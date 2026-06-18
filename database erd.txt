@@ -1,0 +1,259 @@
+-- ==========================================================
+-- DATABASE: findyourkost_test (VERSI FINAL & LENGKAP)
+-- Platform: SaaS Marketplace Kos & Property Management
+-- ==========================================================
+
+SET FOREIGN_KEY_CHECKS = 0;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+CREATE DATABASE IF NOT EXISTS `findyourkost_test`;
+USE `findyourkost_test`;
+
+-- --------------------------------------------------------
+-- 1. TABEL PENGGUNA (Aktor Sistem)
+-- --------------------------------------------------------
+CREATE TABLE `users` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `nama` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL UNIQUE,
+  `password_hash` varchar(255) DEFAULT NULL,
+  `google_id` varchar(255) DEFAULT NULL,
+  `no_hp` varchar(20) DEFAULT NULL,
+  `foto_profil` varchar(255) DEFAULT NULL,
+  `role` enum('penyewa','pemilik','admin') NOT NULL DEFAULT 'penyewa',
+  `is_profile_complete` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `alamat` text,
+  `tanggal_lahir` date DEFAULT NULL,
+  `jenis_kelamin` enum('L','P') DEFAULT NULL,
+  `foto_ktp` varchar(255) DEFAULT NULL,
+  `is_verified` tinyint(1) DEFAULT '0',
+  `pekerjaan` varchar(100) DEFAULT NULL,
+  `instansi` varchar(150) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 2. TABEL KOST (Data Properti Utama)
+-- --------------------------------------------------------
+CREATE TABLE `kost` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `pemilik_id` int NOT NULL,
+  `nama_kost` varchar(150) NOT NULL,
+  `alamat` text NOT NULL,
+  `deskripsi` text,
+  `harga` decimal(12,2) NOT NULL,
+  `tipe_penghuni` enum('putra','putri','campur') DEFAULT 'campur',
+  `total_kamar` int NOT NULL DEFAULT '1',
+  `sisa_kamar` int DEFAULT '0',
+  `latitude` decimal(10,8) DEFAULT NULL,
+  `longitude` decimal(11,8) DEFAULT NULL,
+  `status_verifikasi` tinyint(1) DEFAULT '0',
+  `tier_listing` enum('silver','gold','premium') DEFAULT 'silver',
+  `foto_thumbnail` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`pemilik_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 3. TABEL GALERI FOTO KOST
+-- --------------------------------------------------------
+CREATE TABLE `foto_kost` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `kost_id` int NOT NULL,
+  `url_foto` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`kost_id`) REFERENCES `kost` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 4. TABEL REKENING BANK PEMILIK (Untuk Pencairan Escrow)
+-- --------------------------------------------------------
+CREATE TABLE `rekening_bank` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `user_id` int NOT NULL,
+  `nama_bank` varchar(50) NOT NULL,
+  `nomor_rekening` varchar(50) NOT NULL,
+  `atas_nama` varchar(100) NOT NULL,
+  `is_utama` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 5. TABEL BOOKING (Transaksi Pemesanan Kamar)
+-- --------------------------------------------------------
+CREATE TABLE `booking` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `penyewa_id` int NOT NULL,
+  `kost_id` int NOT NULL,
+  `tanggal_booking` datetime DEFAULT CURRENT_TIMESTAMP,
+  `tanggal_masuk` date DEFAULT NULL,
+  `durasi_bulan` int DEFAULT NULL,
+  `total_harga` decimal(12,2) DEFAULT NULL,
+  `status_booking` enum('menunggu_dp','dp_dibayar','menunggu_konfirmasi','menunggu_pelunasan','aktif','selesai','dibatalkan') DEFAULT 'menunggu_dp',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`penyewa_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`kost_id`) REFERENCES `kost` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 6. TABEL PEMBAYARAN (Integrasi Midtrans)
+-- --------------------------------------------------------
+CREATE TABLE `pembayaran` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` int NOT NULL,
+  `midtrans_order_id` varchar(100) DEFAULT NULL,
+  `jumlah` decimal(12,2) DEFAULT NULL,
+  `metode_pembayaran` varchar(100) DEFAULT NULL,
+  `status_pembayaran` enum('pending','success','failed','expired') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`booking_id`) REFERENCES `booking` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 7. TABEL ESCROW (Manajemen Dana DP & Komisi)
+-- --------------------------------------------------------
+CREATE TABLE `escrow` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` int NOT NULL,
+  `admin_id` int DEFAULT NULL,
+  `rekening_tujuan_id` int DEFAULT NULL,
+  `jumlah_dp` decimal(12,2) DEFAULT NULL,
+  `potongan_komisi` decimal(12,2) DEFAULT '0.00',
+  `nominal_bersih` decimal(12,2) DEFAULT NULL,
+  `status` enum('ditahan','released','refund') DEFAULT 'ditahan',
+  `bukti_transfer` varchar(255) DEFAULT NULL,
+  `tanggal_release` datetime DEFAULT NULL,
+  `tanggal_refund` datetime DEFAULT NULL,
+  FOREIGN KEY (`booking_id`) REFERENCES `booking` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`rekening_tujuan_id`) REFERENCES `rekening_bank` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 8. TABEL PREMIUM SUBSCRIPTION (Langganan Akun SaaS)
+-- --------------------------------------------------------
+CREATE TABLE `premium_subscription` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `user_id` int NOT NULL,
+  `tier` enum('silver','gold','premium') DEFAULT 'silver',
+  `tanggal_mulai` date DEFAULT NULL,
+  `tanggal_akhir` date DEFAULT NULL,
+  `status` enum('aktif','expired') DEFAULT 'aktif',
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 9. TABEL BUKU KAS (Fitur Keuangan Premium Pemilik)
+-- --------------------------------------------------------
+CREATE TABLE `buku_kas` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `kost_id` int NOT NULL,
+  `jenis_transaksi` enum('pemasukan','pengeluaran') NOT NULL,
+  `kategori` varchar(50) DEFAULT NULL,
+  `nominal` decimal(12,2) NOT NULL,
+  `keterangan` text,
+  `tanggal_transaksi` date NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`kost_id`) REFERENCES `kost` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 10. TABEL TAGIHAN PENGHUNI (Fitur Keuangan Premium Pemilik)
+-- --------------------------------------------------------
+CREATE TABLE `tagihan_penghuni` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` int NOT NULL,
+  `bulan_tagihan` date NOT NULL,
+  `nominal` decimal(12,2) NOT NULL,
+  `status` enum('belum_bayar','lunas') DEFAULT 'belum_bayar',
+  `tanggal_jatuh_tempo` date NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`booking_id`) REFERENCES `booking` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 11. TABEL CHAT ROOM & CHAT MESSAGE (Komunikasi Privat)
+-- --------------------------------------------------------
+CREATE TABLE `chat_room` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `penyewa_id` int NOT NULL,
+  `pemilik_id` int NOT NULL,
+  `kost_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`penyewa_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`pemilik_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`kost_id`) REFERENCES `kost` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `chat_message` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `room_id` int NOT NULL,
+  `sender_id` int NOT NULL,
+  `pesan` text,
+  `is_read` tinyint(1) DEFAULT '0',
+  `waktu_kirim` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`room_id`) REFERENCES `chat_room` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 12. TABEL REVIEW (Ulasan Terverifikasi)
+-- --------------------------------------------------------
+CREATE TABLE `review` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `kost_id` int NOT NULL,
+  `rating` int DEFAULT NULL CHECK (`rating` >= 1 and `rating` <= 5),
+  `ulasan` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`booking_id`) REFERENCES `booking` (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`kost_id`) REFERENCES `kost` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 13. TABEL WISHLIST (Kos Favorit)
+-- --------------------------------------------------------
+CREATE TABLE `wishlist` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `user_id` int NOT NULL,
+  `kost_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`kost_id`) REFERENCES `kost` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 14. TABEL LAPORAN (Pengaduan Kos Bermasalah)
+-- --------------------------------------------------------
+CREATE TABLE `laporan` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `pelapor_id` int NOT NULL,
+  `kost_id` int NOT NULL,
+  `alasan` text,
+  `status` enum('pending','diproses','selesai') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`pelapor_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`kost_id`) REFERENCES `kost` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- 15. TABEL VERIFIKASI KOST (Persetujuan Admin)
+-- --------------------------------------------------------
+CREATE TABLE `verifikasi_kost` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `kost_id` int NOT NULL,
+  `admin_id` int NOT NULL,
+  `status` enum('pending','diterima','ditolak') DEFAULT 'pending',
+  `catatan` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`kost_id`) REFERENCES `kost` (`id`),
+  FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
+COMMIT;
