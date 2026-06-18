@@ -1,0 +1,213 @@
+.hero{
+
+    height:420px;
+
+    background:
+    linear-gradient(
+    rgba(0,0,0,.4),
+    rgba(0,0,0,.4)
+    ),
+    url("../images/hero.jpg");
+
+    background-size:cover;
+
+    background-position:center;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+    color:white;
+}
+
+.hero-content{
+
+    max-width:700px;
+}
+
+.hero h1{
+
+    font-size:52px;
+
+    margin-bottom:15px;
+}
+
+.hero p{
+
+    font-size:18px;
+
+    margin-bottom:25px;
+}
+
+.search-box{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:10px;
+}
+
+.search-box input{
+
+    width:450px;
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:10px;
+}
+
+.search-box button{
+
+    background:#1453e5;
+
+    color:white;
+
+    border:none;
+
+    padding:15px 30px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+}
+
+.kost-section{
+
+    max-width:1300px;
+
+    margin:50px auto;
+
+    padding:0 20px;
+}
+
+.section-header{
+
+    margin-bottom:30px;
+}
+
+.section-header h2{
+
+    font-size:32px;
+}
+
+.kost-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(
+    auto-fill,
+    minmax(280px,1fr)
+    );
+
+    gap:25px;
+}
+
+.kost-card{
+
+    background:white;
+
+    border-radius:15px;
+
+    overflow:hidden;
+
+    box-shadow:
+    0 4px 15px rgba(
+    0,0,0,.08
+    );
+
+    transition:.2s;
+}
+
+.kost-card:hover{
+
+    transform:translateY(-5px);
+}
+
+.kost-card img{
+
+    width:100%;
+
+    height:220px;
+
+    object-fit:cover;
+}
+
+.kost-body{
+
+    padding:18px;
+}
+
+.verified{
+
+    display:inline-block;
+
+    background:#dcfce7;
+
+    color:#166534;
+
+    padding:5px 10px;
+
+    border-radius:20px;
+
+    font-size:12px;
+
+    margin-bottom:10px;
+}
+
+.kost-body h3{
+
+    margin-bottom:10px;
+}
+
+.alamat{
+
+    color:#6b7280;
+
+    margin-bottom:10px;
+}
+
+.tipe{
+
+    color:#1453e5;
+
+    font-weight:600;
+
+    margin-bottom:10px;
+}
+
+.harga{
+
+    font-size:20px;
+
+    font-weight:700;
+
+    color:#1453e5;
+
+    margin-bottom:10px;
+}
+
+.sisa{
+
+    color:#374151;
+}
+
+footer{
+
+    margin-top:60px;
+
+    text-align:center;
+
+    padding:25px;
+
+    border-top:1px solid #e5e7eb;
+
+    color:#6b7280;
+}

@@ -1,0 +1,225 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Profil Saya
+{% endblock %}
+
+{% block css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/profil.css'
+    ) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="profile-wrapper">
+
+```
+<div class="profile-card">
+
+    <h2>
+        Informasi Pribadi
+    </h2>
+
+    <div class="info-box">
+
+        Lengkapi profil Anda agar dapat
+        melakukan booking, wishlist,
+        dan menggunakan seluruh fitur
+        FindYourKost.
+
+    </div>
+
+    <form method="POST">
+
+        <div class="form-group">
+
+            <label>
+                Nama Lengkap
+            </label>
+
+            <input
+                type="text"
+                name="nama"
+                value="{{ user[0] if user[0] else '' }}"
+                required>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Email
+            </label>
+
+            <input
+                type="email"
+                value="{{ user[1] }}"
+                readonly>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Nomor Telepon
+            </label>
+
+            <input
+                type="text"
+                name="no_hp"
+                value="{{ user[2] if user[2] else '' }}"
+                required>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Jenis Kelamin
+            </label>
+
+            <select
+                name="jenis_kelamin"
+                required>
+
+                <option value="">
+                    Pilih Jenis Kelamin
+                </option>
+
+                <option
+                    value="L"
+                    {% if user[3]=='L' %}
+                    selected
+                    {% endif %}
+                >
+                    Laki-Laki
+                </option>
+
+                <option
+                    value="P"
+                    {% if user[3]=='P' %}
+                    selected
+                    {% endif %}
+                >
+                    Perempuan
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Tanggal Lahir
+            </label>
+
+            <input
+                type="date"
+                name="tanggal_lahir"
+                value="{{ user[4] if user[4] else '' }}"
+                required>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Pekerjaan
+            </label>
+
+            <select
+                name="pekerjaan"
+                required>
+
+                <option value="">
+                    Pilih Pekerjaan
+                </option>
+
+                <option value="Mahasiswa"
+                {% if user[5]=='Mahasiswa' %}
+                selected
+                {% endif %}>
+                Mahasiswa
+                </option>
+
+                <option value="Karyawan"
+                {% if user[5]=='Karyawan' %}
+                selected
+                {% endif %}>
+                Karyawan
+                </option>
+
+                <option value="Wirausaha"
+                {% if user[5]=='Wirausaha' %}
+                selected
+                {% endif %}>
+                Wirausaha
+                </option>
+
+                <option value="Freelancer"
+                {% if user[5]=='Freelancer' %}
+                selected
+                {% endif %}>
+                Freelancer
+                </option>
+
+                <option value="Lainnya"
+                {% if user[5]=='Lainnya' %}
+                selected
+                {% endif %}>
+                Lainnya
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Instansi / Kampus
+            </label>
+
+            <input
+                type="text"
+                name="instansi"
+                value="{{ user[6] if user[6] else '' }}">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Alamat
+            </label>
+
+            <textarea
+                name="alamat"
+                rows="4"
+                required>{{ user[7] if user[7] else '' }}</textarea>
+
+        </div>
+
+        <button
+            type="submit"
+            class="save-btn">
+
+            Simpan Profil
+
+        </button>
+
+    </form>
+
+</div>
+```
+
+</div>
+
+{% endblock %}

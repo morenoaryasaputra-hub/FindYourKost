@@ -1,0 +1,87 @@
+<nav class="navbar">
+
+    <div class="nav-left">
+
+        <a href="/" class="logo">
+
+            FindYourKost
+
+        </a>
+
+    </div>
+
+    <div class="nav-center">
+
+        <a href="/" class="nav-link">
+            Beranda
+        </a>
+
+        <a href="#" class="nav-link">
+            Cari Kos
+        </a>
+
+        <a href="#" class="nav-link">
+            Wishlist
+        </a>
+
+        <a href="#" class="nav-link">
+            Booking Saya
+        </a>
+
+        <a href="#" class="nav-link">
+            Pesan
+        </a>
+
+    </div>
+
+    <div class="nav-right">
+
+        <button class="notif-btn">
+
+            🔔
+
+        </button>
+
+        <div class="user-menu">
+
+            <div class="avatar">
+
+                {{ session['nama'][0]|upper }}
+
+            </div>
+
+            <div class="dropdown">
+
+                <div class="dropdown-header">
+
+                    {{ session['nama'] }}
+
+                </div>
+
+                <hr>
+
+                <a href="/profil">
+
+                    Profil Saya
+
+                </a>
+
+                <a href="#">
+
+                    Pengaturan
+
+                </a>
+
+                <a href="/logout">
+
+                    Logout
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</nav>

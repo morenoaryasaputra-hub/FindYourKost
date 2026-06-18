@@ -1,0 +1,137 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Beranda
+{% endblock %}
+
+{% block css %}
+
+<link
+rel="stylesheet"
+href="{{ url_for(
+'static',
+filename='css/beranda.css'
+) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <h1>
+            Temukan Kos Impianmu
+        </h1>
+
+        <p>
+            Cari kos terbaik dengan
+            lokasi strategis dan harga
+            sesuai kebutuhanmu.
+        </p>
+
+        <div class="search-box">
+
+            <input
+            type="text"
+            placeholder="Cari nama kos atau lokasi...">
+
+            <button>
+
+                Cari
+
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="kost-section">
+
+    <div class="section-header">
+
+        <h2>
+            Rekomendasi Kost
+        </h2>
+
+    </div>
+
+    <div class="kost-grid">
+
+        {% for kost in kost_list %}
+
+        <div class="kost-card">
+
+            <img
+            src="{{ url_for(
+            'static',
+            filename='images/kost/' + kost[5]
+            ) }}"
+            alt="{{ kost[1] }}">
+
+            <div class="kost-body">
+
+                {% if kost[6] == 1 %}
+
+                <span class="verified">
+
+                    ✓ Terverifikasi
+
+                </span>
+
+                {% endif %}
+
+                <h3>
+
+                    {{ kost[1] }}
+
+                </h3>
+
+                <p class="alamat">
+
+                    {{ kost[2] }}
+
+                </p>
+
+                <p class="tipe">
+
+                    {{ kost[4] | upper }}
+
+                </p>
+
+                <p class="harga">
+
+                    Rp {{ "{:,}".format(kost[3]) }}
+
+                    / bulan
+
+                </p>
+
+                <p class="sisa">
+
+                    Sisa Kamar:
+
+                    {{ kost[7] }}
+
+                </p>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+<footer>
+
+    © 2026 FindYourKost
+
+</footer>
+
+{% endblock %}

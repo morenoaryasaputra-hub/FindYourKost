@@ -1,0 +1,14 @@
+1. Moreno
+email: moreno@gmail.com
+pass: 123456
+
+2. Arya
+email: arya@gmail.com
+pass: arya
+no hp: 86868686
+
+3. Agape Dhaniel Wibowo
+email: agape@gmail.com
+no hp: 291048294
+penyewa
+pass: AGAPE

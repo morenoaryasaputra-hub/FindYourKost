@@ -1,0 +1,216 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial, Helvetica, sans-serif;
+    background:#f5f7fb;
+}
+
+.navbar{
+    height:80px;
+
+    background:#fff;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 50px;
+
+    border-bottom:1px solid #d1d5db;
+
+    box-shadow:0 1px 8px rgba(0,0,0,0.04);
+
+    position:sticky;
+
+    top:0;
+
+    z-index:1000;
+}
+
+.logo{
+
+    font-size:22px;
+
+    font-weight:700;
+
+    color:#1453e5;
+
+    text-decoration:none;
+}
+
+.nav-center{
+
+    display:flex;
+
+    gap:40px;
+}
+
+.nav-link{
+
+    position:relative;
+
+    text-decoration:none;
+
+    color:#374151;
+
+    font-size:18px;
+
+    font-weight:500;
+
+    padding:26px 0;
+
+    transition:all .2s ease;
+}
+
+.nav-link:hover{
+
+    color:#1453e5;
+}
+
+.nav-link::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    bottom:18px;
+
+    width:0;
+
+    height:3px;
+
+    background:#1453e5;
+
+    border-radius:5px;
+
+    transition:.25s;
+}
+
+.nav-link:hover::after{
+
+    width:100%;
+}
+
+.nav-right{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:25px;
+}
+
+.notif-btn{
+
+    border:none;
+
+    background:none;
+
+    cursor:pointer;
+
+    font-size:24px;
+}
+
+.user-menu{
+
+    position:relative;
+
+    cursor:pointer;
+}
+
+.avatar{
+
+    width:45px;
+
+    height:45px;
+
+    border-radius:50%;
+
+    background:#1453e5;
+
+    color:white;
+
+    font-weight:bold;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    transition:.2s;
+}
+
+.avatar:hover{
+
+    transform:scale(1.05);
+}
+
+.dropdown{
+
+    display:none;
+
+    position:absolute;
+
+    right:0;
+
+    top:60px;
+
+    min-width:220px;
+
+    background:white;
+
+    border-radius:12px;
+
+    box-shadow:
+    0 10px 25px rgba(
+        0,
+        0,
+        0,
+        .15
+    );
+
+    overflow:hidden;
+}
+
+.dropdown-header{
+
+    padding:15px;
+
+    font-weight:600;
+}
+
+.dropdown a{
+
+    display:block;
+
+    padding:14px 15px;
+
+    text-decoration:none;
+
+    color:#333;
+}
+
+.dropdown a:hover{
+
+    background:#f3f4f6;
+}
+
+.user-menu:hover
+.dropdown{
+
+    display:block;
+}
+
+main{
+
+    padding:30px;
+}

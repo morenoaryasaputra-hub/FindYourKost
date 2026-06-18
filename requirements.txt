@@ -1,0 +1,13 @@
+Flask==3.0.3                 # Framework web utama
+
+Flask-MySQLdb==2.0.0         # Koneksi Flask ke MySQL/MariaDB
+
+Flask-Bcrypt==1.0.1          # Hash password menggunakan bcrypt
+
+Flask-Login==0.6.3           # Session login & logout user
+
+email-validator==2.2.0       # Validasi format email
+
+mysqlclient==2.2.4           # Driver MySQL yang digunakan Flask-MySQLdb
+
+bcrypt==4.1.3                # Library bcrypt dasar

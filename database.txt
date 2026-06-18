@@ -1,0 +1,367 @@
+CREATE DATABASE IF NOT EXISTS findyourkost_test;
+USE findyourkost_test;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    nama VARCHAR(100) NOT NULL,
+
+    email VARCHAR(100) UNIQUE NOT NULL,
+
+    password_hash VARCHAR(255),
+
+    google_id VARCHAR(255),
+
+    no_hp VARCHAR(20),
+
+    alamat TEXT,
+
+    tanggal_lahir DATE,
+
+    jenis_kelamin ENUM('L', 'P'),
+
+    foto_profil VARCHAR(255),
+
+    foto_KTP VARCHAR(20),
+
+    role ENUM('penyewa','pemilik','admin')
+    NOT NULL DEFAULT 'penyewa',
+
+    is_profile_complete BOOLEAN DEFAULT FALSE,
+
+    is_verified BOOLEAN DEFAULT FALSE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE kost (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    pemilik_id INT NOT NULL,
+
+    nama_kost VARCHAR(150) NOT NULL,
+
+    alamat TEXT NOT NULL,
+
+    deskripsi TEXT,
+
+    harga DECIMAL(12,2) NOT NULL,
+
+    tipe_penghuni ENUM(
+        'putra',
+        'putri',
+        'campur'
+    ) DEFAULT 'campur',
+
+    latitude DECIMAL(10,8),
+
+    longitude DECIMAL(11,8),
+
+    status_verifikasi BOOLEAN DEFAULT FALSE,
+
+    tier_listing ENUM(
+        'silver',
+        'gold',
+        'premium'
+    ) DEFAULT 'silver',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (pemilik_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+);
+
+
+CREATE TABLE foto_kost (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    kost_id INT NOT NULL,
+
+    url_foto VARCHAR(255),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (kost_id)
+    REFERENCES kost(id)
+    ON DELETE CASCADE
+);
+
+
+CREATE TABLE booking (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    penyewa_id INT NOT NULL,
+
+    kost_id INT NOT NULL,
+
+    tanggal_booking DATETIME
+    DEFAULT CURRENT_TIMESTAMP,
+
+    tanggal_masuk DATE,
+
+    durasi_bulan INT,
+
+    total_harga DECIMAL(12,2),
+
+    status_booking ENUM(
+
+        'menunggu_dp',
+
+        'dp_dibayar',
+
+        'menunggu_konfirmasi',
+
+        'menunggu_pelunasan',
+
+        'aktif',
+
+        'selesai',
+
+        'dibatalkan'
+
+    ) DEFAULT 'menunggu_dp',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (penyewa_id)
+    REFERENCES users(id),
+
+    FOREIGN KEY (kost_id)
+    REFERENCES kost(id)
+);
+
+
+CREATE TABLE pembayaran (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    booking_id INT NOT NULL,
+
+    midtrans_order_id VARCHAR(100),
+
+    jumlah DECIMAL(12,2),
+
+    metode_pembayaran VARCHAR(100),
+
+    status_pembayaran ENUM(
+
+        'pending',
+
+        'success',
+
+        'failed',
+
+        'expired'
+
+    ) DEFAULT 'pending',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (booking_id)
+    REFERENCES booking(id)
+    ON DELETE CASCADE
+);
+
+
+CREATE TABLE escrow (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    booking_id INT NOT NULL,
+
+    jumlah_dp DECIMAL(12,2),
+
+    status ENUM(
+
+        'ditahan',
+
+        'released',
+
+        'refund'
+
+    ) DEFAULT 'ditahan',
+
+    tanggal_release DATETIME,
+
+    tanggal_refund DATETIME,
+
+    FOREIGN KEY (booking_id)
+    REFERENCES booking(id)
+    ON DELETE CASCADE
+);
+
+
+CREATE TABLE wishlist (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    user_id INT NOT NULL,
+
+    kost_id INT NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE,
+
+    FOREIGN KEY (kost_id)
+    REFERENCES kost(id)
+    ON DELETE CASCADE
+);
+
+
+CREATE TABLE chat_room (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    penyewa_id INT NOT NULL,
+
+    pemilik_id INT NOT NULL,
+
+    kost_id INT NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (penyewa_id)
+    REFERENCES users(id),
+
+    FOREIGN KEY (pemilik_id)
+    REFERENCES users(id),
+
+    FOREIGN KEY (kost_id)
+    REFERENCES kost(id)
+);
+
+
+CREATE TABLE chat_message (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    room_id INT NOT NULL,
+
+    sender_id INT NOT NULL,
+
+    pesan TEXT,
+
+    waktu_kirim TIMESTAMP
+    DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (room_id)
+    REFERENCES chat_room(id)
+    ON DELETE CASCADE,
+
+    FOREIGN KEY (sender_id)
+    REFERENCES users(id)
+);
+
+
+CREATE TABLE review (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    booking_id INT NOT NULL,
+
+    user_id INT NOT NULL,
+
+    kost_id INT NOT NULL,
+
+    rating INT,
+
+    ulasan TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (booking_id)
+    REFERENCES booking(id),
+
+    FOREIGN KEY (user_id)
+    REFERENCES users(id),
+
+    FOREIGN KEY (kost_id)
+    REFERENCES kost(id)
+);
+
+
+CREATE TABLE premium_subscription (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    user_id INT NOT NULL,
+
+    tier ENUM(
+        'silver',
+        'gold',
+        'premium'
+    ) DEFAULT 'silver',
+
+    tanggal_mulai DATE,
+
+    tanggal_akhir DATE,
+
+    status ENUM(
+        'aktif',
+        'expired'
+    ) DEFAULT 'aktif',
+
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+);
+
+
+CREATE TABLE laporan (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    pelapor_id INT NOT NULL,
+
+    kost_id INT NOT NULL,
+
+    alasan TEXT,
+
+    status ENUM(
+        'pending',
+        'diproses',
+        'selesai'
+    ) DEFAULT 'pending',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (pelapor_id)
+    REFERENCES users(id),
+
+    FOREIGN KEY (kost_id)
+    REFERENCES kost(id)
+);
+
+
+CREATE TABLE verifikasi_kost (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    kost_id INT NOT NULL,
+
+    admin_id INT NOT NULL,
+
+    status ENUM(
+        'pending',
+        'diterima',
+        'ditolak'
+    ) DEFAULT 'pending',
+
+    catatan TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (kost_id)
+    REFERENCES kost(id),
+
+    FOREIGN KEY (admin_id)
+    REFERENCES users(id)
+);

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Login | FindYourKost</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/auth.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- LEFT -->
+
+    <div class="left-panel">
+
+        <div class="branding">
+
+            <h1>FindYourKost</h1>
+
+            <h2>
+                A Place That Gets You.
+            </h2>
+
+            <p>
+                Temukan kos impianmu dengan aman,
+                nyaman, dan terpercaya.
+            </p>
+
+            <div class="badge">
+
+                Terverifikasi
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT -->
+
+    <div class="right-panel">
+
+        <div class="form-card">
+
+            <h2>Masuk ke Akun</h2>
+
+            <p>
+                Silakan masukkan detail akun Anda
+                untuk melanjutkan.
+            </p>
+
+            {% with messages =
+            get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+            {% for category, message in messages %}
+
+            <div class="alert">
+
+                {{ message }}
+
+            </div>
+
+            {% endfor %}
+
+            {% endif %}
+
+            {% endwith %}
+
+            <form method="POST">
+
+                <label>Email</label>
+
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="contoh@email.com"
+                    required>
+
+                <label>Kata Sandi</label>
+
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Masukkan kata sandi"
+                    required>
+
+                <div class="options">
+
+                    <label>
+
+                        <input type="checkbox">
+
+                        Ingat Saya
+
+                    </label>
+
+                    <a href="#">
+
+                        Lupa Kata Sandi?
+
+                    </a>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn-primary">
+
+                    Masuk
+
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-google">
+
+                    Login dengan Google
+                    (Segera Hadir)
+
+                </button>
+
+            </form>
+
+            <p class="register-link">
+
+                Belum punya akun?
+
+                <a href="/register">
+
+                    Daftar Sekarang
+
+                </a>
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
