@@ -44,13 +44,17 @@
 
         <div class="user-menu">
 
-            <div class="avatar">
+            <div
+                class="avatar"
+                id="avatarBtn">
 
                 {{ session['nama'][0]|upper }}
 
             </div>
 
-            <div class="dropdown">
+            <div
+                class="dropdown"
+                id="dropdownMenu">
 
                 <div class="dropdown-header">
 
@@ -60,7 +64,7 @@
 
                 <hr>
 
-                <a href="/profil">
+                <a href="/akun">
 
                     Profil Saya
 
@@ -85,3 +89,57 @@
     </div>
 
 </nav>
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        const avatarBtn =
+        document.getElementById(
+            "avatarBtn"
+        );
+
+        const dropdownMenu =
+        document.getElementById(
+            "dropdownMenu"
+        );
+
+        avatarBtn.addEventListener(
+            "click",
+            function(e){
+
+                e.stopPropagation();
+
+                dropdownMenu.classList.toggle(
+                    "show"
+                );
+            }
+        );
+
+        document.addEventListener(
+            "click",
+            function(e){
+
+                if(
+                    !dropdownMenu.contains(
+                        e.target
+                    )
+                    &&
+                    !avatarBtn.contains(
+                        e.target
+                    )
+                ){
+
+                    dropdownMenu.classList.remove(
+                        "show"
+                    );
+                }
+            }
+        );
+
+    }
+);
+
+</script>

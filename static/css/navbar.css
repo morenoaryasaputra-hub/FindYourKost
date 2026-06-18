@@ -122,15 +122,13 @@ body{
 .user-menu{
 
     position:relative;
-
-    cursor:pointer;
 }
 
 .avatar{
 
-    width:45px;
+    width:42px;
 
-    height:45px;
+    height:42px;
 
     border-radius:50%;
 
@@ -138,13 +136,17 @@ body{
 
     color:white;
 
-    font-weight:bold;
-
     display:flex;
 
     align-items:center;
 
     justify-content:center;
+
+    font-size:18px;
+
+    font-weight:600;
+
+    cursor:pointer;
 
     transition:.2s;
 }
@@ -156,61 +158,76 @@ body{
 
 .dropdown{
 
-    display:none;
-
     position:absolute;
+
+    top:75px;
 
     right:0;
 
-    top:60px;
-
-    min-width:220px;
+    width:270px;
 
     background:white;
 
-    border-radius:12px;
+    border-radius:18px;
 
     box-shadow:
-    0 10px 25px rgba(
+    0 10px 30px rgba(
         0,
         0,
         0,
-        .15
+        .12
     );
 
     overflow:hidden;
+
+    opacity:0;
+
+    visibility:hidden;
+
+    transform:
+        translateY(-15px);
+
+    transition:
+        all .25s ease;
+
+    z-index:999;
+}
+
+.dropdown.show{
+
+    opacity:1;
+
+    visibility:visible;
+
+    transform:
+        translateY(0);
 }
 
 .dropdown-header{
 
-    padding:15px;
+    padding:20px;
 
-    font-weight:600;
+    font-size:20px;
+
+    font-weight:700;
 }
 
 .dropdown a{
 
     display:block;
 
-    padding:14px 15px;
+    padding:18px 20px;
 
     text-decoration:none;
 
-    color:#333;
+    color:#374151;
+
+    transition:.2s;
 }
 
 .dropdown a:hover{
 
     background:#f3f4f6;
-}
 
-.user-menu:hover
-.dropdown{
-
-    display:block;
-}
-
-main{
-
-    padding:30px;
+    color:#1453e5;
 }

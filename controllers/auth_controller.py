@@ -5,6 +5,8 @@ from flask import redirect
 from flask import url_for
 from flask import flash
 from flask import session
+import os
+from werkzeug.utils import secure_filename
 
 from extensions import mysql
 from extensions import bcrypt
@@ -236,6 +238,35 @@ def profil():
             "alamat"
         ]
 
+        foto = request.files.get(
+            "foto_profil"
+        )
+
+        nama_file = None
+
+        if foto and foto.filename != "":
+
+            nama_file = secure_filename(
+                foto.filename
+            )
+
+            upload_folder = os.path.join(
+                "static",
+                "uploads"
+            )
+
+            os.makedirs(
+                upload_folder,
+                exist_ok=True
+            )
+
+            foto.save(
+                os.path.join(
+                    upload_folder,
+                    nama_file
+                )
+            )
+
         is_profile_complete = all([
             nama,
             no_hp,
@@ -245,34 +276,69 @@ def profil():
             alamat
         ])
 
-        cursor.execute(
-            """
-            UPDATE users
-            SET
+        if nama_file:
 
-            nama=%s,
-            no_hp=%s,
-            jenis_kelamin=%s,
-            tanggal_lahir=%s,
-            pekerjaan=%s,
-            instansi=%s,
-            alamat=%s,
-            is_profile_complete=%s
+            cursor.execute(
+                """
+                UPDATE users
+                SET
 
-            WHERE id=%s
-            """,
-            (
-                nama,
-                no_hp,
-                jenis_kelamin,
-                tanggal_lahir,
-                pekerjaan,
-                instansi,
-                alamat,
-                is_profile_complete,
-                session["user_id"]
+                nama=%s,
+                no_hp=%s,
+                jenis_kelamin=%s,
+                tanggal_lahir=%s,
+                pekerjaan=%s,
+                instansi=%s,
+                alamat=%s,
+                foto_profil=%s,
+                is_profile_complete=%s
+
+                WHERE id=%s
+                """,
+                (
+                    nama,
+                    no_hp,
+                    jenis_kelamin,
+                    tanggal_lahir,
+                    pekerjaan,
+                    instansi,
+                    alamat,
+                    nama_file,
+                    is_profile_complete,
+                    session["user_id"]
+                )
             )
-        )
+
+        else:
+
+            cursor.execute(
+                """
+                UPDATE users
+                SET
+
+                nama=%s,
+                no_hp=%s,
+                jenis_kelamin=%s,
+                tanggal_lahir=%s,
+                pekerjaan=%s,
+                instansi=%s,
+                alamat=%s,
+                is_profile_complete=%s
+
+                WHERE id=%s
+                """,
+                (
+                    nama,
+                    no_hp,
+                    jenis_kelamin,
+                    tanggal_lahir,
+                    pekerjaan,
+                    instansi,
+                    alamat,
+                    is_profile_complete,
+                    session["user_id"]
+                )
+            )
 
         mysql.connection.commit()
 
@@ -305,7 +371,9 @@ def profil():
             pekerjaan,
             instansi,
 
-            alamat
+            alamat,
+
+            foto_profil
 
         FROM users
 
@@ -320,6 +388,44 @@ def profil():
 
     return render_template(
         "auth/edit_profil.html",
+        user=user
+    )
+
+@auth_bp.route("/akun")
+def akun():
+
+    if "user_id" not in session:
+
+        return redirect("/login")
+
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            nama,
+            email,
+            no_hp,
+            jenis_kelamin,
+            tanggal_lahir,
+            pekerjaan,
+            instansi,
+            alamat,
+            is_profile_complete
+        FROM users
+        WHERE id=%s
+        """,
+        (
+            session["user_id"],
+        )
+    )
+
+    user = cursor.fetchone()
+
+    cursor.close()
+
+    return render_template(
+        "auth/akun.html",
         user=user
     )
 
