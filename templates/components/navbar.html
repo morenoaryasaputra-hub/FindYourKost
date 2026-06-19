@@ -2,7 +2,9 @@
 
     <div class="nav-left">
 
-        <a href="/" class="logo">
+        <a
+            href="/"
+            class="logo">
 
             FindYourKost
 
@@ -12,24 +14,44 @@
 
     <div class="nav-center">
 
-        <a href="/" class="nav-link">
+        <a
+            href="/"
+            class="nav-link">
+
             Beranda
+
         </a>
 
-        <a href="#" class="nav-link">
+        <a
+            href="#"
+            class="nav-link">
+
             Cari Kos
+
         </a>
 
-        <a href="#" class="nav-link">
+        <a
+            href="#"
+            class="nav-link">
+
             Wishlist
+
         </a>
 
-        <a href="#" class="nav-link">
+        <a
+            href="#"
+            class="nav-link">
+
             Booking Saya
+
         </a>
 
-        <a href="#" class="nav-link">
+        <a
+            href="#"
+            class="nav-link">
+
             Pesan
+
         </a>
 
     </div>
@@ -48,7 +70,20 @@
                 class="avatar"
                 id="avatarBtn">
 
-                {{ session['nama'][0]|upper }}
+                {% if session.get('foto_profil') %}
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename='uploads/' + session['foto_profil']
+                        ) }}"
+                        class="navbar-avatar">
+
+                {% else %}
+
+                    {{ session['nama'][0]|upper }}
+
+                {% endif %}
 
             </div>
 
@@ -97,14 +132,14 @@ document.addEventListener(
     function(){
 
         const avatarBtn =
-        document.getElementById(
-            "avatarBtn"
-        );
+            document.getElementById(
+                "avatarBtn"
+            );
 
         const dropdownMenu =
-        document.getElementById(
-            "dropdownMenu"
-        );
+            document.getElementById(
+                "dropdownMenu"
+            );
 
         avatarBtn.addEventListener(
             "click",
@@ -115,6 +150,7 @@ document.addEventListener(
                 dropdownMenu.classList.toggle(
                     "show"
                 );
+
             }
         );
 
@@ -135,7 +171,9 @@ document.addEventListener(
                     dropdownMenu.classList.remove(
                         "show"
                     );
+
                 }
+
             }
         );
 

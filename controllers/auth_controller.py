@@ -153,7 +153,8 @@ def login():
                 email,
                 password_hash,
                 role,
-                is_profile_complete
+                is_profile_complete,
+                foto_profil
             FROM users
             WHERE email=%s
             """,
@@ -193,6 +194,7 @@ def login():
         session["is_profile_complete"] = bool(
             user[5]
         )
+        session["foto_profil"] = user[6]
 
         return redirect("/")
 
@@ -277,6 +279,8 @@ def profil():
         ])
 
         if nama_file:
+
+            session["foto_profil"] = nama_file
 
             cursor.execute(
                 """
@@ -383,7 +387,10 @@ def profil():
     )
 
     user = cursor.fetchone()
-
+    
+    if user:
+        session["foto_profil"] = user[8]
+    
     cursor.close()
 
     return render_template(
@@ -411,7 +418,8 @@ def akun():
             pekerjaan,
             instansi,
             alamat,
-            is_profile_complete
+            is_profile_complete,
+            foto_profil
         FROM users
         WHERE id=%s
         """,

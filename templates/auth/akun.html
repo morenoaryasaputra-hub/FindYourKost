@@ -43,7 +43,24 @@ href="{{ url_for(
 
             <div class="avatar-besar">
 
-                {{ user[0][0]|upper }}
+                {% if user[9] %}
+
+                    <img
+                    src="{{ url_for(
+                        'static',
+                        filename='uploads/' + user[9]
+                    ) }}"
+                    class="avatar-image">
+
+                {% else %}
+
+                    <div class="default-avatar-large">
+
+                        {{ user[0][0]|upper }}
+
+                    </div>
+
+                {% endif %}
 
             </div>
 

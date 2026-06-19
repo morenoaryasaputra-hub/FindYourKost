@@ -36,6 +36,7 @@ Edit Profil
                     {% if user[8] %}
 
                         <img
+                            id="previewFoto"
                             src="{{ url_for(
                                 'static',
                                 filename='uploads/' + user[8]
@@ -44,11 +45,13 @@ Edit Profil
 
                     {% else %}
 
-                        <div class="default-avatar">
-
-                            {{ user[0][0]|upper }}
-
-                        </div>
+                        <img
+                            id="previewFoto"
+                            src="{{ url_for(
+                                'static', 
+                                filename='images/default-avatar.png'
+                                ) }}"
+                            class="profile-photo">
 
                     {% endif %}
 
@@ -263,5 +266,35 @@ Edit Profil
     </div>
 
 </div>
+
+<script>
+
+document
+.getElementById("foto_profil")
+.addEventListener(
+    "change",
+    function(e){
+
+        const file =
+            e.target.files[0];
+
+        if(!file){
+            return;
+        }
+
+        const preview =
+            document.getElementById(
+                "previewFoto"
+            );
+
+        preview.src =
+            URL.createObjectURL(
+                file
+            );
+
+    }
+);
+
+</script>
 
 {% endblock %}

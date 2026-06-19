@@ -125,30 +125,24 @@ body{
 }
 
 .avatar{
-
     width:42px;
-
     height:42px;
-
     border-radius:50%;
-
-    background:#1453e5;
-
-    color:white;
-
+    overflow:hidden;
     display:flex;
-
     align-items:center;
-
     justify-content:center;
-
-    font-size:18px;
-
+    background:#1453e5;
+    color:white;
     font-weight:600;
-
     cursor:pointer;
+}
 
-    transition:.2s;
+.navbar-avatar{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
 }
 
 .avatar:hover{
