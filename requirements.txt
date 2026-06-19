@@ -11,3 +11,9 @@ email-validator==2.2.0       # Validasi format email
 mysqlclient==2.2.4           # Driver MySQL yang digunakan Flask-MySQLdb
 
 bcrypt==4.1.3                # Library bcrypt dasar
+
+authlib==1.7.2               # Library untuk otentikasi
+
+python-dotenv==0.21.0        # Load variabel lingkungan dari file .env
+
+flask-mail==0.10.0            # Library untuk mengirim email dengan Flask

@@ -145,10 +145,38 @@ input{
 }
 
 .options{
+
     display:flex;
+
     justify-content:space-between;
-    margin-bottom:20px;
+
+    align-items:center;
+
+    margin:15px 0 25px;
+}
+
+.remember-me{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    cursor:pointer;
+
     font-size:14px;
+
+    font-weight:500;
+}
+
+.remember-me input{
+
+    width:16px;
+
+    height:16px;
+
+    margin:0;
 }
 
 .btn-primary{
@@ -174,15 +202,45 @@ input{
 
     width:100%;
 
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:10px;
+
+    margin-top:12px;
+
     padding:14px;
 
-    border:1px solid #ddd;
-
-    background:white;
+    border:1px solid #d1d5db;
 
     border-radius:10px;
 
-    cursor:pointer;
+    background:white;
+
+    color:#374151;
+
+    font-weight:600;
+
+    text-decoration:none;
+
+    transition:.2s;
+}
+
+.btn-google:hover{
+
+    background:#f9fafb;
+
+    border-color:#1453e5;
+}
+
+.btn-google img{
+
+    width:18px;
+
+    height:18px;
 }
 
 .register-link{
@@ -459,4 +517,100 @@ textarea{
 .upload-photo-btn input{
 
     display:none;
+}
+
+.auth-container{
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:40px 20px;
+
+    background:#f3f4f6;
+}
+
+.auth-card{
+
+    width:100%;
+
+    max-width:520px;
+
+    background:#ffffff;
+
+    border:1px solid #012101;
+
+    border-radius:20px;
+
+    padding:40px;
+
+    box-shadow:
+        0 20px 40px rgba(
+            0,
+            0,
+            0,
+            .10
+        );
+
+    position:relative;
+}
+
+.auth-header{
+
+    text-align:center;
+
+    margin-bottom:30px;
+}
+
+.auth-header h2{
+
+    font-size:30px;
+
+    color:#1f2937;
+
+    margin-bottom:10px;
+}
+
+.auth-header p{
+
+    color:#6b7280;
+
+    line-height:1.6;
+}
+
+.back-login{
+
+    text-align:center;
+
+    margin-top:20px;
+}
+
+.back-login a{
+
+    color:#1453e5;
+
+    font-weight:600;
+
+    text-decoration:none;
+}
+
+.back-login a:hover{
+
+    text-decoration:underline;
+}
+
+.flash-success{
+    background:#ecfdf5;
+    border:1px solid #a7f3d0;
+    color:#065f46;
+    padding:14px 16px;
+    border-radius:12px;
+    margin-bottom:20px;
+    text-align:center;
+    font-size:14px;
+    font-weight:500;
 }

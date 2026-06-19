@@ -99,15 +99,20 @@
 
                 <div class="options">
 
-                    <label>
+                    <label class="remember-me">
 
-                        <input type="checkbox">
+                        <input 
+                        type="checkbox"
+                        name="remember">
 
+                        <span>
                         Ingat Saya
+                        </span>
 
                     </label>
 
-                    <a href="#">
+                    <a 
+                        href="/lupa-password">
 
                         Lupa Kata Sandi?
 
@@ -123,14 +128,17 @@
 
                 </button>
 
-                <button
-                    type="button"
+                <a
+                    href="/login/google"
                     class="btn-google">
 
-                    Login dengan Google
-                    (Segera Hadir)
+                <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google">
 
-                </button>
+                Login dengan Google
+
+                </a>
 
             </form>
 

@@ -31,8 +31,10 @@
 
 <body>
 
-    {% include 'components/navbar.html' %}
-
+    {% if session.get('user_id') %}
+        {% include 'components/navbar.html' %}
+    {% endif %}
+    
     <main>
 
         {% block content %}
