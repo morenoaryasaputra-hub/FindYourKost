@@ -1,0 +1,234 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Detail Kos
+{% endblock %}
+
+{% block css %}
+
+<link
+rel="stylesheet"
+href="{{ url_for(
+    'static',
+    filename='css/detail_kost.css'
+) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="detail-container">
+
+    <div class="breadcrumb">
+
+        Jakarta Selatan
+
+        >
+
+        Tebet
+
+        >
+
+        <span>
+
+            Kos Eksklusif Tebet Raya
+
+        </span>
+
+    </div>
+
+    <div class="detail-top">
+
+        <!-- GALERI -->
+
+        <div class="gallery-section">
+
+            <div class="main-photo">
+
+                <img
+                src="https://placehold.co/800x600">
+
+            </div>
+
+            <div class="side-photos">
+
+                <img
+                src="https://placehold.co/400x300">
+
+                <img
+                src="https://placehold.co/400x300">
+
+                <img
+                src="https://placehold.co/400x300">
+
+                <div class="more-photo">
+
+                    <img
+                    src="https://placehold.co/400x300">
+
+                    <div class="overlay">
+
+                        +12 Foto
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- BOOKING CARD -->
+
+        <div class="booking-card">
+
+            <div class="price-title">
+
+                Mulai dari
+
+            </div>
+
+            <div class="price">
+
+                Rp 3.500.000
+
+                <span>
+
+                    / bulan
+
+                </span>
+
+            </div>
+
+            <hr>
+
+            <div class="owner-box">
+
+                <img
+                src="https://placehold.co/60">
+
+                <div>
+
+                    <strong>
+
+                        Andi Pratama
+
+                    </strong>
+
+                    <p>
+
+                        Pemilik Terverifikasi
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <a
+            href="konfirmasi-booking"
+            class="booking-btn">
+
+                Booking Sekarang
+
+            </a>
+
+            <a
+            href="#"
+            class="chat-btn">
+
+                Chat Pemilik
+
+            </a>
+
+            <ul class="benefit-list">
+
+                <li>
+
+                    Konfirmasi instan
+
+                </li>
+
+                <li>
+
+                    Jaminan uang kembali
+
+                </li>
+
+                <li>
+
+                    Pembayaran aman
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    <!-- INFO -->
+
+    <div class="info-section">
+
+        <div class="tags">
+
+            <span class="premium">
+
+                Premium
+
+            </span>
+
+            <span class="available">
+
+                Tersedia
+
+            </span>
+
+            <span class="rating">
+
+                ⭐ 4.9 (124 Review)
+
+            </span>
+
+        </div>
+
+        <h1>
+
+            Kos Eksklusif Tebet Raya - Tipe A
+
+        </h1>
+
+        <div class="alamat">
+
+            📍 Jl. Tebet Raya No.45,
+            Tebet Timur,
+            Jakarta Selatan
+
+        </div>
+
+        <h2>
+
+            Deskripsi Kos
+
+        </h2>
+
+        <p>
+
+            Nikmati hunian eksklusif
+            di jantung Jakarta Selatan.
+
+            Kos ini menawarkan desain
+            interior modern minimalis,
+            fasilitas lengkap,
+            keamanan 24 jam,
+            serta lokasi strategis
+            dekat kampus dan pusat kota.
+
+        </p>
+
+    </div>
+
+</div>
+
+{% endblock %}

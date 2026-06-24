@@ -1,15 +1,11 @@
--- ==========================================================
--- DATABASE: findyourkost_test (VERSI FINAL & LENGKAP)
--- Platform: SaaS Marketplace Kos & Property Management
--- ==========================================================
+CREATE DATABASE IF NOT EXISTS `findyourkost`;
+
+USE `findyourkost`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
-
-CREATE DATABASE IF NOT EXISTS `findyourkost_test`;
-USE `findyourkost_test`;
 
 -- --------------------------------------------------------
 -- 1. TABEL PENGGUNA (Aktor Sistem)
@@ -110,26 +106,6 @@ CREATE TABLE `pembayaran` (
   `status_pembayaran` enum('pending','success','failed','expired') DEFAULT 'pending',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`booking_id`) REFERENCES `booking` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
--- 7. TABEL ESCROW (Manajemen Dana DP & Komisi)
--- --------------------------------------------------------
-CREATE TABLE `escrow` (
-  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `booking_id` int NOT NULL,
-  `admin_id` int DEFAULT NULL,
-  `rekening_tujuan_id` int DEFAULT NULL,
-  `jumlah_dp` decimal(12,2) DEFAULT NULL,
-  `potongan_komisi` decimal(12,2) DEFAULT '0.00',
-  `nominal_bersih` decimal(12,2) DEFAULT NULL,
-  `status` enum('ditahan','released','refund') DEFAULT 'ditahan',
-  `bukti_transfer` varchar(255) DEFAULT NULL,
-  `tanggal_release` datetime DEFAULT NULL,
-  `tanggal_refund` datetime DEFAULT NULL,
-  FOREIGN KEY (`booking_id`) REFERENCES `booking` (`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`),
-  FOREIGN KEY (`rekening_tujuan_id`) REFERENCES `rekening_bank` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -255,9 +231,6 @@ CREATE TABLE `verifikasi_kost` (
   FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-SET FOREIGN_KEY_CHECKS = 1;
-COMMIT;
-
 -- --------------------------------------------------------
 --  16. PASSWORD RESET TOKEN
 -- --------------------------------------------------------
@@ -280,3 +253,26 @@ CREATE TABLE password_reset_tokens (
     REFERENCES users(id)
     ON DELETE CASCADE
 );
+
+-- --------------------------------------------------------
+-- 7. TABEL ESCROW (Manajemen Dana DP & Komisi)
+-- --------------------------------------------------------
+CREATE TABLE `escrow` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` int NOT NULL,
+  `admin_id` int DEFAULT NULL,
+  `rekening_tujuan_id` int DEFAULT NULL,
+  `jumlah_dp` decimal(12,2) DEFAULT NULL,
+  `potongan_komisi` decimal(12,2) DEFAULT '0.00',
+  `nominal_bersih` decimal(12,2) DEFAULT NULL,
+  `status` enum('ditahan','released','refund') DEFAULT 'ditahan',
+  `bukti_transfer` varchar(255) DEFAULT NULL,
+  `tanggal_release` datetime DEFAULT NULL,
+  `tanggal_refund` datetime DEFAULT NULL,
+  FOREIGN KEY (`booking_id`) REFERENCES `booking` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`rekening_tujuan_id`) REFERENCES `rekening_bank` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
+COMMIT;

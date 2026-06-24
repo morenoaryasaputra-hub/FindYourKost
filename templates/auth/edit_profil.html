@@ -37,10 +37,7 @@ Edit Profil
 
                         <img
                             id="previewFoto"
-                            src="{{ url_for(
-                                'static',
-                                filename='uploads/' + user[8]
-                            ) }}"
+                            src="{{ user[8] }}"
                             class="profile-photo">
 
                     {% else %}

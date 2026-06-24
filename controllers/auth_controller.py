@@ -8,17 +8,16 @@ from flask import session
 
 from datetime import datetime
 from datetime import timedelta
-from flask_mail import Message
 
-import secrets
-
+from resend import Emails
 import os
-from werkzeug.utils import secure_filename
+import secrets
+import cloudinary.uploader
 
-from extensions import mysql
+from extensions import get_db
+
 from extensions import bcrypt
 from extensions import oauth
-from extensions import mail
 
 auth_bp = Blueprint(
     "auth",
@@ -60,7 +59,9 @@ def register():
 
             return redirect("/register")
 
-        cursor = mysql.connection.cursor()
+        conn = get_db()
+
+        cursor = conn.cursor()
 
         cursor.execute(
             """
@@ -76,6 +77,7 @@ def register():
         if existing_user:
 
             cursor.close()
+            conn.close()
 
             flash(
                 "Email sudah digunakan",
@@ -113,11 +115,12 @@ def register():
             )
         )
 
-        mysql.connection.commit()
+        conn.commit()
 
         user_id = cursor.lastrowid
 
         cursor.close()
+        conn.close()
 
         session["user_id"] = user_id
         session["nama"] = nama
@@ -152,7 +155,9 @@ def login():
 
         password = request.form["password"]
 
-        cursor = mysql.connection.cursor()
+        conn = get_db()
+
+        cursor = conn.cursor()
 
         cursor.execute(
             """
@@ -173,6 +178,7 @@ def login():
         user = cursor.fetchone()
 
         cursor.close()
+        conn.close()
 
         if not user:
 
@@ -213,7 +219,7 @@ def login():
 
 @auth_bp.route(
     "/lupa-password",
-    methods=["GET","POST"]
+    methods=["GET", "POST"]
 )
 def lupa_password():
 
@@ -221,13 +227,15 @@ def lupa_password():
 
         email = request.form["email"]
 
-        cursor = mysql.connection.cursor()
+        conn = get_db()
+
+        cursor = conn.cursor()
 
         cursor.execute(
             """
             SELECT id
             FROM users
-            WHERE email=%s
+            WHERE email = %s
             """,
             (email,)
         )
@@ -269,35 +277,59 @@ def lupa_password():
                 )
             )
 
-            mysql.connection.commit()
+            conn.commit()
 
             reset_link = (
                 f"http://127.0.0.1:5000"
                 f"/reset-password/{token}"
             )
 
-            msg = Message(
-                "Reset Password FindYourKost",
-                recipients=[email]
-            )
+            try:
 
-            msg.body = f"""
-Halo,
+                Emails.send({
 
-Klik link berikut untuk
-mengatur ulang password:
+                    "from": os.getenv(
+                        "EMAIL_FROM"
+                    ),
 
-{reset_link}
+                    "to": [
+                        "morenoaryasaputra@gmail.com"
+                    ],
 
-Link berlaku selama 1 jam.
+                    "subject":
+                    "Reset Password FindYourKost",
 
-Jika Anda tidak meminta
-reset password, abaikan email ini.
-"""
+                    "html": f"""
+                    <h2>Reset Password</h2>
 
-            mail.send(msg)
+                    <p>
+                        Klik tombol berikut
+                        untuk reset password:
+                    </p>
+
+                    <p>
+                        <a href="{reset_link}">
+                            Reset Password
+                        </a>
+                    </p>
+
+                    <p>
+                        Link berlaku selama
+                        1 jam.
+                    </p>
+                    """
+                })
+
+            except Exception as e:
+
+                print(
+                    "RESEND ERROR:",
+                    e
+                )
 
         cursor.close()
+
+        conn.close()
 
         flash(
             "Jika email terdaftar, tautan reset password telah dikirim.",
@@ -318,7 +350,8 @@ reset password, abaikan email ini.
 )
 def reset_password(token):
 
-    cursor = mysql.connection.cursor()
+    conn = get_db()
+    cursor = conn.cursor()
 
     cursor.execute(
         """
@@ -338,18 +371,21 @@ def reset_password(token):
     if not token_data:
 
         cursor.close()
+        conn.close()
 
         return "Token tidak valid"
 
     if token_data[3] == 1:
 
         cursor.close()
+        conn.close()
 
         return "Token sudah digunakan"
 
     if token_data[2] < datetime.now():
 
         cursor.close()
+        conn.close()
 
         return "Token sudah kadaluarsa"
 
@@ -371,6 +407,7 @@ def reset_password(token):
             )
 
             cursor.close()
+            conn.close()
 
             return redirect(
                 request.url
@@ -405,9 +442,10 @@ def reset_password(token):
             )
         )
 
-        mysql.connection.commit()
+        conn.commit()
 
         cursor.close()
+        conn.close()
 
         flash(
             "Password berhasil diubah. Silakan login.",
@@ -419,6 +457,7 @@ def reset_password(token):
         )
 
     cursor.close()
+    conn.close()
 
     return render_template(
         "auth/reset_password.html",
@@ -462,7 +501,8 @@ def google_callback():
 
     nama = user_info["name"]
 
-    cursor = mysql.connection.cursor()
+    conn = get_db()
+    cursor = conn.cursor()
 
     cursor.execute(
         """
@@ -506,7 +546,7 @@ def google_callback():
             )
         )
 
-        mysql.connection.commit()
+        conn.commit()
 
         user_id = cursor.lastrowid
 
@@ -518,6 +558,7 @@ def google_callback():
         session["foto_profil"] = None
 
         cursor.close()
+        conn.close()
 
         return redirect("/profil")
 
@@ -531,6 +572,7 @@ def google_callback():
     session["foto_profil"] = user[5]
 
     cursor.close()
+    conn.close()
 
     if not user[4]:
 
@@ -548,7 +590,8 @@ def profil():
 
         return redirect("/login")
 
-    cursor = mysql.connection.cursor()
+    conn = get_db()
+    cursor = conn.cursor()
 
     if request.method == "POST":
 
@@ -580,30 +623,18 @@ def profil():
             "foto_profil"
         )
 
-        nama_file = None
+        foto_url = None
 
         if foto and foto.filename != "":
 
-            nama_file = secure_filename(
-                foto.filename
+            result = cloudinary.uploader.upload(
+                foto,
+                folder="findyourkost/profile"
             )
 
-            upload_folder = os.path.join(
-                "static",
-                "uploads"
-            )
-
-            os.makedirs(
-                upload_folder,
-                exist_ok=True
-            )
-
-            foto.save(
-                os.path.join(
-                    upload_folder,
-                    nama_file
-                )
-            )
+            foto_url = result[
+                "secure_url"
+            ]
 
         is_profile_complete = all([
             nama,
@@ -614,9 +645,9 @@ def profil():
             alamat
         ])
 
-        if nama_file:
+        if foto_url:
 
-            session["foto_profil"] = nama_file
+            session["foto_profil"] = foto_url
 
             cursor.execute(
                 """
@@ -643,7 +674,7 @@ def profil():
                     pekerjaan,
                     instansi,
                     alamat,
-                    nama_file,
+                    foto_url,
                     is_profile_complete,
                     session["user_id"]
                 )
@@ -680,7 +711,7 @@ def profil():
                 )
             )
 
-        mysql.connection.commit()
+        conn.commit()
 
         session["nama"] = nama
 
@@ -694,6 +725,7 @@ def profil():
         )
 
         cursor.close()
+        conn.close()
 
         return redirect("/profil")
 
@@ -723,11 +755,13 @@ def profil():
     )
 
     user = cursor.fetchone()
-    
+
     if user:
+
         session["foto_profil"] = user[8]
-    
+
     cursor.close()
+    conn.close()
 
     return render_template(
         "auth/edit_profil.html",
@@ -741,7 +775,8 @@ def akun():
 
         return redirect("/login")
 
-    cursor = mysql.connection.cursor()
+    conn = get_db()
+    cursor = conn.cursor()
 
     cursor.execute(
         """
@@ -767,12 +802,37 @@ def akun():
     user = cursor.fetchone()
 
     cursor.close()
+    conn.close()
 
     return render_template(
         "auth/akun.html",
         user=user
     )
 
+@auth_bp.route("/test-resend")
+def test_resend():
+
+    try:
+
+        email = Emails.send({
+
+            "from": os.getenv("EMAIL_FROM"),
+
+            "to": ["emailkamu@gmail.com"],
+
+            "subject": "Test Resend",
+
+            "html": """
+            <h2>FindYourKost</h2>
+            <p>Email berhasil dikirim dari Resend.</p>
+            """
+        })
+
+        return str(email)
+
+    except Exception as e:
+
+        return str(e)
 
 @auth_bp.route("/logout")
 def logout():

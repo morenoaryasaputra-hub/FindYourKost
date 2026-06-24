@@ -1,0 +1,319 @@
+body{
+
+    background:#f5f7fb;
+}
+
+.detail-container{
+
+    max-width:1200px;
+
+    margin:25px auto;
+
+    padding:0 20px;
+}
+
+.breadcrumb{
+
+    color:#666;
+
+    font-size:14px;
+
+    margin-bottom:20px;
+}
+
+.breadcrumb span{
+
+    color:#2563eb;
+}
+
+.detail-top{
+
+    display:flex;
+
+    gap:20px;
+
+    align-items:flex-start;
+}
+
+.gallery-section{
+
+    flex:1;
+
+    display:flex;
+
+    gap:10px;
+}
+
+.main-photo{
+
+    flex:2;
+}
+
+.main-photo img{
+
+    width:100%;
+
+    height:500px;
+
+    object-fit:cover;
+
+    border-radius:18px;
+}
+
+.side-photos{
+
+    flex:1;
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(
+        2,
+        1fr
+    );
+
+    gap:10px;
+}
+
+.side-photos img{
+
+    width:100%;
+
+    height:245px;
+
+    object-fit:cover;
+
+    border-radius:18px;
+}
+
+.more-photo{
+
+    position:relative;
+}
+
+.overlay{
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+    rgba(0,0,0,.45);
+
+    color:white;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border-radius:18px;
+
+    font-size:22px;
+
+    font-weight:600;
+}
+
+.booking-card{
+
+    width:300px;
+
+    background:white;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:18px;
+
+    padding:20px;
+
+    position:sticky;
+
+    top:90px;
+}
+
+.price-title{
+
+    color:#666;
+
+    margin-bottom:8px;
+}
+
+.price{
+
+    color:#2563eb;
+
+    font-size:34px;
+
+    font-weight:700;
+
+    margin-bottom:15px;
+}
+
+.price span{
+
+    font-size:16px;
+
+    color:#666;
+}
+
+.owner-box{
+
+    display:flex;
+
+    gap:12px;
+
+    margin:20px 0;
+}
+
+.owner-box img{
+
+    width:55px;
+
+    height:55px;
+
+    border-radius:50%;
+}
+
+.owner-box p{
+
+    color:#666;
+
+    font-size:13px;
+}
+
+.booking-btn{
+
+    display:block;
+
+    text-align:center;
+
+    text-decoration:none;
+
+    background:#2563eb;
+
+    color:white;
+
+    padding:14px;
+
+    border-radius:12px;
+
+    margin-bottom:12px;
+}
+
+.chat-btn{
+
+    display:block;
+
+    text-align:center;
+
+    text-decoration:none;
+
+    border:2px solid #2563eb;
+
+    color:#2563eb;
+
+    padding:14px;
+
+    border-radius:12px;
+
+    margin-bottom:20px;
+}
+
+.benefit-list{
+
+    padding-left:18px;
+
+    color:#555;
+}
+
+.benefit-list li{
+
+    margin-bottom:8px;
+}
+
+.info-section{
+
+    margin-top:30px;
+}
+
+.tags{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-bottom:15px;
+}
+
+.premium{
+
+    background:#a84d00;
+
+    color:white;
+
+    padding:6px 12px;
+
+    border-radius:20px;
+
+    font-size:12px;
+}
+
+.available{
+
+    background:#dcfce7;
+
+    color:#16a34a;
+
+    padding:6px 12px;
+
+    border-radius:20px;
+
+    font-size:12px;
+}
+
+.rating{
+
+    color:#2563eb;
+
+    font-size:14px;
+}
+
+.info-section h1{
+
+    margin-bottom:12px;
+}
+
+.alamat{
+
+    color:#666;
+
+    margin-bottom:30px;
+}
+
+.info-section h2{
+
+    margin-bottom:12px;
+}
+
+.info-section p{
+
+    line-height:1.8;
+
+    color:#444;
+}
+
+@media(max-width:992px){
+
+    .detail-top{
+
+        flex-direction:column;
+    }
+
+    .booking-card{
+
+        width:100%;
+
+        position:static;
+    }
+}

@@ -2,18 +2,33 @@ from flask import Flask
 
 from config import Config
 
-from extensions import mysql
+import cloudinary
 from extensions import bcrypt
 from extensions import oauth
-from extensions import mail
 
 app = Flask(__name__)
 
+
 app.config.from_object(Config)
 
-mysql.init_app(app)
+app.secret_key = app.config[
+    "SECRET_KEY"
+]
+
+cloudinary.config(
+    cloud_name=app.config[
+        "CLOUDINARY_CLOUD_NAME"
+    ],
+    api_key=app.config[
+        "CLOUDINARY_API_KEY"
+    ],
+    api_secret=app.config[
+        "CLOUDINARY_API_SECRET"
+    ],
+    secure=True
+)
+
 bcrypt.init_app(app)
-mail.init_app(app)
 oauth.init_app(app)
 
 oauth.register(

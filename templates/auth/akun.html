@@ -46,11 +46,8 @@ href="{{ url_for(
                 {% if user[9] %}
 
                     <img
-                    src="{{ url_for(
-                        'static',
-                        filename='uploads/' + user[9]
-                    ) }}"
-                    class="avatar-image">
+                        src="{{ user[9] }}"
+                        alt="Avatar">
 
                 {% else %}
 

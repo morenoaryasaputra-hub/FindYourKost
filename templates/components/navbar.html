@@ -23,7 +23,7 @@
         </a>
 
         <a
-            href="#"
+            href="/cari-kos"
             class="nav-link">
 
             Cari Kos
@@ -73,11 +73,8 @@
                 {% if session.get('foto_profil') %}
 
                     <img
-                        src="{{ url_for(
-                            'static',
-                            filename='uploads/' + session['foto_profil']
-                        ) }}"
-                        class="navbar-avatar">
+                        src="{{ session['foto_profil'] }}"
+                        alt="Avatar">
 
                 {% else %}
 

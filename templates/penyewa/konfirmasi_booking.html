@@ -1,0 +1,448 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Konfirmasi Booking
+{% endblock %}
+
+{% block css %}
+
+<link
+rel="stylesheet"
+href="{{ url_for(
+    'static',
+    filename='css/konfirmasi_booking.css'
+) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="booking-container">
+
+    <div class="breadcrumb">
+
+        <a href="/cari-kos">
+
+            Cari Kos
+
+        </a>
+
+        >
+
+        <a href="/detail-kost">
+
+            Detail Kos
+
+        </a>
+
+        >
+
+        <span>
+
+            Konfirmasi Booking
+
+        </span>
+
+    </div>
+
+    <h1>
+
+        Konfirmasi Booking
+
+    </h1>
+
+    <div class="booking-layout">
+
+        <div class="booking-left">
+
+            <!-- INFORMASI PENYEWA -->
+
+            <div class="card">
+
+                <h2>
+
+                    👤 Informasi Penyewa
+
+                </h2>
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>
+
+                            Nama Lengkap
+
+                        </label>
+
+                        <input
+                        type="text"
+                        value="Moreno Arya Saputra">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>
+
+                            Nomor Telepon
+
+                        </label>
+
+                        <input
+                        type="text"
+                        value="+62 812 3456 7890">
+
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>
+
+                        Email
+
+                    </label>
+
+                    <input
+                    type="email"
+                    value="moreno@example.com">
+
+                </div>
+
+            </div>
+
+            <!-- VERIFIKASI -->
+
+            <div class="card">
+
+                <div class="section-header">
+
+                    <h2>
+
+                        🛡️ Verifikasi Identitas
+
+                    </h2>
+
+                    <span class="status-upload">
+
+                        Belum Diunggah
+
+                    </span>
+
+                </div>
+
+                <div class="ktp-layout">
+
+                    <div class="upload-box">
+
+                        <div class="upload-icon">
+
+                            ☁️
+
+                        </div>
+
+                        <h3>
+
+                            Upload Foto KTP
+
+                        </h3>
+
+                        <p>
+
+                            JPG, PNG maks 5MB
+
+                        </p>
+
+                        <input
+                        type="file"
+                        id="ktpFile"
+                        accept="image/*"
+                        hidden>
+
+                        <label
+                        for="ktpFile"
+                        class="upload-btn">
+
+                            Pilih File
+
+                        </label>
+
+                        <small
+                        id="fileName">
+
+                            Belum ada file dipilih
+
+                        </small>
+
+                    </div>
+
+                    <div class="preview-box">
+
+                        <img
+                        id="previewImage"
+                        src=""
+                        style="display:none;">
+
+                        <span
+                        id="previewText">
+
+                            Preview KTP
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="note">
+
+                    Foto KTP digunakan
+                    untuk verifikasi identitas
+                    penyewa dan hanya dapat
+                    diakses administrator
+                    serta pemilik kos.
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- SIDEBAR -->
+
+        <div class="booking-right">
+
+            <div class="summary-card">
+
+                <img
+                src="https://placehold.co/500x250">
+
+                <div class="summary-content">
+
+                    <span class="premium">
+
+                        Premium
+
+                    </span>
+
+                    <h3>
+
+                        Kos Eksklusif Mentari
+
+                    </h3>
+
+                    <p>
+
+                        👤 Ibu H. Sudarsono
+
+                    </p>
+
+                    <hr>
+
+                    <div class="row">
+
+                        <span>
+
+                            Tanggal Masuk
+
+                        </span>
+
+                        <strong>
+
+                            15 Nov 2026
+
+                        </strong>
+
+                    </div>
+
+                    <div class="row">
+
+                        <span>
+
+                            Durasi
+
+                        </span>
+
+                        <strong>
+
+                            1 Bulan
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="payment-card">
+
+                <h2>
+
+                    Ringkasan Pembayaran
+
+                </h2>
+
+                <div class="row">
+
+                    <span>
+
+                        Harga Kos
+
+                    </span>
+
+                    <strong>
+
+                        Rp1.500.000
+
+                    </strong>
+
+                </div>
+
+                <div class="row">
+
+                    <span>
+
+                        Durasi
+
+                    </span>
+
+                    <strong>
+
+                        1 Bulan
+
+                    </strong>
+
+                </div>
+
+                <hr>
+
+                <div class="row total">
+
+                    <span>
+
+                        Total Biaya
+
+                    </span>
+
+                    <strong>
+
+                        Rp1.500.000
+
+                    </strong>
+
+                </div>
+
+                <div class="dp-box">
+
+                    <div>
+
+                        <div>
+
+                            DP 30%
+
+                        </div>
+
+                        <small>
+
+                            Sisa Pembayaran
+
+                            Rp1.050.000
+
+                        </small>
+
+                    </div>
+
+                    <strong>
+
+                        Rp450.000
+
+                    </strong>
+
+                </div>
+
+                <a
+                href="/pembayaran"
+                class="payment-btn">
+
+                    Lanjut ke Pembayaran
+
+                    →
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const ktpFile =
+    document.getElementById(
+        "ktpFile"
+    );
+
+const fileName =
+    document.getElementById(
+        "fileName"
+    );
+
+const previewImage =
+    document.getElementById(
+        "previewImage"
+    );
+
+const previewText =
+    document.getElementById(
+        "previewText"
+    );
+
+ktpFile.addEventListener(
+    "change",
+    function(){
+
+        if(
+            this.files.length
+        ){
+
+            const file =
+                this.files[0];
+
+            fileName.textContent =
+                file.name;
+
+            const reader =
+                new FileReader();
+
+            reader.onload =
+            function(e){
+
+                previewImage.src =
+                    e.target.result;
+
+                previewImage.style.display =
+                    "block";
+
+                previewText.style.display =
+                    "none";
+
+            };
+
+            reader.readAsDataURL(
+                file
+            );
+
+        }
+
+    }
+);
+
+</script>
+
+{% endblock %}

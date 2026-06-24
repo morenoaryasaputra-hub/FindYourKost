@@ -398,7 +398,7 @@ textarea{
     gap:30px;
 }
 
-.avatar-besar{
+.avatar-besar img{
     width:120px;
     height:120px;
     border-radius:50%;
@@ -410,6 +410,8 @@ textarea{
     width:100%;
     height:100%;
     object-fit:cover;
+    object-position:center;
+    border-radius:50%;
     display:block;
 }
 

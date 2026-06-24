@@ -3,7 +3,7 @@ from flask import render_template
 from flask import session
 from flask import redirect
 
-from extensions import mysql
+from extensions import get_db
 
 penyewa_bp = Blueprint(
     "penyewa",
@@ -16,11 +16,12 @@ def beranda():
     if "user_id" not in session:
         return redirect("/login")
 
-    cursor = mysql.connection.cursor()
+    conn = get_db()
+
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT
-
             id,
             nama_kost,
             alamat,
@@ -29,13 +30,9 @@ def beranda():
             foto_thumbnail,
             status_verifikasi,
             sisa_kamar
-
         FROM kost
-
         WHERE status_verifikasi = 1
-
         ORDER BY created_at DESC
-
         LIMIT 8
     """)
 
@@ -43,7 +40,37 @@ def beranda():
 
     cursor.close()
 
+    conn.close()
+
     return render_template(
         "penyewa/beranda.html",
         kost_list=kost_list
     )
+
+@penyewa_bp.route(
+    "/cari-kos"
+)
+def cari_kos():
+
+    return render_template(
+        "penyewa/cari_kos.html"
+    )
+
+@penyewa_bp.route(
+    "/detail-kost"
+)
+def detail_kost():
+
+    return render_template(
+        "penyewa/detail_kost.html"
+    )
+
+@penyewa_bp.route(
+    "/konfirmasi-booking"
+)
+def konfirmasi_booking():
+
+    return render_template(
+        "penyewa/konfirmasi_booking.html"
+    )
+

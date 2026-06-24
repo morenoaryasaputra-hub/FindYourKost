@@ -1,0 +1,356 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Cari Kos
+{% endblock %}
+
+{% block css %}
+
+<link
+rel="stylesheet"
+href="{{ url_for(
+    'static',
+    filename='css/cari_kos.css'
+) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="cari-kos-page">
+
+    <!-- SEARCH BAR -->
+
+    <div class="search-section">
+
+        <div class="search-box">
+
+            <span class="search-icon">
+
+                🔍
+
+            </span>
+
+            <input
+            type="text"
+            placeholder="Cari lokasi atau nama kos...">
+
+        </div>
+
+    </div>
+
+    <!-- FILTER ATAS -->
+
+    <div class="top-filter-bar">
+
+        <button class="filter-main-btn">
+
+            ☰ Filter
+
+        </button>
+
+        <button class="filter-chip">
+
+            Harga
+
+        </button>
+
+        <button class="filter-chip">
+
+            Gender
+
+        </button>
+
+        <button class="filter-chip">
+
+            Kampus
+
+        </button>
+
+        <button class="filter-chip">
+
+            Fasilitas
+
+        </button>
+
+        <div class="hasil-info">
+
+            ⓘ Ditemukan 124 properti di sekitar Anda
+
+        </div>
+
+    </div>
+
+    <div class="content-layout">
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar-filter">
+
+            <h2>
+
+                Filter Lanjutan
+
+            </h2>
+
+            <div class="filter-group">
+
+                <label>
+
+                    Rentang Harga (Bulanan)
+
+                </label>
+
+                <input
+                type="range">
+
+                <div class="price-range">
+
+                    <span>
+
+                        Rp 500rb
+
+                    </span>
+
+                    <span>
+
+                        Rp 5jt+
+
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="filter-group">
+
+                <label>
+
+                    Tipe Penghuni
+
+                </label>
+
+                <div class="gender-buttons">
+
+                    <button>
+
+                        Putra
+
+                    </button>
+
+                    <button class="active">
+
+                        Putri
+
+                    </button>
+
+                    <button>
+
+                        Campur
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="filter-group">
+
+                <label>
+
+                    Fasilitas Utama
+
+                </label>
+
+                <label>
+
+                    <input type="checkbox">
+
+                    AC
+
+                </label>
+
+                <label>
+
+                    <input
+                    type="checkbox"
+                    checked>
+
+                    Kamar Mandi Dalam
+
+                </label>
+
+                <label>
+
+                    <input type="checkbox">
+
+                    Wifi
+
+                </label>
+
+                <label>
+
+                    <input type="checkbox">
+
+                    Parkir Mobil
+
+                </label>
+
+            </div>
+
+            <div class="filter-group">
+
+                <label>
+
+                    Radius dari Kampus
+
+                </label>
+
+                <select>
+
+                    <option>
+                        < 1 KM
+                    </option>
+
+                    <option>
+                        < 3 KM
+                    </option>
+
+                    <option>
+                        < 5 KM
+                    </option>
+
+                </select>
+
+            </div>
+
+            <button class="apply-btn">
+
+                Terapkan Filter
+
+            </button>
+
+        </aside>
+
+        <!-- LISTING -->
+
+        <section class="listing-section">
+
+            <div class="listing-header">
+
+                <h2>
+
+                    Rekomendasi Kos di Salatiga
+
+                </h2>
+
+                <div class="sorting">
+
+                    Urutkan:
+
+                    <select>
+
+                        <option>
+                            Paling Populer
+                        </option>
+
+                        <option>
+                            Termurah
+                        </option>
+
+                        <option>
+                            Terdekat
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="kost-grid">
+
+                {% for i in range(6) %}
+
+                <div class="kost-card">
+
+                    <div class="image-wrapper">
+
+                        <img
+                        src="https://placehold.co/500x300">
+
+                        <div class="wishlist-btn">
+
+                            ♡
+
+                        </div>
+
+                        <div class="premium-badge">
+
+                            Premium
+
+                        </div>
+
+                    </div>
+
+                    <div class="kost-body">
+
+                        <div class="price">
+
+                            Rp 1.500.000
+
+                            <span>
+
+                                / bln
+
+                            </span>
+
+                        </div>
+
+                        <div class="gender-tag">
+
+                            PUTRI
+
+                        </div>
+
+                        <h3>
+
+                            Kos Melati Salatiga
+
+                        </h3>
+
+                        <div class="alamat">
+
+                            📍 Sidorejo, Salatiga
+
+                        </div>
+
+                        <div class="rating">
+
+                            ⭐ 4.8
+
+                        </div>
+
+                        <a
+                        href="/detail-kost"
+                        class="detail-btn">
+
+                            Detail
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+    </div>
+
+</div>
+
+{% endblock %}
