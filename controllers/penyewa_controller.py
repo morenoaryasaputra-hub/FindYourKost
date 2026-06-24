@@ -10,11 +10,29 @@ penyewa_bp = Blueprint(
     __name__
 )
 
-@penyewa_bp.route("/")
-def beranda():
+# ====================================
+# PROTEKSI SEMUA HALAMAN PENYEWA
+# ====================================
+
+@penyewa_bp.before_request
+def cek_penyewa():
 
     if "user_id" not in session:
+
         return redirect("/login")
+
+    if session.get("role") != "penyewa":
+
+        return redirect(
+            "/pemilik/dashboard"
+        )
+
+# ====================================
+# BERANDA
+# ====================================
+
+@penyewa_bp.route("/")
+def beranda():
 
     conn = get_db()
 
@@ -39,13 +57,16 @@ def beranda():
     kost_list = cursor.fetchall()
 
     cursor.close()
-
     conn.close()
 
     return render_template(
         "penyewa/beranda.html",
         kost_list=kost_list
     )
+
+# ====================================
+# CARI KOS
+# ====================================
 
 @penyewa_bp.route(
     "/cari-kos"
@@ -56,6 +77,10 @@ def cari_kos():
         "penyewa/cari_kos.html"
     )
 
+# ====================================
+# DETAIL KOS
+# ====================================
+
 @penyewa_bp.route(
     "/detail-kost"
 )
@@ -65,6 +90,10 @@ def detail_kost():
         "penyewa/detail_kost.html"
     )
 
+# ====================================
+# KONFIRMASI BOOKING
+# ====================================
+
 @penyewa_bp.route(
     "/konfirmasi-booking"
 )
@@ -73,4 +102,3 @@ def konfirmasi_booking():
     return render_template(
         "penyewa/konfirmasi_booking.html"
     )
-

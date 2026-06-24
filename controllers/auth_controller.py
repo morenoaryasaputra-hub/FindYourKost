@@ -32,6 +32,12 @@ def register():
 
     if "user_id" in session:
 
+        if session.get("role") == "pemilik":
+
+            return redirect(
+                "/pemilik/dashboard"
+            )
+
         return redirect("/")
 
     if request.method == "POST":
@@ -127,13 +133,22 @@ def register():
         session["email"] = email
         session["role"] = role
         session["is_profile_complete"] = False
+        session["foto_profil"] = None
 
         flash(
             "Registrasi berhasil",
             "success"
         )
 
-        return redirect("/profil")
+        if role == "pemilik":
+
+            return redirect(
+                "/pemilik/dashboard"
+            )
+
+        return redirect(
+            "/profil"
+        )
 
     return render_template(
         "auth/register.html"
@@ -211,6 +226,12 @@ def login():
         )
         session["foto_profil"] = user[6]
 
+        if user[4] == "pemilik":
+
+            return redirect(
+                "/pemilik/dashboard"
+            )
+
         return redirect("/")
 
     return render_template(
@@ -280,8 +301,9 @@ def lupa_password():
             conn.commit()
 
             reset_link = (
-                f"http://127.0.0.1:5000"
-                f"/reset-password/{token}"
+                request.host_url.rstrip("/")
+                   +
+                    f"/reset-password/{token}"
             )
 
             try:
@@ -577,6 +599,12 @@ def google_callback():
     if not user[4]:
 
         return redirect("/profil")
+    
+    if user[3] == "pemilik":
+
+        return redirect(
+            "/pemilik"
+        )
 
     return redirect("/")
 

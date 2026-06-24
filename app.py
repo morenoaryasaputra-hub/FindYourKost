@@ -53,9 +53,11 @@ oauth.register(
 
 from controllers.auth_controller import auth_bp
 from controllers.penyewa_controller import penyewa_bp
+from controllers.pemilik_controller import pemilik_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(penyewa_bp)
+app.register_blueprint(pemilik_bp)
 
 if __name__ == "__main__":
 

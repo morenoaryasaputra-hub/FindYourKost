@@ -1,0 +1,31 @@
+{% extends 'pemilik/base.html' %}
+{% block content %}
+<h2>Data Properti Kos</h2>
+<a href="{{ url_for('pemilik.tambah_kost') }}" class="btn btn-primary">Tambah Kos Baru</a>
+
+<table class="table mt-3">
+    <thead>
+        <tr>
+            <th>Nama Kos</th>
+            <th>Harga</th>
+            <th>Sisa Kamar</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for k in list_kost %}
+        <tr>
+            <td>{{ k.nama_kost }}</td>
+            <td>Rp {{ "{:,.0f}".format(k.harga) }}</td>
+            <td>{{ k.sisa_kamar }}</td>
+            <td>
+                <a href="{{ url_for('pemilik.edit_kost', id=k.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                <form action="{{ url_for('pemilik.hapus_kost', id=k.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Hapus kos ini?')">Hapus</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'pemilik/base.html' %}
+
+{% block title %}Dashboard - FindYourKost{% endblock %}
+{% block page_header %}Dashboard Hari Ini{% endblock %}
+{% block page_desc %}Pantau ringkasan performa properti Anda bulan ini.{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon icon-blue"><i class="fa-solid fa-building"></i></div>
+        <div class="stat-title">Total Properti</div>
+        <div class="stat-value">24</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-green"><i class="fa-solid fa-door-open"></i></div>
+        <div class="stat-title">Kamar Tersedia</div>
+        <div class="stat-value">15</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-orange"><i class="fa-regular fa-calendar-check"></i></div>
+        <div class="stat-title">Booking Aktif</div>
+        <div class="stat-value">142</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-blue"><i class="fa-solid fa-wallet"></i></div>
+        <div class="stat-title">Pendapatan (Bulan Ini)</div>
+        <div class="stat-value">Rp 82.4M</div>
+    </div>
+</div>
+
+<div class="bottom-grid">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">Analitik Pendapatan</div>
+                <div class="card-subtitle">Januari - Juni 2026</div>
+            </div>
+        </div>
+        <canvas id="revenueChart" height="120"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Aktivitas Terbaru</div>
+        </div>
+        <div class="activity-list">
+            <div class="activity-item">
+                <div class="act-icon icon-green"><i class="fa-solid fa-check"></i></div>
+                <div class="act-text">
+                    <h4>Pembayaran DP Berhasil</h4>
+                    <p>Anisa membayar sewa Kos Mentari.</p>
+                </div>
+            </div>
+        </div>
+        <button class="btn-outline">Lihat Semua</button>
+    </div>
+</div>
+{% endblock %}

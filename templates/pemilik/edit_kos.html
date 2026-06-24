@@ -1,0 +1,20 @@
+{% extends 'pemilik/base.html' %}
+{% block content %}
+<h2>Edit Data Kos</h2>
+<form method="POST" class="mt-3">
+    <div class="mb-3">
+        <label>Nama Kos</label>
+        <input type="text" name="nama_kost" class="form-control" value="{{ kost.nama_kost }}" required>
+    </div>
+    <div class="mb-3">
+        <label>Harga</label>
+        <input type="number" name="harga" class="form-control" value="{{ kost.harga }}" required>
+    </div>
+    <div class="mb-3">
+        <label>Sisa Kamar</label>
+        <input type="number" name="sisa_kamar" class="form-control" value="{{ kost.sisa_kamar }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Data</button>
+    <a href="{{ url_for('pemilik.data_kos') }}" class="btn btn-secondary">Batal</a>
+</form>
+{% endblock %}

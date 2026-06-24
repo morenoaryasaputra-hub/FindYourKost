@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+    <title>
+
+        {% block title %}
+            FindYourKost Owner
+        {% endblock %}
+
+    </title>
+
+    <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/pemilik.css'
+    ) }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body class="admin-body">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+
+            <h2>
+
+                FindYourKost
+
+            </h2>
+
+        </div>
+
+        <ul class="sidebar-menu">
+
+            <li>
+
+                <a
+                href="{{ url_for('pemilik.dashboard') }}"
+                class="{% if request.endpoint == 'pemilik.dashboard' %}active{% endif %}">
+
+                    <i class="fa-solid fa-chart-pie"></i>
+
+                    Dashboard
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a
+                href="{{ url_for('pemilik.data_kos') }}"
+                class="{% if request.endpoint == 'pemilik.data_kos' %}active{% endif %}">
+
+                    <i class="fa-solid fa-building"></i>
+
+                    Data Kos
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a href="#">
+
+                    <i class="fa-solid fa-users"></i>
+
+                    Data Penyewa
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a href="#">
+
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+
+                    Data Tagihan
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a href="#">
+
+                    <i class="fa-solid fa-chart-line"></i>
+
+                    Laporan Keuangan
+
+                </a>
+
+            </li>
+
+            <li>
+
+                <a href="#">
+
+                    <i class="fa-solid fa-gear"></i>
+
+                    Pengaturan Akun
+
+                </a>
+
+            </li>
+
+        </ul>
+
+        <div class="sidebar-footer">
+
+            <a
+            href="{{ url_for('auth.logout') }}"
+            class="logout-btn">
+
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
+                Keluar
+
+            </a>
+
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div class="page-title">
+
+                <h1>
+
+                    {% block page_header %}
+                        Dashboard
+                    {% endblock %}
+
+                </h1>
+
+                <p>
+
+                    {% block page_desc %}
+                        Selamat datang di panel kontrol Anda.
+                    {% endblock %}
+
+                </p>
+
+            </div>
+
+            <div class="user-profile-top">
+
+                <div
+                class="nav-icons"
+                style="margin-right:15px;">
+
+                    <i
+                    class="fa-regular fa-bell"
+                    style="
+                        font-size:18px;
+                        color:#4b5563;
+                        cursor:pointer;
+                    ">
+                    </i>
+
+                </div>
+
+                <div class="avatar">
+
+                    {{ session["nama"][0]|upper }}
+
+                </div>
+
+                <span
+                style="
+                    font-weight:500;
+                    font-size:14px;
+                    color:#374151;
+                ">
+
+                    {{ session["nama"] }}
+
+                </span>
+
+            </div>
+
+        </header>
+
+        <div class="content-area">
+
+            {% block content %}
+            {% endblock %}
+
+        </div>
+
+    </main>
+
+    <script
+    src="{{ url_for(
+        'static',
+        filename='js/script.js'
+    ) }}">
+    </script>
+
+</body>
+</html>
