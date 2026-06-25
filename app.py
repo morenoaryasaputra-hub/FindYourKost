@@ -1,10 +1,11 @@
 from flask import Flask
 
 from config import Config
-
+import socket_events
 import cloudinary
 from extensions import bcrypt
 from extensions import oauth
+from extensions import socketio
 
 app = Flask(__name__)
 
@@ -30,6 +31,7 @@ cloudinary.config(
 
 bcrypt.init_app(app)
 oauth.init_app(app)
+socketio.init_app(app)
 
 oauth.register(
     name="google",
@@ -54,11 +56,13 @@ oauth.register(
 from controllers.auth_controller import auth_bp
 from controllers.penyewa_controller import penyewa_bp
 from controllers.pemilik_controller import pemilik_bp
+from controllers.chat_controller import chat_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(penyewa_bp)
 app.register_blueprint(pemilik_bp)
+app.register_blueprint(chat_bp)
 
 if __name__ == "__main__":
 
-    app.run(debug=True)
+    socketio.run(app, debug=True)

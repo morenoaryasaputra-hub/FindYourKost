@@ -1,0 +1,309 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Detail Booking
+{% endblock %}
+
+{% block css %}
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/detail_booking.css') }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="detail-booking-container">
+
+    <div class="detail-header">
+
+        <div>
+
+            <h1>Detail Booking</h1>
+
+            <p>
+
+                ID Booking :
+                <b>#TRX-{{ booking[0] }}</b>
+
+            </p>
+
+        </div>
+
+        <a href="#"
+        class="invoice-btn">
+
+            <i class="fa-solid fa-download"></i>
+
+            Unduh Invoice
+
+        </a>
+
+    </div>
+
+    <!-- Timeline -->
+
+    <div class="timeline-card">
+
+        <div class="timeline">
+
+            <div class="step active">
+
+                <div class="circle">
+
+                    <i class="fa-solid fa-wallet"></i>
+
+                </div>
+
+                <span>Menunggu DP</span>
+
+            </div>
+
+            <div class="line"></div>
+
+            <div class="step {% if booking[5] in ['dp_dibayar','menunggu_konfirmasi','menunggu_pelunasan','aktif','selesai'] %}active{% endif %}">
+
+                <div class="circle">
+
+                    <i class="fa-solid fa-check"></i>
+
+                </div>
+
+                <span>DP Dibayar</span>
+
+            </div>
+
+            <div class="line"></div>
+
+            <div class="step {% if booking[5] in ['menunggu_konfirmasi','menunggu_pelunasan','aktif','selesai'] %}active{% endif %}">
+
+                <div class="circle">
+
+                    <i class="fa-solid fa-user-check"></i>
+
+                </div>
+
+                <span>Konfirmasi</span>
+
+            </div>
+
+            <div class="line"></div>
+
+            <div class="step {% if booking[5] in ['menunggu_pelunasan','aktif','selesai'] %}active{% endif %}">
+
+                <div class="circle">
+
+                    <i class="fa-solid fa-credit-card"></i>
+
+                </div>
+
+                <span>Pelunasan</span>
+
+            </div>
+
+            <div class="line"></div>
+
+            <div class="step {% if booking[5] in ['aktif','selesai'] %}active{% endif %}">
+
+                <div class="circle">
+
+                    <i class="fa-solid fa-house"></i>
+
+                </div>
+
+                <span>Aktif</span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="detail-grid">
+
+        <!-- kiri -->
+
+        <div>
+
+            <div class="payment-card">
+
+                <h3>
+
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+
+                    Rincian Pembayaran
+
+                </h3>
+
+                <div class="payment-row">
+
+                    <span>Total Kontrak</span>
+
+                    <b>
+
+                        Rp {{ "{:,.0f}".format(booking[4]) }}
+
+                    </b>
+
+                </div>
+
+                <div class="payment-row">
+
+                    <span>DP (30%)</span>
+
+                    <b class="green">
+
+                        Rp {{ "{:,.0f}".format(dp) }}
+
+                    </b>
+
+                </div>
+
+                <div class="payment-row total">
+
+                    <div>
+
+                        <strong>Sisa Pelunasan</strong>
+
+                    </div>
+
+                    <h2>
+
+                        Rp {{ "{:,.0f}".format(pelunasan) }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <div class="escrow-card">
+
+                <div class="escrow-icon">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                </div>
+
+                <div>
+
+                    <h4>
+
+                        Dana Aman di Escrow
+
+                    </h4>
+
+                    <p>
+
+                        Dana akan diteruskan kepada pemilik kos setelah proses check-in berhasil.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% if booking[5] == "menunggu_dp" %}
+
+            <a
+            href="/booking/{{ booking[0] }}/bayar-dp"
+            class="pay-btn">
+
+                Bayar DP
+
+            </a>
+
+            {% elif booking[5] == "menunggu_pelunasan" %}
+
+            <a
+            href="/booking/{{ booking[0] }}/pelunasan"
+            class="pay-btn">
+
+                Bayar Pelunasan
+
+            </a>
+
+            {% endif %}
+
+        </div>
+
+        <!-- kanan -->
+
+        <div class="kost-card">
+
+            <img
+            src="{{ booking[8] }}"
+            alt="{{ booking[6] }}">
+
+            <div class="kost-body">
+
+                <h2>
+
+                    {{ booking[6] }}
+
+                </h2>
+
+                <p>
+
+                    <i class="fa-solid fa-location-dot"></i>
+
+                    {{ booking[7] }}
+
+                </p>
+
+                <hr>
+
+                <div class="info">
+
+                    <span>Pemilik</span>
+
+                    <b>{{ booking[11] }}</b>
+
+                </div>
+
+                <div class="info">
+
+                    <span>Durasi</span>
+
+                    <b>{{ booking[3] }} Bulan</b>
+
+                </div>
+
+                <div class="info">
+
+                    <span>Tanggal Masuk</span>
+
+                    <b>
+
+                        {{ booking[2].strftime("%d %B %Y") }}
+
+                    </b>
+
+                </div>
+
+                <div class="info">
+
+                    <span>Tipe</span>
+
+                    <b>{{ booking[10] }}</b>
+
+                </div>
+
+                <a href="#"
+                class="chat-btn">
+
+                    <i class="fa-solid fa-comments"></i>
+
+                    Hubungi Pemilik
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

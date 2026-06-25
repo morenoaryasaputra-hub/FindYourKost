@@ -1,0 +1,415 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Pesan
+{% endblock %}
+
+{% block css %}
+
+<link
+rel="stylesheet"
+href="{{ url_for(
+'static',
+filename='css/chat.css'
+) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="chat-container">
+
+    <!-- SIDEBAR -->
+
+    <div class="chat-sidebar">
+
+        <div class="sidebar-header">
+
+            <h2>
+
+                Pesan
+
+            </h2>
+
+        </div>
+
+        <div class="search-box">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input
+            type="text"
+            placeholder="Cari percakapan...">
+
+        </div>
+
+        <div class="chat-list">
+
+            {% for room in rooms %}
+
+            <a
+            href="/chat/{{ room[0] }}"
+            class="chat-item {% if room[0]==active_room %}active{% endif %}">
+
+                <img
+
+                src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}"
+
+                class="avatar">
+
+                <div class="chat-info">
+
+                    <div class="top">
+
+                        <h4>
+
+                            {{ room[1] }}
+
+                        </h4>
+
+                        {% if room[5] %}
+
+                        <small>
+
+                            {{ room[5].strftime("%H:%M") }}
+
+                        </small>
+
+                        {% endif %}
+
+                    </div>
+
+                    <span>
+
+                        {{ room[3] }}
+
+                    </span>
+
+                    <p>
+
+                        {{ room[4] if room[4] else "Belum ada pesan" }}
+
+                    </p>
+
+                </div>
+
+            </a>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    <!-- CHAT -->
+
+    <div class="chat-room">
+
+    {% if active_room %}
+
+    {% set room = rooms|selectattr(0,'equalto',active_room)|first %}
+
+        <div class="chat-header">
+
+            <div class="header-left">
+
+                <img
+
+                src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}"
+
+                class="avatar">
+
+                <div>
+
+                    <h3>
+
+                        {{ room[1] }}
+
+                    </h3>
+
+                    <span>
+
+                        {{ room[3] }}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="header-right">
+
+                <i class="fa-solid fa-phone"></i>
+
+                <i class="fa-solid fa-video"></i>
+
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+
+            </div>
+
+        </div>
+
+        <div
+        class="messages"
+        id="messages">
+
+                    {% for msg in messages %}
+
+                {% if msg[1] == session["user_id"] %}
+
+                <div class="message mine">
+
+                    <div class="bubble">
+
+                        {{ msg[2] }}
+
+                    </div>
+
+                    <span class="time">
+
+                        {{ msg[3].strftime("%H:%M") }}
+
+                    </span>
+
+                </div>
+
+                {% else %}
+
+                <div class="message">
+
+                    <div class="bubble">
+
+                        {{ msg[2] }}
+
+                    </div>
+
+                    <span class="time">
+
+                        {{ msg[3].strftime("%H:%M") }}
+
+                    </span>
+
+                </div>
+
+                {% endif %}
+
+            {% endfor %}
+
+        </div>
+
+        <form
+        class="chat-input"
+        action="/chat/send"
+        method="POST">
+
+            <input
+            type="hidden"
+            name="room_id"
+            value="{{ active_room }}">
+
+            <button
+            type="button"
+            class="attach-btn">
+
+                <i class="fa-solid fa-paperclip"></i>
+
+            </button>
+
+            <input
+
+            id="message"
+
+            type="text"
+
+            name="pesan"
+
+            placeholder="Tulis pesan..."
+
+            autocomplete="off"
+
+            required>
+
+            <button
+
+            class="send-btn"
+
+            type="submit">
+
+                <i class="fa-solid fa-paper-plane"></i>
+
+            </button>
+
+        </form>
+
+    {% else %}
+
+        <div class="empty-chat">
+
+            <i class="fa-solid fa-comments"></i>
+
+            <h2>
+
+                Belum ada percakapan
+
+            </h2>
+
+            <p>
+
+                Pilih percakapan di sebelah kiri untuk mulai chatting.
+
+            </p>
+
+        </div>
+
+    {% endif %}
+
+    </div>
+
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+
+const socket = io();
+
+const room = "{{ active_room }}";
+
+if(room){
+
+    socket.emit(
+
+        "join",
+
+        {
+
+            room: room
+
+        }
+
+    );
+
+}
+
+const messages = document.getElementById(
+
+    "messages"
+
+);
+
+if(messages){
+
+    messages.scrollTop = messages.scrollHeight;
+
+}
+
+const form = document.querySelector(".chat-input");
+
+if(form){
+
+    form.addEventListener(
+
+        "submit",
+
+        function(e){
+
+            e.preventDefault();
+
+            const input =
+                document.getElementById(
+                    "message"
+                );
+
+            const pesan =
+                input.value.trim();
+
+            if(pesan===""){
+                return;
+            }
+
+            socket.emit(
+
+                "send_message",
+
+                {
+
+                    room: room,
+
+                    message: pesan
+
+                }
+
+            );
+
+            input.value="";
+
+        }
+
+    );
+
+}
+
+socket.on(
+
+    "receive_message",
+
+    function(data){
+
+        const wrapper =
+            document.createElement(
+                "div"
+            );
+
+        if(
+            data.sender_id ==
+            "{{ session['user_id'] }}"
+        ){
+
+            wrapper.className =
+                "message mine";
+
+        }
+
+        else{
+
+            wrapper.className =
+                "message";
+
+        }
+
+        wrapper.innerHTML =
+
+        `
+        <div class="bubble">
+
+            ${data.message}
+
+        </div>
+
+        <span class="time">
+
+            ${new Date().toLocaleTimeString(
+                [],
+                {
+                    hour:'2-digit',
+                    minute:'2-digit'
+                }
+            )}
+
+        </span>
+        `;
+
+        messages.appendChild(
+            wrapper
+        );
+
+        messages.scrollTop =
+            messages.scrollHeight;
+
+    }
+
+);
+
+</script>
+
+{% endblock %}

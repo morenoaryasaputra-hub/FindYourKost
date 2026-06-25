@@ -1,0 +1,161 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Wishlist Saya
+{% endblock %}
+
+{% block css %}
+<link
+rel="stylesheet"
+href="{{ url_for(
+    'static',
+    filename='css/wishlist.css'
+) }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="wishlist-container">
+
+    <div class="wishlist-header">
+
+        <div>
+
+            <h1>
+                Wishlist Saya
+            </h1>
+
+            <p>
+                Temukan kembali kos impian yang telah Anda simpan.
+            </p>
+
+        </div>
+
+        <div class="wishlist-filter">
+
+            <button class="active">
+                Semua ({{ wishlist|length }})
+            </button>
+
+            <button>
+                Tersedia
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="wishlist-grid">
+
+        {% if wishlist %}
+
+            {% for kost in wishlist %}
+
+            <div class="wishlist-card">
+
+                <div class="wishlist-image">
+
+                    <img
+                    src="{{ kost[4] }}"
+                    alt="{{ kost[1] }}">
+
+                    <span class="badge premium">
+                        PREMIUM
+                    </span>
+
+                    <button class="favorite-btn">
+
+                        <i class="fa-solid fa-heart"></i>
+
+                    </button>
+
+                    <div class="rating">
+
+                        ⭐ 4.9 (120)
+
+                    </div>
+
+                </div>
+
+                <div class="wishlist-body">
+
+                    <h3>
+
+                        {{ kost[1] }}
+
+                    </h3>
+
+                    <p class="alamat">
+
+                        <i class="fa-solid fa-location-dot"></i>
+
+                        {{ kost[2] }}
+
+                    </p>
+
+                    <h2>
+
+                        Rp {{ "{:,.0f}".format(kost[3]).replace(",", ".") }}
+
+                        <span>/bulan</span>
+
+                    </h2>
+
+                    <div class="wishlist-action">
+
+                        <a
+                        href="/detail-kost/{{ kost[0] }}"
+                        class="btn-detail">
+
+                            Detail
+
+                        </a>
+
+                        <a
+                        href="/wishlist/hapus/{{ kost[0] }}"
+                        class="btn-delete"
+                        onclick="return confirm('Hapus dari wishlist?')">
+
+                            Hapus
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+        <div class="empty-wishlist">
+
+            <i class="fa-regular fa-heart"></i>
+
+            <h2>
+                Wishlist masih kosong
+            </h2>
+
+            <p>
+                Simpan kos favoritmu agar lebih mudah ditemukan nanti.
+            </p>
+
+            <a
+            href="/cari-kos"
+            class="btn-detail">
+
+                Cari Kos
+
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

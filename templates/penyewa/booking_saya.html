@@ -1,0 +1,148 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Booking Saya
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet"
+href="{{ url_for('static',filename='css/booking_saya.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="booking-container">
+
+    <div class="booking-header">
+
+        <h1>Booking Saya</h1>
+
+        <p>
+            Kelola seluruh riwayat booking Anda.
+        </p>
+
+    </div>
+
+    <div class="booking-summary">
+
+        <div class="summary-card">
+            <h5>Total Booking</h5>
+            <h2>{{ total_booking }}</h2>
+        </div>
+
+        <div class="summary-card aktif">
+            <h5>Aktif</h5>
+            <h2>{{ aktif }}</h2>
+        </div>
+
+        <div class="summary-card tunggu">
+            <h5>Menunggu</h5>
+            <h2>{{ menunggu }}</h2>
+        </div>
+
+        <div class="summary-card selesai">
+            <h5>Selesai</h5>
+            <h2>{{ selesai }}</h2>
+        </div>
+
+    </div>
+
+    <table class="booking-table">
+
+        <thead>
+
+            <tr>
+
+                <th>Nama Kost</th>
+
+                <th>Tanggal Booking</th>
+
+                <th>Tanggal Masuk</th>
+
+                <th>Durasi</th>
+
+                <th>Total</th>
+
+                <th>Status</th>
+
+                <th>Aksi</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for booking in booking_list %}
+
+            <tr>
+
+                <td>
+
+                    <div class="kost-info">
+
+                        <img src="{{ booking[2] }}">
+
+                        <span>{{ booking[1] }}</span>
+
+                    </div>
+
+                </td>
+
+                <td>
+
+                    {{ booking[3].strftime("%d %b %Y") }}
+
+                </td>
+
+                <td>
+
+                    {{ booking[4].strftime("%d %b %Y") }}
+
+                </td>
+
+                <td>
+
+                    {{ booking[5] }} Bulan
+
+                </td>
+
+                <td>
+
+                    Rp {{ "{:,.0f}".format(booking[6]) }}
+
+                </td>
+
+                <td>
+
+                    <span class="status {{ booking[7] }}">
+
+                        {{ booking[7].replace("_"," ").title() }}
+
+                    </span>
+
+                </td>
+
+                <td>
+
+                    <a
+                    href="/booking/{{ booking[0] }}"
+                    class="btn-detail">
+
+                        Lihat Detail
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

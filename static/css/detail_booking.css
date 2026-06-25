@@ -1,0 +1,486 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    background:#f5f7fb;
+
+    font-family:Arial,Helvetica,sans-serif;
+
+}
+
+.detail-booking-container{
+
+    max-width:1280px;
+
+    margin:40px auto;
+
+    padding:0 20px;
+
+}
+
+.detail-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:30px;
+
+    flex-wrap:wrap;
+
+    gap:20px;
+
+}
+
+.detail-header h1{
+
+    font-size:38px;
+
+    color:#111827;
+
+    margin-bottom:8px;
+
+}
+
+.detail-header p{
+
+    color:#6b7280;
+
+}
+
+.invoice-btn{
+
+    background:white;
+
+    color:#1453e5;
+
+    border:1px solid #dbeafe;
+
+    text-decoration:none;
+
+    padding:14px 22px;
+
+    border-radius:12px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.invoice-btn:hover{
+
+    background:#1453e5;
+
+    color:white;
+
+}
+
+.timeline-card{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:30px;
+
+    margin-bottom:30px;
+
+    box-shadow:
+    0 8px 25px rgba(0,0,0,.05);
+
+}
+
+.timeline{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.step{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    width:140px;
+
+}
+
+.circle{
+
+    width:58px;
+
+    height:58px;
+
+    border-radius:50%;
+
+    background:#e5e7eb;
+
+    color:#9ca3af;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:22px;
+
+    margin-bottom:12px;
+
+}
+
+.step.active .circle{
+
+    background:#1453e5;
+
+    color:white;
+
+}
+
+.step span{
+
+    font-size:14px;
+
+    font-weight:600;
+
+    text-align:center;
+
+}
+
+.line{
+
+    flex:1;
+
+    height:4px;
+
+    background:#d1d5db;
+
+    margin:0 5px;
+
+    margin-bottom:38px;
+
+}
+
+.detail-grid{
+
+    display:grid;
+
+    grid-template-columns:2fr 1fr;
+
+    gap:25px;
+
+}
+
+.payment-card{
+
+    background:white;
+
+    padding:28px;
+
+    border-radius:18px;
+
+    box-shadow:
+    0 8px 25px rgba(0,0,0,.05);
+
+    margin-bottom:25px;
+
+}
+
+.payment-card h3{
+
+    font-size:22px;
+
+    margin-bottom:25px;
+
+}
+
+.payment-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
+}
+
+.payment-row span{
+
+    color:#6b7280;
+
+}
+
+.payment-row.total{
+
+    margin-top:25px;
+
+    border-top:1px solid #e5e7eb;
+
+    padding-top:20px;
+
+}
+
+.payment-row.total h2{
+
+    color:#1453e5;
+
+    font-size:34px;
+
+}
+
+.green{
+
+    color:#16a34a;
+
+}
+
+.escrow-card{
+
+    background:#eef4ff;
+
+    border:1px solid #c7ddff;
+
+    border-radius:18px;
+
+    padding:22px;
+
+    display:flex;
+
+    gap:20px;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
+}
+
+.escrow-icon{
+
+    width:65px;
+
+    height:65px;
+
+    border-radius:50%;
+
+    background:#1453e5;
+
+    color:white;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:28px;
+
+}
+
+.escrow-card h4{
+
+    margin-bottom:8px;
+
+}
+
+.escrow-card p{
+
+    color:#6b7280;
+
+    line-height:1.6;
+
+}
+
+.pay-btn{
+
+    width:100%;
+
+    display:block;
+
+    background:#1453e5;
+
+    color:white;
+
+    text-align:center;
+
+    text-decoration:none;
+
+    padding:18px;
+
+    border-radius:14px;
+
+    font-size:18px;
+
+    font-weight:700;
+
+    transition:.25s;
+
+}
+
+.pay-btn:hover{
+
+    background:#0f45c8;
+
+}
+
+.kost-card{
+
+    background:white;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:
+    0 8px 25px rgba(0,0,0,.05);
+
+}
+
+.kost-card img{
+
+    width:100%;
+
+    height:240px;
+
+    object-fit:cover;
+
+}
+
+.kost-body{
+
+    padding:24px;
+
+}
+
+.kost-body h2{
+
+    margin-bottom:10px;
+
+}
+
+.kost-body p{
+
+    color:#6b7280;
+
+    margin-bottom:20px;
+
+}
+
+.kost-body hr{
+
+    border:none;
+
+    border-top:1px solid #e5e7eb;
+
+    margin-bottom:20px;
+
+}
+
+.info{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-bottom:18px;
+
+}
+
+.info span{
+
+    color:#6b7280;
+
+}
+
+.chat-btn{
+
+    margin-top:25px;
+
+    display:block;
+
+    text-align:center;
+
+    background:#16a34a;
+
+    color:white;
+
+    text-decoration:none;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    font-weight:700;
+
+    transition:.25s;
+
+}
+
+.chat-btn:hover{
+
+    background:#15803d;
+
+}
+
+@media(max-width:1000px){
+
+    .detail-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .timeline{
+
+        flex-wrap:wrap;
+
+        gap:25px;
+
+    }
+
+    .line{
+
+        display:none;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .detail-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .detail-header h1{
+
+        font-size:30px;
+
+    }
+
+    .payment-row.total h2{
+
+        font-size:26px;
+
+    }
+
+}

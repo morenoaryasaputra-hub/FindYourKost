@@ -1,18 +1,13 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
 
 {% block title %}
 Beranda
 {% endblock %}
 
 {% block css %}
-
 <link
 rel="stylesheet"
-href="{{ url_for(
-'static',
-filename='css/beranda.css'
-) }}">
-
+href="{{ url_for('static', filename='css/beranda.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -21,14 +16,11 @@ filename='css/beranda.css'
 
     <div class="hero-content">
 
-        <h1>
-            Temukan Kos Impianmu
-        </h1>
+        <h1>Temukan Kos Impianmu</h1>
 
         <p>
-            Cari kos terbaik dengan
-            lokasi strategis dan harga
-            sesuai kebutuhanmu.
+            Cari kos terbaik dengan lokasi strategis
+            dan harga sesuai kebutuhanmu.
         </p>
 
         <div class="search-box">
@@ -37,11 +29,7 @@ filename='css/beranda.css'
             type="text"
             placeholder="Cari nama kos atau lokasi...">
 
-            <button>
-
-                Cari
-
-            </button>
+            <button>Cari</button>
 
         </div>
 
@@ -53,9 +41,7 @@ filename='css/beranda.css'
 
     <div class="section-header">
 
-        <h2>
-            Rekomendasi Kost
-        </h2>
+        <h2>Rekomendasi Kost</h2>
 
     </div>
 
@@ -65,57 +51,48 @@ filename='css/beranda.css'
 
         <div class="kost-card">
 
+            {% if kost[5] %}
+
             <img
-            src="{{ url_for(
-            'static',
-            filename='images/kost/' + kost[5]
-            ) }}"
+            src="{{ kost[5] }}"
             alt="{{ kost[1] }}">
+
+            {% else %}
+
+            <img
+            src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900"
+            alt="{{ kost[1] }}">
+
+            {% endif %}
 
             <div class="kost-body">
 
                 {% if kost[6] == 1 %}
 
                 <span class="verified">
-
                     ✓ Terverifikasi
-
                 </span>
 
                 {% endif %}
 
-                <h3>
-
-                    {{ kost[1] }}
-
-                </h3>
+                <h3>{{ kost[1] }}</h3>
 
                 <p class="alamat">
-
                     {{ kost[2] }}
-
                 </p>
 
                 <p class="tipe">
-
-                    {{ kost[4] | upper }}
-
+                    {{ kost[4]|upper }}
                 </p>
 
                 <p class="harga">
-
-                    Rp {{ "{:,}".format(kost[3]) }}
-
-                    / bulan
-
+                    Rp {{ "{:,.0f}".format(kost[3]) }}
+                    <span>/ bulan</span>
                 </p>
 
                 <p class="sisa">
-
                     Sisa Kamar:
-
                     {{ kost[7] }}
-
                 </p>
 
             </div>

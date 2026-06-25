@@ -3,11 +3,14 @@ import pymysql
 
 from flask_bcrypt import Bcrypt
 from authlib.integrations.flask_client import OAuth
-
+from flask_socketio import SocketIO
 
 bcrypt = Bcrypt()
 oauth = OAuth()
 
+socketio = SocketIO(
+    cors_allowed_origins="*"
+)
 
 def get_db():
 

@@ -8,3 +8,4 @@ pymysql
 cloudinary
 resend
 gunicorn
+Flask-SocketIO
