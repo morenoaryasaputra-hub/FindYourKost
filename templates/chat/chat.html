@@ -9,8 +9,8 @@ Pesan
 <link
 rel="stylesheet"
 href="{{ url_for(
-'static',
-filename='css/chat.css'
+    'static',
+    filename='css/chat.css'
 ) }}">
 
 {% endblock %}
@@ -48,13 +48,11 @@ filename='css/chat.css'
             {% for room in rooms %}
 
             <a
-            href="/chat/{{ room[0] }}"
-            class="chat-item {% if room[0]==active_room %}active{% endif %}">
+            href="{{ url_for('chat.open_room', room_id=room[0]) }}"
+            class="chat-item {% if room[0] == active_room %}active{% endif %}">
 
                 <img
-
                 src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}"
-
                 class="avatar">
 
                 <div class="chat-info">
@@ -101,22 +99,20 @@ filename='css/chat.css'
 
     </div>
 
-    <!-- CHAT -->
+    <!-- CHAT ROOM -->
 
     <div class="chat-room">
 
     {% if active_room %}
 
-    {% set room = rooms|selectattr(0,'equalto',active_room)|first %}
+    {% set room = rooms|selectattr(0, 'equalto', active_room)|first %}
 
         <div class="chat-header">
 
             <div class="header-left">
 
                 <img
-
                 src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}"
-
                 class="avatar">
 
                 <div>
@@ -150,120 +146,118 @@ filename='css/chat.css'
         </div>
 
         <div
-        class="messages"
-        id="messages">
+        id="messages"
+        class="messages">
 
-                    {% for msg in messages %}
+        {% for msg in messages %}
 
-                {% if msg[1] == session["user_id"] %}
+    {% if msg[1] == session["user_id"] %}
 
-                <div class="message mine">
+    <div class="message mine">
 
-                    <div class="bubble">
+        <div class="bubble">
 
-                        {{ msg[2] }}
-
-                    </div>
-
-                    <span class="time">
-
-                        {{ msg[3].strftime("%H:%M") }}
-
-                    </span>
-
-                </div>
-
-                {% else %}
-
-                <div class="message">
-
-                    <div class="bubble">
-
-                        {{ msg[2] }}
-
-                    </div>
-
-                    <span class="time">
-
-                        {{ msg[3].strftime("%H:%M") }}
-
-                    </span>
-
-                </div>
-
-                {% endif %}
-
-            {% endfor %}
+            {{ msg[2] }}
 
         </div>
 
-        <form
-        class="chat-input"
-        action="/chat/send"
-        method="POST">
+        <span class="time">
 
-            <input
-            type="hidden"
-            name="room_id"
-            value="{{ active_room }}">
+            {{ msg[3].strftime("%H:%M") }}
 
-            <button
-            type="button"
-            class="attach-btn">
+        </span>
 
-                <i class="fa-solid fa-paperclip"></i>
-
-            </button>
-
-            <input
-
-            id="message"
-
-            type="text"
-
-            name="pesan"
-
-            placeholder="Tulis pesan..."
-
-            autocomplete="off"
-
-            required>
-
-            <button
-
-            class="send-btn"
-
-            type="submit">
-
-                <i class="fa-solid fa-paper-plane"></i>
-
-            </button>
-
-        </form>
+    </div>
 
     {% else %}
 
-        <div class="empty-chat">
+    <div class="message">
 
-            <i class="fa-solid fa-comments"></i>
+        <div class="bubble">
 
-            <h2>
-
-                Belum ada percakapan
-
-            </h2>
-
-            <p>
-
-                Pilih percakapan di sebelah kiri untuk mulai chatting.
-
-            </p>
+            {{ msg[2] }}
 
         </div>
 
-    {% endif %}
+        <span class="time">
+
+            {{ msg[3].strftime("%H:%M") }}
+
+        </span>
 
     </div>
+
+    {% endif %}
+
+{% endfor %}
+
+</div>
+
+<form
+id="chat-form"
+class="chat-input">
+
+    <input
+    type="hidden"
+    id="room_id"
+    name="room_id"
+    value="{{ active_room }}">
+
+    <button
+    type="button"
+    class="attach-btn">
+
+        <i class="fa-solid fa-paperclip"></i>
+
+    </button>
+
+    <input
+
+    id="message"
+
+    type="text"
+
+    placeholder="Tulis pesan..."
+
+    autocomplete="off"
+
+    required>
+
+    <button
+
+    class="send-btn"
+
+    type="submit">
+
+        <i class="fa-solid fa-paper-plane"></i>
+
+    </button>
+
+</form>
+
+{% else %}
+
+<div class="empty-chat">
+
+    <i class="fa-solid fa-comments"></i>
+
+    <h2>
+
+        Belum ada percakapan
+
+    </h2>
+
+    <p>
+
+        Pilih percakapan di sebelah kiri untuk mulai chatting.
+
+    </p>
+
+</div>
+
+{% endif %}
+
+</div>
 
 </div>
 
@@ -271,39 +265,59 @@ filename='css/chat.css'
 
 <script>
 
-const socket = io();
+const socket = io("/", {
+    transports: ["websocket"]
+});
 
-const room = "{{ active_room }}";
+socket.on("connect", function () {
+    console.log("CONNECTED", socket.id);
+});
 
-if(room){
+socket.on("disconnect", function () {
+    console.log("DISCONNECT");
+});
+
+socket.onAny((event, data) => {
+    console.log("EVENT:", event, data);
+});
+
+const roomId = document.getElementById("room_id");
+
+const form = document.getElementById("chat-form");
+
+const input = document.getElementById("message");
+
+const messages = document.getElementById("messages");
+
+// ======================
+// JOIN ROOM
+// ======================
+
+if(roomId){
 
     socket.emit(
-
         "join",
-
         {
-
-            room: room
-
+            room: roomId.value
         }
-
     );
 
 }
 
-const messages = document.getElementById(
-
-    "messages"
-
-);
+// ======================
+// AUTO SCROLL
+// ======================
 
 if(messages){
 
-    messages.scrollTop = messages.scrollHeight;
+    messages.scrollTop =
+        messages.scrollHeight;
 
 }
 
-const form = document.querySelector(".chat-input");
+// ======================
+// KIRIM PESAN
+// ======================
 
 if(form){
 
@@ -315,16 +329,13 @@ if(form){
 
             e.preventDefault();
 
-            const input =
-                document.getElementById(
-                    "message"
-                );
-
             const pesan =
                 input.value.trim();
 
-            if(pesan===""){
+            if(pesan==""){
+
                 return;
+
             }
 
             socket.emit(
@@ -333,7 +344,7 @@ if(form){
 
                 {
 
-                    room: room,
+                    room: roomId.value,
 
                     message: pesan
 
@@ -343,11 +354,17 @@ if(form){
 
             input.value="";
 
+            input.focus();
+
         }
 
     );
 
 }
+
+// ======================
+// TERIMA PESAN
+// ======================
 
 socket.on(
 
@@ -355,14 +372,23 @@ socket.on(
 
     function(data){
 
+        if(!messages){
+
+            return;
+
+        }
+
         const wrapper =
             document.createElement(
                 "div"
             );
 
         if(
-            data.sender_id ==
-            "{{ session['user_id'] }}"
+
+            Number(data.sender_id) ===
+
+            Number("{{ session['user_id'] }}")
+
         ){
 
             wrapper.className =
@@ -391,13 +417,15 @@ socket.on(
             ${new Date().toLocaleTimeString(
                 [],
                 {
-                    hour:'2-digit',
-                    minute:'2-digit'
+                    hour: "2-digit",
+                    minute: "2-digit"
                 }
             )}
 
         </span>
         `;
+
+        console.log(wrapper);
 
         messages.appendChild(
             wrapper

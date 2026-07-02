@@ -87,3 +87,15 @@ class Config:
     RESEND_API_KEY = os.getenv(
         "RESEND_API_KEY"
     )
+
+    MIDTRANS_SERVER_KEY = os.getenv(
+        "MIDTRANS_SERVER_KEY"
+    )
+
+    MIDTRANS_CLIENT_KEY = os.getenv(
+        "MIDTRANS_CLIENT_KEY"
+    )
+
+    MIDTRANS_IS_PRODUCTION = os.getenv(
+        "MIDTRANS_IS_PRODUCTION"
+    ) == "True"

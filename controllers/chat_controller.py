@@ -230,3 +230,96 @@ def send_message():
     conn.close()
 
     return redirect(f"/chat/{room_id}")
+
+@chat_bp.route("/chat/create/<int:kost_id>")
+def create_chat(kost_id):
+
+    if "user_id" not in session:
+
+        return redirect("/login")
+
+    conn = get_db()
+
+    cursor = conn.cursor()
+
+    # Ambil pemilik kos
+
+    cursor.execute(
+        """
+        SELECT pemilik_id
+        FROM kost
+        WHERE id=%s
+        """,
+        (kost_id,)
+    )
+
+    kost = cursor.fetchone()
+
+    if not kost:
+
+        cursor.close()
+        conn.close()
+
+        return redirect("/")
+
+    pemilik_id = kost[0]
+
+    # Cek apakah room sudah ada
+
+    cursor.execute(
+        """
+        SELECT id
+        FROM chat_room
+        WHERE
+
+        penyewa_id=%s
+        AND pemilik_id=%s
+        AND kost_id=%s
+        """,
+        (
+            session["user_id"],
+            pemilik_id,
+            kost_id
+        )
+    )
+
+    room = cursor.fetchone()
+
+    if room:
+
+        room_id = room[0]
+
+    else:
+
+        cursor.execute(
+            """
+            INSERT INTO chat_room
+            (
+                penyewa_id,
+                pemilik_id,
+                kost_id
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s
+            )
+            """,
+            (
+                session["user_id"],
+                pemilik_id,
+                kost_id
+            )
+        )
+
+        conn.commit()
+
+        room_id = cursor.lastrowid
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        f"/chat/{room_id}"
+    )

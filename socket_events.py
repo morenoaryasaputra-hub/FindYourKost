@@ -1,6 +1,5 @@
 from flask import session
 
-from flask_socketio import emit
 from flask_socketio import join_room
 from flask_socketio import leave_room
 
@@ -9,23 +8,17 @@ from extensions import get_db
 
 
 @socketio.on("join")
-def on_join(data):
+def join(data):
 
     room = str(data["room"])
 
-    join_room(room)
+    print("JOIN ROOM:", room)
 
-    emit(
-        "status",
-        {
-            "msg": "joined"
-        },
-        room=room
-    )
+    join_room(room)
 
 
 @socketio.on("leave")
-def on_leave(data):
+def leave(data):
 
     room = str(data["room"])
 
@@ -39,7 +32,9 @@ def send_message(data):
 
     pesan = data["message"]
 
-    sender_id = session.get("user_id")
+    sender = session["user_id"]
+
+    print("SEND:", room, sender, pesan)
 
     conn = get_db()
 
@@ -62,7 +57,7 @@ def send_message(data):
         """,
         (
             room,
-            sender_id,
+            sender,
             pesan
         )
     )
@@ -73,11 +68,20 @@ def send_message(data):
 
     conn.close()
 
-    emit(
+    socketio.emit(
+
         "receive_message",
+
         {
-            "sender_id": sender_id,
+
+            "sender_id": sender,
+
             "message": pesan
+
         },
-        room=room
+        to=room,
+        namespace="/"
+
     )
+
+    print("EMIT:", room)

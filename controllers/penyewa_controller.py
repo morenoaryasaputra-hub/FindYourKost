@@ -3,7 +3,11 @@ from flask import render_template
 from flask import session
 from flask import redirect
 from flask import request
+from flask import jsonify
 from decimal import Decimal
+
+from utils.midtrans import snap
+import uuid
 
 from extensions import get_db
 
@@ -331,6 +335,8 @@ def detail_booking(booking_id):
             booking.durasi_bulan,
             booking.total_harga,
             booking.status_booking,
+                   
+            kost_id,
 
             kost.nama_kost,
             kost.alamat,
@@ -369,3 +375,164 @@ def detail_booking(booking_id):
         dp=dp,
         pelunasan=pelunasan
     )
+
+# ====================================
+# BAYAR DP
+# ====================================
+
+@penyewa_bp.route("/booking/<int:booking_id>/bayar-dp")
+def bayar_dp(booking_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+
+            booking.id,
+            booking.total_harga,
+
+            users.nama,
+            users.email,
+            users.nomor_telepon
+
+        FROM booking
+
+        JOIN users
+        ON booking.penyewa_id = users.id
+
+        WHERE
+            booking.id=%s
+        AND
+            booking.penyewa_id=%s
+    """, (
+        booking_id,
+        session["user_id"]
+    ))
+
+    booking = cursor.fetchone()
+
+    if not booking:
+
+        cursor.close()
+        conn.close()
+
+        return redirect("/booking-saya")
+
+    total = float(booking[1])
+
+    dp = int(total * 0.30)
+
+    order_id = f"DP-{booking_id}-{uuid.uuid4().hex[:8]}"
+    
+    transaction = {
+
+        "transaction_details": {
+
+            "order_id": order_id,
+
+            "gross_amount": dp
+
+        },
+
+        "customer_details": {
+
+            "first_name": booking[2],
+
+            "email": booking[3],
+
+            "phone": booking[4]
+
+        }
+
+    }
+
+# ====================================
+# MIDTRANS SNAP TOKEN
+# ====================================
+
+@penyewa_bp.route("/booking/<int:booking_id>/snap-token")
+def get_snap_token(booking_id):
+
+    if "user_id" not in session:
+        return jsonify({"error":"Unauthorized"}),401
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+
+        SELECT
+
+            b.id,
+            b.total_harga,
+
+            u.nama,
+            u.email,
+            u.no_hp
+
+        FROM booking b
+
+        JOIN users u
+        ON b.penyewa_id=u.id
+
+        WHERE
+
+            b.id=%s
+
+        AND
+
+            b.penyewa_id=%s
+
+    """,(booking_id,session["user_id"]))
+
+    booking=cursor.fetchone()
+
+    if not booking:
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"error":"Booking tidak ditemukan"}),404
+
+    dp=int(float(booking[1])*0.30)
+
+    order_id=f"DP-{booking_id}-{uuid.uuid4().hex[:8]}"
+
+    transaction={
+
+        "transaction_details":{
+
+            "order_id":order_id,
+
+            "gross_amount":dp
+
+        },
+
+        "customer_details":{
+
+            "first_name":booking[2],
+
+            "email":booking[3],
+
+            "phone":booking[4]
+
+        }
+
+    }
+
+    snap_token=snap.create_transaction(
+        transaction
+    )["token"]
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+
+        "token":snap_token
+
+    })

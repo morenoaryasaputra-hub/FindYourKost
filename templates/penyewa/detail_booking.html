@@ -205,13 +205,17 @@ href="{{ url_for('static', filename='css/detail_booking.css') }}">
 
             {% if booking[5] == "menunggu_dp" %}
 
-            <a
-            href="/booking/{{ booking[0] }}/bayar-dp"
+            <button
+
+            id="pay-button"
+            data-booking-id="{{ booking[0] }}"
             class="pay-btn">
 
                 Bayar DP
 
-            </a>
+            </button>
+
+            {% elif booking[5] == "dp_dibayar" %}
 
             {% elif booking[5] == "menunggu_pelunasan" %}
 
@@ -232,8 +236,8 @@ href="{{ url_for('static', filename='css/detail_booking.css') }}">
         <div class="kost-card">
 
             <img
-            src="{{ booking[8] }}"
-            alt="{{ booking[6] }}">
+            src="{{ booking[9] }}"
+            alt="{{ booking[7] }}">
 
             <div class="kost-body">
 
@@ -289,7 +293,7 @@ href="{{ url_for('static', filename='css/detail_booking.css') }}">
 
                 </div>
 
-                <a href="#"
+                <a href="/chat/create/{{ booking[6] }}"
                 class="chat-btn">
 
                     <i class="fa-solid fa-comments"></i>
@@ -305,5 +309,71 @@ href="{{ url_for('static', filename='css/detail_booking.css') }}">
     </div>
 
 </div>
+
+<script
+src="https://app.sandbox.midtrans.com/snap/snap.js"
+data-client-key="{{ config['MIDTRANS_CLIENT_KEY'] }}">
+</script>
+
+<script>
+
+const payButton = document.getElementById("pay-button");
+
+if(payButton){
+
+    payButton.onclick = async function(){
+
+        const bookingId =
+            payButton.dataset.bookingId;
+
+        const response = await fetch(
+
+            `/booking/${bookingId}/snap-token`
+
+        );
+
+        const data = await response.json();
+
+        snap.pay(
+
+            data.token,
+
+            {
+
+                onSuccess:function(result){
+
+                    location.reload();
+
+                },
+
+                onPending:function(result){
+
+                    alert("Pembayaran Pending");
+
+                },
+
+                onError:function(result){
+
+                    alert("Pembayaran Gagal");
+
+                },
+
+                onClose:function(){
+
+                    console.log(
+                        "Popup ditutup"
+                    );
+
+                }
+
+            }
+
+        );
+
+    }
+
+}
+
+</script>
 
 {% endblock %}

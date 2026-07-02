@@ -12,6 +12,15 @@ app = Flask(__name__)
 
 app.config.from_object(Config)
 
+@app.context_processor
+def inject_config():
+
+    return dict(
+
+        config=app.config
+
+    )
+
 app.secret_key = app.config[
     "SECRET_KEY"
 ]
