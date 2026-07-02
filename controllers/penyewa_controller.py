@@ -5,6 +5,8 @@ from flask import redirect
 from flask import request
 from flask import jsonify
 from decimal import Decimal
+from config import Config
+import hashlib
 
 from utils.midtrans import snap
 import uuid
@@ -480,11 +482,8 @@ def get_snap_token(booking_id):
         ON b.penyewa_id=u.id
 
         WHERE
-
             b.id=%s
-
         AND
-
             b.penyewa_id=%s
 
     """,(booking_id,session["user_id"]))
@@ -524,9 +523,19 @@ def get_snap_token(booking_id):
 
     }
 
-    snap_token=snap.create_transaction(
-        transaction
-    )["token"]
+    snap_token=snap.create_transaction(transaction)["token"]
+
+    # simpan order id agar nanti webhook bisa mencocokkan transaksi
+    cursor.execute("""
+        UPDATE pembayaran
+        SET
+            midtrans_order_id=%s,
+            jumlah=%s,
+            status_pembayaran='pending'
+        WHERE booking_id=%s
+    """,(order_id, dp, booking_id))
+
+    conn.commit()
 
     cursor.close()
     conn.close()
@@ -535,4 +544,117 @@ def get_snap_token(booking_id):
 
         "token":snap_token
 
+    })
+
+# ====================================
+# NOTIFIKASI MIDTRANS
+# ====================================
+
+@penyewa_bp.route("/midtrans/notification", methods=["POST"])
+def midtrans_notification():
+
+    data = request.get_json()
+
+    order_id = data["order_id"]
+    status_code = data["status_code"]
+    gross_amount = data["gross_amount"]
+    signature_key = data["signature_key"]
+    transaction_status = data["transaction_status"]
+
+    server_key = Config.MIDTRANS_SERVER_KEY
+
+    my_signature = hashlib.sha512(
+        (
+            order_id +
+            status_code +
+            gross_amount +
+            server_key
+        ).encode()
+    ).hexdigest()
+
+    if my_signature != signature_key:
+
+        return jsonify({
+            "message":"Invalid Signature"
+        }),403
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+
+        SELECT booking_id
+
+        FROM pembayaran
+
+        WHERE midtrans_order_id=%s
+
+    """,(order_id,))
+
+    pembayaran = cursor.fetchone()
+
+    if not pembayaran:
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "message":"Order tidak ditemukan"
+        }),404
+
+    booking_id = pembayaran[0]
+
+    if transaction_status == "settlement":
+
+        cursor.execute("""
+
+            UPDATE pembayaran
+
+            SET status_pembayaran='success'
+
+            WHERE booking_id=%s
+
+        """,(booking_id,))
+
+        cursor.execute("""
+
+            UPDATE booking
+
+            SET status_booking='dp_dibayar'
+
+            WHERE id=%s
+
+        """,(booking_id,))
+
+    elif transaction_status == "pending":
+
+        cursor.execute("""
+
+            UPDATE pembayaran
+
+            SET status_pembayaran='pending'
+
+            WHERE booking_id=%s
+
+        """,(booking_id,))
+
+    elif transaction_status in ("expire", "cancel"):
+
+        cursor.execute("""
+
+            UPDATE pembayaran
+
+            SET status_pembayaran='failed'
+
+            WHERE booking_id=%s
+
+        """, (booking_id,))
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+        "message":"OK"
     })
