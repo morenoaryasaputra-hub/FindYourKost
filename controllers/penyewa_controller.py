@@ -25,6 +25,13 @@ penyewa_bp = Blueprint(
 @penyewa_bp.before_request
 def cek_penyewa():
 
+    whitelist = {
+        "penyewa.midtrans_notification"
+    }
+
+    if request.endpoint in whitelist:
+        return
+
     if "user_id" not in session:
 
         return redirect("/login")
