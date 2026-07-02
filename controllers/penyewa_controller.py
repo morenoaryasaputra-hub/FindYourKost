@@ -467,80 +467,118 @@ def bayar_dp(booking_id):
 def get_snap_token(booking_id):
 
     if "user_id" not in session:
-        return jsonify({"error":"Unauthorized"}),401
+        return jsonify({"error": "Unauthorized"}), 401
 
     conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute("""
-
         SELECT
-
             b.id,
             b.total_harga,
-
             u.nama,
             u.email,
-            u.no_hp
-
+            u.no_hp,
+            p.midtrans_order_id,
+            p.snap_token,
+            p.status_pembayaran
         FROM booking b
 
         JOIN users u
-        ON b.penyewa_id=u.id
+            ON b.penyewa_id = u.id
+
+        JOIN pembayaran p
+            ON p.booking_id = b.id
 
         WHERE
             b.id=%s
         AND
             b.penyewa_id=%s
+    """, (booking_id, session["user_id"]))
 
-    """,(booking_id,session["user_id"]))
-
-    booking=cursor.fetchone()
+    booking = cursor.fetchone()
 
     if not booking:
 
         cursor.close()
         conn.close()
 
-        return jsonify({"error":"Booking tidak ditemukan"}),404
+        return jsonify({
+            "error": "Booking tidak ditemukan"
+        }), 404
 
-    dp=int(float(booking[1])*0.30)
+    dp = int(float(booking[1]) * 0.30)
 
-    order_id=f"DP-{booking_id}-{uuid.uuid4().hex[:8]}"
+    # ==========================
+    # SUDAH ADA TRANSAKSI PENDING
+    # ==========================
 
-    transaction={
+    if booking[5] and booking[6] and booking[7] == "pending":
 
-        "transaction_details":{
+        cursor.close()
+        conn.close()
 
-            "order_id":order_id,
+        return jsonify({
+            "token": booking[6]
+        })
 
-            "gross_amount":dp
+    # ==========================
+    # BELUM ADA TRANSAKSI
+    # ==========================
+
+    order_id = f"DP-{booking_id}-{uuid.uuid4().hex[:8]}"
+
+    transaction = {
+
+        "transaction_details": {
+
+            "order_id": order_id,
+
+            "gross_amount": dp
 
         },
 
-        "customer_details":{
+        "customer_details": {
 
-            "first_name":booking[2],
+            "first_name": booking[2],
 
-            "email":booking[3],
+            "email": booking[3],
 
-            "phone":booking[4]
+            "phone": booking[4]
 
         }
 
     }
 
-    snap_token=snap.create_transaction(transaction)["token"]
+    snap_token = snap.create_transaction(transaction)["token"]
 
-    # simpan order id agar nanti webhook bisa mencocokkan transaksi
     cursor.execute("""
+
         UPDATE pembayaran
+
         SET
+
             midtrans_order_id=%s,
+
+            snap_token=%s,
+
             jumlah=%s,
+
             status_pembayaran='pending'
+
         WHERE booking_id=%s
-    """,(order_id, dp, booking_id))
+
+    """, (
+
+        order_id,
+
+        snap_token,
+
+        dp,
+
+        booking_id
+
+    ))
 
     conn.commit()
 
@@ -549,7 +587,7 @@ def get_snap_token(booking_id):
 
     return jsonify({
 
-        "token":snap_token
+        "token": snap_token
 
     })
 
@@ -580,6 +618,7 @@ def midtrans_notification():
 
     server_key = current_app.config["MIDTRANS_SERVER_KEY"]
 
+    print("WEBHOOK ORDER =", order_id)
     print("SERVER KEY =", current_app.config["MIDTRANS_SERVER_KEY"])
     print("DATA =", data)
 
