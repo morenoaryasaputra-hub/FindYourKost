@@ -5,7 +5,7 @@ from flask import redirect
 from flask import request
 from flask import jsonify
 from decimal import Decimal
-from config import Config
+from flask import current_app
 import hashlib
 
 from utils.midtrans import snap
@@ -562,10 +562,15 @@ def midtrans_notification():
 
     data = request.get_json(silent=True)
 
-    if not data:
-        return jsonify({
-            "message": "Notification endpoint OK"
-        }), 200
+    if data is None:
+        data = request.form.to_dict()
+
+    print("CONTENT TYPE =", request.content_type)
+    print("RAW DATA =", request.data)
+    print("FORM =", request.form)
+    print("JSON =", request.get_json(silent=True))
+
+    print(data)
 
     order_id = data["order_id"]
     status_code = data["status_code"]
@@ -573,7 +578,10 @@ def midtrans_notification():
     signature_key = data["signature_key"]
     transaction_status = data["transaction_status"]
 
-    server_key = Config.MIDTRANS_SERVER_KEY
+    server_key = current_app.config["MIDTRANS_SERVER_KEY"]
+
+    print("SERVER KEY =", current_app.config["MIDTRANS_SERVER_KEY"])
+    print("DATA =", data)
 
     my_signature = hashlib.sha512(
         (
@@ -661,9 +669,6 @@ def midtrans_notification():
             WHERE booking_id=%s
 
         """, (booking_id,))
-
-    print("SERVER KEY =", Config.MIDTRANS_SERVER_KEY)
-    print("DATA =", data)
 
     conn.commit()
 
