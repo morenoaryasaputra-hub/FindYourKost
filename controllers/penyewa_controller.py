@@ -662,6 +662,9 @@ def midtrans_notification():
 
         """, (booking_id,))
 
+    print("SERVER KEY =", Config.MIDTRANS_SERVER_KEY)
+    print("DATA =", data)
+
     conn.commit()
 
     cursor.close()
