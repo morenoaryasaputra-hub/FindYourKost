@@ -553,7 +553,12 @@ def get_snap_token(booking_id):
 @penyewa_bp.route("/midtrans/notification", methods=["POST"])
 def midtrans_notification():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({
+            "message": "Notification endpoint OK"
+        }), 200
 
     order_id = data["order_id"]
     status_code = data["status_code"]
