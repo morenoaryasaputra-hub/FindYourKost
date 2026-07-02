@@ -219,13 +219,14 @@ href="{{ url_for('static', filename='css/detail_booking.css') }}">
 
             {% elif booking[5] == "menunggu_pelunasan" %}
 
-            <a
-            href="/booking/{{ booking[0] }}/pelunasan"
+            <button
+            id="pelunasan-button"
+            data-booking-id="{{ booking[0] }}"
             class="pay-btn">
 
                 Bayar Pelunasan
 
-            </a>
+            </button>
 
             {% endif %}
 
@@ -329,6 +330,68 @@ if(payButton){
         const response = await fetch(
 
             `/booking/${bookingId}/snap-token`
+
+        );
+
+        const data = await response.json();
+
+        snap.pay(
+
+            data.token,
+
+            {
+
+                onSuccess:function(result){
+
+                    location.reload();
+
+                },
+
+                onPending:function(result){
+
+                    alert("Pembayaran Pending");
+
+                },
+
+                onError:function(result){
+
+                    alert("Pembayaran Gagal");
+
+                },
+
+                onClose:function(){
+
+                    console.log(
+                        "Popup ditutup"
+                    );
+
+                }
+
+            }
+
+        );
+
+    }
+
+}
+
+// ====================================
+// BAYAR PELUNASAN
+// ====================================
+
+const pelunasanButton =
+document.getElementById("pelunasan-button");
+
+if(pelunasanButton){
+
+    pelunasanButton.onclick = async function(){
+
+        const bookingId =
+            pelunasanButton.dataset.bookingId;
+
+        const response = await fetch(
+
+            `/booking/${bookingId}/pelunasan-token`
 
         );
 
