@@ -340,11 +340,29 @@ if(payButton){
 
             {
 
-                onSuccess:function(result){
+                onSuccess: function(result){
 
-                    location.reload();
+                    fetch("/booking/update-status",{
 
-                },
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+
+                    body:JSON.stringify({
+                        order_id:result.order_id
+                    })
+
+                })
+                .then(r=>r.json())
+                .then(data=>{
+
+                    window.location.reload();
+
+                });
+
+            },
 
                 onPending:function(result){
 
