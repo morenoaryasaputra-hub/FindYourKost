@@ -473,12 +473,16 @@ def get_snap_token(booking_id):
     cursor = conn.cursor()
 
     cursor.execute("""
+
         SELECT
+
             b.id,
             b.total_harga,
+
             u.nama,
             u.email,
             u.no_hp,
+
             p.midtrans_order_id,
             p.snap_token,
             p.status_pembayaran
@@ -486,15 +490,16 @@ def get_snap_token(booking_id):
         FROM booking b
 
         JOIN users u
-            ON b.penyewa_id = u.id
+        ON b.penyewa_id = u.id
 
         JOIN pembayaran p
-            ON p.booking_id = b.id
+        ON p.booking_id = b.id
 
         WHERE
             b.id=%s
         AND
             b.penyewa_id=%s
+
     """, (booking_id, session["user_id"]))
 
     booking = cursor.fetchone()
@@ -510,15 +515,26 @@ def get_snap_token(booking_id):
 
     dp = int(float(booking[1]) * 0.30)
 
-    # ===================================
-    # MASIH ADA TRANSAKSI PENDING
-    # ===================================
+    # ============================
+    # SUDAH BERHASIL BAYAR
+    # ============================
 
-    if (
-        booking[5] is not None
-        and booking[6] is not None
-        and booking[7] == "pending"
-    ):
+    if booking[7] == "success":
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "message": "DP sudah dibayar."
+        }), 400
+
+    # ============================
+    # MASIH PENDING
+    # ============================
+
+    if booking[7] == "pending" and booking[6]:
+
+        print("PAKAI SNAP TOKEN LAMA")
 
         cursor.close()
         conn.close()
@@ -529,11 +545,13 @@ def get_snap_token(booking_id):
 
         })
 
-    # ===================================
-    # TRANSAKSI BARU
-    # ===================================
+    # ============================
+    # BUAT TRANSAKSI BARU
+    # ============================
 
     order_id = f"DP-{booking_id}-{uuid.uuid4().hex[:8]}"
+
+    print("ORDER BARU =", order_id)
 
     transaction = {
 
@@ -600,49 +618,146 @@ def get_snap_token(booking_id):
 
     })
 
-@penyewa_bp.route("/booking/update-status", methods=["POST"])
-def update_status():
+# ====================================
+# NOTIFIKASI MIDTRANS
+# ====================================
 
-    if "user_id" not in session:
-        return jsonify({"error": "Unauthorized"}), 401
+@penyewa_bp.route("/midtrans/notification", methods=["POST"])
+def midtrans_notification():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    if data is None:
+        data = request.form.to_dict()
+
+    print("CONTENT TYPE =", request.content_type)
+    print("RAW DATA =", request.data)
+    print("FORM =", request.form)
+    print("JSON =", request.get_json(silent=True))
+
+    print(data)
 
     order_id = data["order_id"]
+    status_code = data["status_code"]
+    gross_amount = data["gross_amount"]
+    signature_key = data["signature_key"]
+    transaction_status = data["transaction_status"]
+
+    print("======================================")
+    print("WEBHOOK MASUK")
+    print("ORDER ID =", order_id)
+    print("STATUS =", transaction_status)
+    print("======================================")
+
+    server_key = current_app.config["MIDTRANS_SERVER_KEY"]
+
+    print("WEBHOOK ORDER =", order_id)
+    print("SERVER KEY =", current_app.config["MIDTRANS_SERVER_KEY"])
+    print("DATA =", data)
+
+    my_signature = hashlib.sha512(
+        (
+            order_id +
+            status_code +
+            gross_amount +
+            server_key
+        ).encode()
+    ).hexdigest()
+
+    if my_signature != signature_key:
+
+        return jsonify({
+            "message":"Invalid Signature"
+        }),403
 
     conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute("""
+
         SELECT booking_id
+
         FROM pembayaran
+
         WHERE midtrans_order_id=%s
-    """, (order_id,))
+
+    """,(order_id,))
 
     pembayaran = cursor.fetchone()
 
+    print("HASIL QUERY =", pembayaran)
+
     if not pembayaran:
+
         cursor.close()
         conn.close()
-        return jsonify({"error": "Order tidak ditemukan"}), 404
+
+        return jsonify({
+            "message":"Order tidak ditemukan"
+        }),404
 
     booking_id = pembayaran[0]
 
-    cursor.execute("""
-        UPDATE pembayaran
-        SET status_pembayaran='success'
-        WHERE booking_id=%s
-    """, (booking_id,))
+    print("BOOKING =", booking_id)
 
-    cursor.execute("""
-        UPDATE booking
-        SET status_booking='dp_dibayar'
-        WHERE id=%s
-    """, (booking_id,))
+    if transaction_status == "settlement":
 
+        cursor.execute("""
+
+            UPDATE pembayaran
+
+            SET status_pembayaran='success'
+
+            WHERE booking_id=%s
+
+        """,(booking_id,))
+
+        print("UPDATE PEMBAYARAN =", cursor.rowcount)
+
+
+        cursor.execute("""
+
+            UPDATE booking
+
+            SET status_booking='dp_dibayar'
+
+            WHERE id=%s
+
+        """,(booking_id,))
+
+        print("UPDATE BOOKING =", cursor.rowcount)
+
+    elif transaction_status == "pending":
+
+        cursor.execute("""
+
+            UPDATE pembayaran
+
+            SET status_pembayaran='pending'
+
+            WHERE booking_id=%s
+
+        """,(booking_id,))
+
+    elif transaction_status in ("expire", "cancel"):
+
+        cursor.execute("""
+
+            UPDATE pembayaran
+
+            SET status_pembayaran='failed'
+
+            WHERE booking_id=%s
+
+        """, (booking_id,))
+
+    print("COMMIT...")
     conn.commit()
+    print("UPDATE BERHASIL")
 
     cursor.close()
     conn.close()
 
-    return jsonify({"success": True})
+    return jsonify({
+        "message":"OK"
+    })
