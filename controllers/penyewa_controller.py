@@ -49,6 +49,10 @@ def cek_penyewa():
 @penyewa_bp.route("/")
 def beranda():
 
+    if "user_id" not in session:
+
+        return redirect("/login")
+
     conn = get_db()
     cursor = conn.cursor()
 
@@ -56,36 +60,54 @@ def beranda():
 
         SELECT
 
-            id,
-            nama_kost,
-            alamat,
-            harga,
-            tipe_penghuni,
-            foto_thumbnail,
-            status_verifikasi,
-            sisa_kamar,
-            tier_listing
+            k.id,
+            k.nama_kost,
+            k.alamat,
+            k.harga,
+            k.tipe_penghuni,
+            k.foto_thumbnail,
+            k.status_verifikasi,
+            k.sisa_kamar,
+            k.tier_listing,
 
-        FROM kost
+            CASE
 
-        WHERE status_verifikasi = 1
+                WHEN w.id IS NULL THEN 0
+                ELSE 1
+
+            END AS is_wishlist
+
+        FROM kost k
+
+        LEFT JOIN wishlist w
+
+        ON
+            w.kost_id = k.id
+
+        AND
+            w.user_id = %s
+
+        WHERE
+            k.status_verifikasi = 1
 
         ORDER BY
 
-        CASE tier_listing
+        CASE
 
-            WHEN 'premium' THEN 3
-            WHEN 'gold' THEN 2
-            WHEN 'silver' THEN 1
+            WHEN k.tier_listing='premium' THEN 3
+            WHEN k.tier_listing='gold' THEN 2
+            WHEN k.tier_listing='silver' THEN 1
             ELSE 0
 
         END DESC,
 
-        created_at DESC
+        k.created_at DESC
 
         LIMIT 12
 
-    """)
+    """,(
+        session["user_id"],
+    ))
 
     kost_list = cursor.fetchall()
 
@@ -93,13 +115,12 @@ def beranda():
     conn.close()
 
     return render_template(
-        "penyewa/beranda.html",
-        kost_list=kost_list
-    )
 
-# ====================================
-# CARI KOS
-# ====================================
+        "penyewa/beranda.html",
+
+        kost_list=kost_list
+
+    )
 
 # ====================================
 # CARI KOS
@@ -108,19 +129,38 @@ def beranda():
 @penyewa_bp.route("/cari-kos")
 def cari_kos():
 
-    gender=request.args.get("gender","")
+    if "user_id" not in session:
 
-    max_harga=request.args.get("max_harga","")
+        return redirect("/login")
 
-    sort=request.args.get("sort","premium")
+    gender = request.args.get(
+        "gender",
+        ""
+    )
 
-    keyword = request.args.get("keyword", "").strip()
+    max_harga = request.args.get(
+        "max_harga",
+        ""
+    )
+
+    sort = request.args.get(
+        "sort",
+        "premium"
+    )
+
+    keyword = request.args.get(
+        "keyword",
+        ""
+    ).strip()
 
     conn = get_db()
+
     cursor = conn.cursor()
 
     sql = """
+
         SELECT
+
             k.id,
             k.nama_kost,
             k.alamat,
@@ -129,69 +169,134 @@ def cari_kos():
             k.foto_thumbnail,
             k.sisa_kamar,
             k.status_verifikasi,
-            k.tier_listing
+            k.tier_listing,
+
+            CASE
+
+                WHEN w.id IS NULL THEN 0
+                ELSE 1
+
+            END AS is_wishlist
 
         FROM kost k
 
+        LEFT JOIN wishlist w
+
+        ON
+            w.kost_id = k.id
+
+        AND
+            w.user_id = %s
+
         WHERE
+
             k.status_verifikasi = 1
+
     """
 
-    params = []
+    params = [
+
+        session["user_id"]
+
+    ]
 
     if gender:
 
-        sql+=" AND k.tipe_penghuni=%s"
+        sql += """
 
-        params.append(gender)
+            AND
+            k.tipe_penghuni = %s
+
+        """
+
+        params.append(
+            gender
+        )
 
     if max_harga:
 
-        sql+=" AND k.harga<=%s"
+        sql += """
 
-        params.append(max_harga)
+            AND
+            k.harga <= %s
+
+        """
+
+        params.append(
+            max_harga
+        )
 
     if keyword:
 
         sql += """
 
             AND
+
             (
+
                 k.nama_kost LIKE %s
+
                 OR
+
                 k.alamat LIKE %s
+
             )
 
         """
 
-        params.extend([
-            f"%{keyword}%",
-            f"%{keyword}%"
-        ])
+        params.extend(
 
-    if sort=="murah":
+            [
 
-        sql+=" ORDER BY k.harga ASC"
+                f"%{keyword}%",
 
-    elif sort=="mahal":
+                f"%{keyword}%"
 
-        sql+=" ORDER BY k.harga DESC"
+            ]
 
-    elif sort=="baru":
+        )
 
-        sql+=" ORDER BY k.created_at DESC"
+    if sort == "murah":
+
+        sql += """
+
+            ORDER BY
+
+            k.harga ASC
+
+        """
+
+    elif sort == "mahal":
+
+        sql += """
+
+            ORDER BY
+
+            k.harga DESC
+
+        """
+
+    elif sort == "baru":
+
+        sql += """
+
+            ORDER BY
+
+            k.created_at DESC
+
+        """
 
     else:
 
-        sql+="""
+        sql += """
 
             ORDER BY
 
             CASE
 
-                WHEN k.tier_listing='premium' THEN 1
-                WHEN k.tier_listing='gold' THEN 2
-                WHEN k.tier_listing='silver' THEN 3
+                WHEN k.tier_listing = 'premium' THEN 1
+                WHEN k.tier_listing = 'gold' THEN 2
+                WHEN k.tier_listing = 'silver' THEN 3
                 ELSE 4
 
             END,
@@ -200,18 +305,30 @@ def cari_kos():
 
         """
 
-    cursor.execute(sql, params)
+    cursor.execute(
+
+        sql,
+
+        params
+
+    )
 
     kost_list = cursor.fetchall()
 
     cursor.close()
+
     conn.close()
 
     return render_template(
+
         "penyewa/cari_kos.html",
-        kost_list=kost_list,
-        keyword=keyword,
-        total=len(kost_list)
+
+        kost_list = kost_list,
+
+        keyword = keyword,
+
+        total = len(kost_list)
+
     )
 
 # ====================================
@@ -220,6 +337,10 @@ def cari_kos():
 
 @penyewa_bp.route("/detail-kost/<int:kost_id>")
 def detail_kost(kost_id):
+
+    if "user_id" not in session:
+
+        return redirect("/login")
 
     conn = get_db()
     cursor = conn.cursor()
@@ -236,25 +357,84 @@ def detail_kost(kost_id):
             k.deskripsi,
             k.foto_thumbnail,
             k.sisa_kamar,
+            k.status_verifikasi,
+            k.tier_listing,
 
             u.id,
             u.nama,
             u.foto_profil,
-            u.no_hp
+            u.no_hp,
+
+            (
+                SELECT COUNT(*)
+                FROM review r
+                WHERE r.kost_id=k.id
+            ) AS total_review,
+
+            (
+                SELECT ROUND(AVG(r.rating),1)
+                FROM review r
+                WHERE r.kost_id=k.id
+            ) AS rating,
+
+            CASE
+
+                WHEN w.id IS NULL THEN 0
+                ELSE 1
+
+            END AS is_wishlist
 
         FROM kost k
 
         JOIN users u
-        ON k.pemilik_id=u.id
+
+        ON
+            u.id=k.pemilik_id
+
+        LEFT JOIN wishlist w
+
+        ON
+            w.kost_id=k.id
+
+        AND
+            w.user_id=%s
 
         WHERE
+
             k.id=%s
+
         AND
+
             k.status_verifikasi=1
+
+    """,(
+
+        session["user_id"],
+        kost_id
+
+    ))
+
+    kost = cursor.fetchone()
+
+    cursor.execute("""
+
+        SELECT
+
+            url_foto
+
+        FROM foto_kost
+
+        WHERE
+
+            kost_id=%s
+
+        ORDER BY
+
+            created_at ASC
 
     """,(kost_id,))
 
-    kost = cursor.fetchone()
+    foto_list = cursor.fetchall()
 
     cursor.close()
     conn.close()
@@ -267,7 +447,8 @@ def detail_kost(kost_id):
 
         "penyewa/detail_kost.html",
 
-        kost=kost
+        kost=kost,
+        foto_list=foto_list
 
     )
 
@@ -296,51 +477,57 @@ def wishlist():
         return redirect("/login")
 
     conn = get_db()
-
     cursor = conn.cursor()
 
-    cursor.execute(
-        """
+    cursor.execute("""
+
         SELECT
 
-            kost.id,
-            kost.nama_kost,
-            kost.alamat,
-            kost.harga,
-            kost.foto_thumbnail,
-            kost.tipe_penghuni
+            k.id,
+            k.nama_kost,
+            k.alamat,
+            k.harga,
+            k.foto_thumbnail,
+            k.tipe_penghuni,
+            k.status_verifikasi,
+            k.tier_listing,
+            k.sisa_kamar
 
-        FROM wishlist
+        FROM wishlist w
 
-        INNER JOIN kost
-        ON wishlist.kost_id = kost.id
+        JOIN kost k
+        ON w.kost_id = k.id
 
-        WHERE wishlist.user_id = %s
+        WHERE
 
-        ORDER BY wishlist.created_at DESC
-        """,
-        (session["user_id"],)
-    )
+        w.user_id=%s
+
+        ORDER BY w.created_at DESC
+
+    """,(session["user_id"],))
 
     wishlist = cursor.fetchall()
 
     cursor.close()
-
     conn.close()
 
     return render_template(
+
         "penyewa/wishlist.html",
+
         wishlist=wishlist
+
     )
 
 # ====================================
-# TAMBAH WISHLIST
+# TOGGLE WISHLIST
 # ====================================
 
-@penyewa_bp.route("/wishlist/tambah/<int:kost_id>")
-def tambah_wishlist(kost_id):
+@penyewa_bp.route("/wishlist/toggle/<int:kost_id>")
+def toggle_wishlist(kost_id):
 
     if "user_id" not in session:
+
         return redirect("/login")
 
     conn = get_db()
@@ -348,43 +535,9 @@ def tambah_wishlist(kost_id):
 
     cursor.execute("""
 
-        INSERT IGNORE INTO wishlist
-        (
-            user_id,
-            kost_id
-        )
+        SELECT id
 
-        VALUES
-        (
-            %s,
-            %s
-        )
-
-    """,(session["user_id"],kost_id))
-
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-
-    return redirect(request.referrer or "/")
-
-# ====================================
-# HAPUS WISHLIST
-# ====================================
-
-@penyewa_bp.route("/wishlist/hapus/<int:kost_id>")
-def hapus_wishlist(kost_id):
-
-    if "user_id" not in session:
-        return redirect("/login")
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-
-        DELETE FROM wishlist
+        FROM wishlist
 
         WHERE
 
@@ -394,14 +547,59 @@ def hapus_wishlist(kost_id):
 
         kost_id=%s
 
-    """,(session["user_id"],kost_id))
+    """,(
+        session["user_id"],
+        kost_id
+    ))
+
+    data = cursor.fetchone()
+
+    if data:
+
+        cursor.execute("""
+
+            DELETE FROM wishlist
+
+            WHERE
+
+            user_id=%s
+
+            AND
+
+            kost_id=%s
+
+        """,(
+            session["user_id"],
+            kost_id
+        ))
+
+    else:
+
+        cursor.execute("""
+
+            INSERT INTO wishlist
+            (
+                user_id,
+                kost_id
+            )
+
+            VALUES
+            (
+                %s,
+                %s
+            )
+
+        """,(
+            session["user_id"],
+            kost_id
+        ))
 
     conn.commit()
 
     cursor.close()
     conn.close()
 
-    return redirect("/wishlist")
+    return redirect(request.referrer or "/wishlist")
 
 # ====================================
 # BOOKING

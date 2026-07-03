@@ -45,38 +45,61 @@ href="{{ url_for(
 
             <div class="main-photo">
 
+                {% if foto_list %}
+
                 <img 
-                src="{{ kost[6] }}">
+                src="{{ foto_list[0][0] }}"
+                alt="{{ kost[1] }}">
+
+                {% else %}
+
+                <img 
+                src="{{ kost[6] }}"
+                alt="{{ kost[1] }}">
+
+                {% endif %}
 
             </div>
 
+            {% if foto_list|length > 1 %}
+
             <div class="side-photos">
 
-                <img
-                src="https://placehold.co/400x300">
+                {% for foto in foto_list[1:4] %}
 
                 <img
-                src="https://placehold.co/400x300">
+                src="{{ foto[0] }}"
+                alt="Foto Kos">
 
-                <img
-                src="https://placehold.co/400x300">
+                {% endfor %}
+
+                {% if foto_list|length >= 4 %}
 
                 <div class="more-photo">
 
                     <img
-                    src="https://placehold.co/400x300">
+                    src="{{ foto_list[3][0] }}"
+                    alt="Foto Kos">
+
+                    {% if foto_list|length > 4 %}
 
                     <div class="overlay">
 
-                        +12 Foto
-
-                    </div>
+                        +{{ foto_list|length - 4 }} Foto
 
                 </div>
 
+                {% endif %}
+
             </div>
 
+            {% endif %}
+
         </div>
+
+        {% endif %}
+
+    </div>
 
         <!-- BOOKING CARD -->
 
@@ -105,13 +128,14 @@ href="{{ url_for(
             <div class="owner-box">
 
                 <img 
-                src="{{ kost[10] }}">
+                src="{{ kost[12] if kost[12] else url_for('static', 
+                filename='images/default-profile.png') }}">
 
                 <div>
 
                     <strong>
 
-                        {{ kost[9] }}
+                        {{ kost[11] }}
 
                     </strong>
 
@@ -134,10 +158,30 @@ href="{{ url_for(
             </a>
 
             <a
-            href="/chat/create/{{ kost[8] }}"
+            href="/chat/create/{{ kost[0] }}"
             class="chat-btn">
 
                 Chat Pemilik
+
+            </a>
+
+            <a
+            href="/wishlist/toggle/{{ kost[0] }}"
+            class="wishlist-btn-detail">
+
+            {% if kost[16] %}
+
+                <i class="fa-solid fa-heart"></i>
+
+                Hapus dari Wishlist
+
+            {% else %}
+
+                <i class="fa-regular fa-heart"></i>
+
+                Simpan ke Wishlist
+
+            {% endif %}
 
             </a>
 
@@ -173,11 +217,33 @@ href="{{ url_for(
 
         <div class="tags">
 
-            <span class="premium">
+            {% if kost[9] == "premium" %}
+
+            <span class="premium premium-badge">
 
                 Premium
 
             </span>
+
+            {% elif kost[9] == "gold" %}
+
+            <span class="premium gold-badge">
+
+                GOLD
+
+            </span>
+
+            {% elif kost[9] == "silver" %}
+
+            <span class="premium silver-badge">
+
+                SILVER
+
+            </span>
+
+            {% endif %}
+
+            {% if kost[7] > 0 %}
 
             <span class="available">
 
@@ -185,9 +251,23 @@ href="{{ url_for(
 
             </span>
 
+            {% else %}
+
+            <span class="not-available">
+
+                Penuh
+
+            </span>
+
+            {% endif %}
+
             <span class="rating">
 
-                ⭐ 4.9 (124 Review)
+                ⭐
+
+                {{ kost[15] or 0 }}
+
+                ({{ kost[14] }} Review)
 
             </span>
 

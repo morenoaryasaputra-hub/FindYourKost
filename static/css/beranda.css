@@ -297,7 +297,7 @@
 
     top:14px;
 
-    right:14px;
+    right:70px;
 
     background:#dcfce7;
 
@@ -430,5 +430,56 @@ footer{
     border-top:1px solid #e5e7eb;
 
     color:#777;
+
+}
+
+.image-wrapper{
+
+    position:relative;
+
+}
+
+.wishlist-btn{
+
+    position:absolute;
+
+    top:18px;
+
+    right:18px;
+
+    width:42px;
+
+    height:42px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border-radius:50%;
+
+    background:white;
+
+    color:#ef4444;
+
+    text-decoration:none;
+
+    z-index:30;
+
+    box-shadow:
+    0 5px 15px rgba(0,0,0,.15);
+    
+}
+
+.wishlist-btn i{
+
+    font-size:20px;
+
+}
+
+.wishlist-btn:hover{
+
+    transform:scale(1.08);
 
 }

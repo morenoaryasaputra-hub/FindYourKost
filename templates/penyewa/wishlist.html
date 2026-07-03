@@ -5,12 +5,14 @@ Wishlist Saya
 {% endblock %}
 
 {% block css %}
+
 <link
 rel="stylesheet"
 href="{{ url_for(
     'static',
     filename='css/wishlist.css'
 ) }}">
+
 {% endblock %}
 
 {% block content %}
@@ -22,139 +24,233 @@ href="{{ url_for(
         <div>
 
             <h1>
+
                 Wishlist Saya
+
             </h1>
 
             <p>
-                Temukan kembali kos impian yang telah Anda simpan.
+
+                Kos favorit yang telah Anda simpan.
+
             </p>
 
         </div>
 
         <div class="wishlist-filter">
 
-            <button class="active">
-                Semua ({{ wishlist|length }})
+            <button
+            class="active">
+
+                Semua
+
+                ({{ wishlist|length }})
+
             </button>
 
             <button>
+
                 Tersedia
+
             </button>
 
         </div>
 
     </div>
 
+    {% if wishlist %}
+
     <div class="wishlist-grid">
 
-        {% if wishlist %}
+        {% for kost in wishlist %}
 
-            {% for kost in wishlist %}
+        <div
+        class="wishlist-card">
 
-            <div class="wishlist-card">
+            <div class="wishlist-image">
 
-                <div class="wishlist-image">
+                {% if kost[4] %}
 
-                    <img
-                    src="{{ kost[4] }}"
-                    alt="{{ kost[1] }}">
+                <img
+                src="{{ kost[4] }}"
+                alt="{{ kost[1] }}">
 
-                    <span class="badge premium">
-                        PREMIUM
-                    </span>
+                {% else %}
 
-                    <button class="favorite-btn">
+                <img
+                src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900"
+                alt="{{ kost[1] }}">
 
-                        <i class="fa-solid fa-heart"></i>
+                {% endif %}
 
-                    </button>
+                <!-- PREMIUM -->
 
-                    <div class="rating">
+                {% if kost[7] == "premium" %}
 
-                        ⭐ 4.9 (120)
+                <span
+                class="badge premium">
 
-                    </div>
+                    PREMIUM
+
+                </span>
+
+                {% elif kost[7] == "gold" %}
+
+                <span
+                class="badge gold">
+
+                    GOLD
+
+                </span>
+
+                {% elif kost[7] == "silver" %}
+
+                <span
+                class="badge silver">
+
+                    SILVER
+
+                </span>
+
+                {% endif %}
+
+                <a
+                href="/wishlist/toggle/{{ kost[0] }}"
+                class="favorite-btn">
+
+                    <i
+                    class="fa-solid fa-heart"></i>
+
+                </a>
+
+            </div>
+
+            <div class="wishlist-body">
+
+                {% if kost[6] == 1 %}
+
+                <div
+                class="verified">
+
+                    <i
+                    class="fa-solid fa-circle-check"></i>
+
+                    Terverifikasi
 
                 </div>
 
-                <div class="wishlist-body">
+                {% endif %}
 
-                    <h3>
+                <div
+                class="gender-tag">
 
-                        {{ kost[1] }}
+                    {{ kost[5]|upper }}
 
-                    </h3>
+                </div>
 
-                    <p class="alamat">
+                <h3>
 
-                        <i class="fa-solid fa-location-dot"></i>
+                    {{ kost[1] }}
 
-                        {{ kost[2] }}
+                </h3>
 
-                    </p>
+                <p
+                class="alamat">
 
-                    <h2>
+                    <i
+                    class="fa-solid fa-location-dot"></i>
 
-                        Rp {{ "{:,.0f}".format(kost[3]).replace(",", ".") }}
+                    {{ kost[2] }}
 
-                        <span>/bulan</span>
+                </p>
 
-                    </h2>
+                <h2>
 
-                    <div class="wishlist-action">
+                    Rp {{ "{:,.0f}".format(kost[3]).replace(",", ".") }}
 
-                        <a
-                        href="/detail-kost/{{ kost[0] }}"
-                        class="btn-detail">
+                    <span>
 
-                            Detail
+                        / bulan
 
-                        </a>
+                    </span>
 
-                        <a
-                        href="/wishlist/hapus/{{ kost[0] }}"
-                        class="btn-delete"
-                        onclick="return confirm('Hapus dari wishlist?')">
+                </h2>
 
-                            Hapus
+                <p
+                class="sisa">
 
-                        </a>
+                    Sisa Kamar :
 
-                    </div>
+                    <b>
+
+                        {{ kost[8] }}
+
+                    </b>
+
+                </p>
+
+                <div
+                class="wishlist-action">
+
+                    <a
+                    href="/detail-kost/{{ kost[0] }}"
+                    class="btn-detail">
+
+                        Lihat Detail
+
+                    </a>
+
+                    <a
+                    href="/wishlist/toggle/{{ kost[0] }}"
+                    class="btn-delete"
+                    onclick="return confirm('Hapus kos ini dari wishlist?')">
+
+                        Hapus
+
+                    </a>
 
                 </div>
 
             </div>
 
-            {% endfor %}
-
-        {% else %}
-
-        <div class="empty-wishlist">
-
-            <i class="fa-regular fa-heart"></i>
-
-            <h2>
-                Wishlist masih kosong
-            </h2>
-
-            <p>
-                Simpan kos favoritmu agar lebih mudah ditemukan nanti.
-            </p>
-
-            <a
-            href="/cari-kos"
-            class="btn-detail">
-
-                Cari Kos
-
-            </a>
-
         </div>
 
-        {% endif %}
+        {% endfor %}
 
     </div>
+
+    {% else %}
+
+    <div
+    class="empty-wishlist">
+
+        <i
+        class="fa-regular fa-heart"></i>
+
+        <h2>
+
+            Wishlist Masih Kosong
+
+        </h2>
+
+        <p>
+
+            Simpan kos favoritmu agar lebih mudah
+            ditemukan saat ingin melakukan booking.
+
+        </p>
+
+        <a
+        href="/cari-kos"
+        class="btn-detail">
+
+            Cari Kos
+
+        </a>
+
+    </div>
+
+    {% endif %}
 
 </div>
 

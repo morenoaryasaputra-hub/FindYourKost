@@ -110,6 +110,23 @@ href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
                         {% endif %}
 
+                        <a
+                        href="/wishlist/toggle/{{ kost[0] }}"
+                        class="wishlist-btn"
+                        onclick="event.stopPropagation();">
+
+                            {% if kost[9] %}
+
+                            <i class="fa-solid fa-heart"></i>
+
+                            {% else %}
+
+                            <i class="fa-regular fa-heart"></i>
+
+                            {% endif %}
+
+                        </a>
+
                         {% if kost[8] == "premium" %}
 
                         <span class="badge premium">

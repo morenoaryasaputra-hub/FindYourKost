@@ -402,14 +402,22 @@ method="GET">
 
                 <!-- WISHLIST -->
 
-                <button
-                type="button"
+                <a
+                href="/wishlist/toggle/{{ kost[0] }}"
                 class="wishlist-btn"
-                onclick="event.stopPropagation()">
+                onclick="event.stopPropagation();">
+
+                    {% if kost[9] %}
+
+                    <i class="fa-solid fa-heart"></i>
+
+                    {% else %}
 
                     <i class="fa-regular fa-heart"></i>
 
-                </button>
+                    {% endif %}
+
+                </a>
 
             </div>
 
