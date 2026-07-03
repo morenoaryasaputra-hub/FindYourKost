@@ -5,101 +5,206 @@ Beranda
 {% endblock %}
 
 {% block css %}
+
 <link
 rel="stylesheet"
 href="{{ url_for('static', filename='css/beranda.css') }}">
+
+<link
+rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
 {% endblock %}
 
 {% block content %}
+
+<!-- HERO -->
 
 <section class="hero">
 
     <div class="hero-content">
 
-        <h1>Temukan Kos Impianmu</h1>
+        <h1>
+
+            Temukan Kos Impianmu
+
+        </h1>
 
         <p>
+
             Cari kos terbaik dengan lokasi strategis
             dan harga sesuai kebutuhanmu.
+
         </p>
 
-        <div class="search-box">
+        <form
+        action="/cari-kos"
+        method="GET"
+        class="search-box">
 
             <input
             type="text"
+            name="keyword"
             placeholder="Cari nama kos atau lokasi...">
 
-            <button>Cari</button>
+            <button
+            type="submit">
 
-        </div>
+                Cari
+
+            </button>
+
+        </form>
 
     </div>
 
 </section>
 
+<!-- REKOMENDASI -->
+
 <section class="kost-section">
 
     <div class="section-header">
 
-        <h2>Rekomendasi Kost</h2>
+        <h2>
 
-    </div>
+            Rekomendasi Kos
 
-    <div class="kost-grid">
+        </h2>
 
-        {% for kost in kost_list %}
+        <div class="slider-nav">
 
-        <div class="kost-card">
+            <div class="swiper-button-prev"></div>
 
-            {% if kost[5] %}
-
-            <img
-            src="{{ kost[5] }}"
-            alt="{{ kost[1] }}">
-
-            {% else %}
-
-            <img
-            src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900"
-            alt="{{ kost[1] }}">
-
-            {% endif %}
-
-            <div class="kost-body">
-
-                {% if kost[6] == 1 %}
-
-                <span class="verified">
-                    ✓ Terverifikasi
-                </span>
-
-                {% endif %}
-
-                <h3>{{ kost[1] }}</h3>
-
-                <p class="alamat">
-                    {{ kost[2] }}
-                </p>
-
-                <p class="tipe">
-                    {{ kost[4]|upper }}
-                </p>
-
-                <p class="harga">
-                    Rp {{ "{:,.0f}".format(kost[3]) }}
-                    <span>/ bulan</span>
-                </p>
-
-                <p class="sisa">
-                    Sisa Kamar:
-                    {{ kost[7] }}
-                </p>
-
-            </div>
+            <div class="swiper-button-next"></div>
 
         </div>
 
-        {% endfor %}
+    </div>
+
+    <div class="swiper rekomendasiSwiper">
+
+        <div class="swiper-wrapper">
+
+            {% for kost in kost_list %}
+
+            <div class="swiper-slide">
+
+                <div
+                class="kost-card"
+                onclick="window.location='/detail-kost/{{ kost[0] }}'">
+
+                    <div class="image-wrapper">
+
+                        {% if kost[5] %}
+
+                        <img
+                        src="{{ kost[5] }}"
+                        alt="{{ kost[1] }}">
+
+                        {% else %}
+
+                        <img
+                        src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900"
+                        alt="{{ kost[1] }}">
+
+                        {% endif %}
+
+                        {% if kost[8] == "premium" %}
+
+                        <span class="badge premium">
+
+                            PREMIUM
+
+                        </span>
+
+                        {% elif kost[8] == "gold" %}
+
+                        <span class="badge gold">
+
+                            GOLD
+
+                        </span>
+
+                        {% elif kost[8] == "silver" %}
+
+                        <span class="badge silver">
+
+                            SILVER
+
+                        </span>
+
+                        {% endif %}
+
+                        {% if kost[6] == 1 %}
+
+                        <span class="verified">
+
+                            ✓ Terverifikasi
+
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="kost-body">
+
+                        <h3>
+
+                            {{ kost[1] }}
+
+                        </h3>
+
+                        <p class="alamat">
+
+                            📍 {{ kost[2] }}
+
+                        </p>
+
+                        <p class="tipe">
+
+                            {{ kost[4]|upper }}
+
+                        </p>
+
+                        <p class="harga">
+
+                            Rp {{ "{:,.0f}".format(kost[3]) }}
+
+                            <span>
+
+                                / bulan
+
+                            </span>
+
+                        </p>
+
+                        <p class="sisa">
+
+                            Sisa Kamar :
+                            {{ kost[7] }}
+
+                        </p>
+
+                        <a
+                        href="/detail-kost/{{ kost[0] }}"
+                        class="detail-btn"
+                        onclick="event.stopPropagation();">
+
+                            Lihat Detail
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
 
     </div>
 
@@ -110,5 +215,57 @@ href="{{ url_for('static', filename='css/beranda.css') }}">
     © 2026 FindYourKost
 
 </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script>
+
+new Swiper(".rekomendasiSwiper",{
+
+    slidesPerView:4,
+
+    spaceBetween:24,
+
+    loop:false,
+
+    navigation:{
+
+        nextEl:".swiper-button-next",
+
+        prevEl:".swiper-button-prev"
+
+    },
+
+    breakpoints:{
+
+        320:{
+
+            slidesPerView:1
+
+        },
+
+        768:{
+
+            slidesPerView:2
+
+        },
+
+        1024:{
+
+            slidesPerView:3
+
+        },
+
+        1400:{
+
+            slidesPerView:4
+
+        }
+
+    }
+
+});
+
+</script>
 
 {% endblock %}

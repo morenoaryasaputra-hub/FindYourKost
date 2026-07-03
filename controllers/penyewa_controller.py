@@ -50,11 +50,12 @@ def cek_penyewa():
 def beranda():
 
     conn = get_db()
-
     cursor = conn.cursor()
 
     cursor.execute("""
+
         SELECT
+
             id,
             nama_kost,
             alamat,
@@ -62,11 +63,28 @@ def beranda():
             tipe_penghuni,
             foto_thumbnail,
             status_verifikasi,
-            sisa_kamar
+            sisa_kamar,
+            tier_listing
+
         FROM kost
+
         WHERE status_verifikasi = 1
-        ORDER BY created_at DESC
-        LIMIT 8
+
+        ORDER BY
+
+        CASE tier_listing
+
+            WHEN 'premium' THEN 3
+            WHEN 'gold' THEN 2
+            WHEN 'silver' THEN 1
+            ELSE 0
+
+        END DESC,
+
+        created_at DESC
+
+        LIMIT 12
+
     """)
 
     kost_list = cursor.fetchall()
@@ -83,26 +101,174 @@ def beranda():
 # CARI KOS
 # ====================================
 
-@penyewa_bp.route(
-    "/cari-kos"
-)
+# ====================================
+# CARI KOS
+# ====================================
+
+@penyewa_bp.route("/cari-kos")
 def cari_kos():
 
+    gender=request.args.get("gender","")
+
+    max_harga=request.args.get("max_harga","")
+
+    sort=request.args.get("sort","premium")
+
+    keyword = request.args.get("keyword", "").strip()
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    sql = """
+        SELECT
+            k.id,
+            k.nama_kost,
+            k.alamat,
+            k.harga,
+            k.tipe_penghuni,
+            k.foto_thumbnail,
+            k.sisa_kamar,
+            k.status_verifikasi,
+            k.tier_listing
+
+        FROM kost k
+
+        WHERE
+            k.status_verifikasi = 1
+    """
+
+    params = []
+
+    if gender:
+
+        sql+=" AND k.tipe_penghuni=%s"
+
+        params.append(gender)
+
+    if max_harga:
+
+        sql+=" AND k.harga<=%s"
+
+        params.append(max_harga)
+
+    if keyword:
+
+        sql += """
+
+            AND
+            (
+                k.nama_kost LIKE %s
+                OR
+                k.alamat LIKE %s
+            )
+
+        """
+
+        params.extend([
+            f"%{keyword}%",
+            f"%{keyword}%"
+        ])
+
+    if sort=="murah":
+
+        sql+=" ORDER BY k.harga ASC"
+
+    elif sort=="mahal":
+
+        sql+=" ORDER BY k.harga DESC"
+
+    elif sort=="baru":
+
+        sql+=" ORDER BY k.created_at DESC"
+
+    else:
+
+        sql+="""
+
+            ORDER BY
+
+            CASE
+
+                WHEN k.tier_listing='premium' THEN 1
+                WHEN k.tier_listing='gold' THEN 2
+                WHEN k.tier_listing='silver' THEN 3
+                ELSE 4
+
+            END,
+
+            k.created_at DESC
+
+        """
+
+    cursor.execute(sql, params)
+
+    kost_list = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
     return render_template(
-        "penyewa/cari_kos.html"
+        "penyewa/cari_kos.html",
+        kost_list=kost_list,
+        keyword=keyword,
+        total=len(kost_list)
     )
 
 # ====================================
 # DETAIL KOS
 # ====================================
 
-@penyewa_bp.route(
-    "/detail-kost"
-)
-def detail_kost():
+@penyewa_bp.route("/detail-kost/<int:kost_id>")
+def detail_kost(kost_id):
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+
+        SELECT
+
+            k.id,
+            k.nama_kost,
+            k.alamat,
+            k.harga,
+            k.tipe_penghuni,
+            k.deskripsi,
+            k.foto_thumbnail,
+            k.sisa_kamar,
+
+            u.id,
+            u.nama,
+            u.foto_profil,
+            u.no_hp
+
+        FROM kost k
+
+        JOIN users u
+        ON k.pemilik_id=u.id
+
+        WHERE
+            k.id=%s
+        AND
+            k.status_verifikasi=1
+
+    """,(kost_id,))
+
+    kost = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not kost:
+
+        return redirect("/cari-kos")
 
     return render_template(
-        "penyewa/detail_kost.html"
+
+        "penyewa/detail_kost.html",
+
+        kost=kost
+
     )
 
 # ====================================
@@ -406,7 +572,7 @@ def bayar_dp(booking_id):
 
             users.nama,
             users.email,
-            users.nomor_telepon
+            users.no_hp
 
         FROM booking
 

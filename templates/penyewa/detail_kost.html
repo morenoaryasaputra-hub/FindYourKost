@@ -31,7 +31,7 @@ href="{{ url_for(
 
         <span>
 
-            Kos Eksklusif Tebet Raya
+            {{ kost[1] }}
 
         </span>
 
@@ -45,8 +45,8 @@ href="{{ url_for(
 
             <div class="main-photo">
 
-                <img
-                src="https://placehold.co/800x600">
+                <img 
+                src="{{ kost[6] }}">
 
             </div>
 
@@ -90,7 +90,7 @@ href="{{ url_for(
 
             <div class="price">
 
-                Rp 3.500.000
+                Rp {{ "{:,.0f}".format(kost[3]) }}
 
                 <span>
 
@@ -104,14 +104,14 @@ href="{{ url_for(
 
             <div class="owner-box">
 
-                <img
-                src="https://placehold.co/60">
+                <img 
+                src="{{ kost[10] }}">
 
                 <div>
 
                     <strong>
 
-                        Andi Pratama
+                        {{ kost[9] }}
 
                     </strong>
 
@@ -126,7 +126,7 @@ href="{{ url_for(
             </div>
 
             <a
-            href="konfirmasi-booking"
+            href="/konfirmasi-booking/{{ kost[0] }}"
             class="booking-btn">
 
                 Booking Sekarang
@@ -134,7 +134,7 @@ href="{{ url_for(
             </a>
 
             <a
-            href="#"
+            href="/chat/create/{{ kost[8] }}"
             class="chat-btn">
 
                 Chat Pemilik
@@ -195,15 +195,13 @@ href="{{ url_for(
 
         <h1>
 
-            Kos Eksklusif Tebet Raya - Tipe A
+            {{ kost[1] }}
 
         </h1>
 
         <div class="alamat">
 
-            📍 Jl. Tebet Raya No.45,
-            Tebet Timur,
-            Jakarta Selatan
+            {{ kost[2] }}
 
         </div>
 
@@ -215,15 +213,7 @@ href="{{ url_for(
 
         <p>
 
-            Nikmati hunian eksklusif
-            di jantung Jakarta Selatan.
-
-            Kos ini menawarkan desain
-            interior modern minimalis,
-            fasilitas lengkap,
-            keamanan 24 jam,
-            serta lokasi strategis
-            dekat kampus dan pusat kota.
+            {{ kost[5] }}
 
         </p>
 

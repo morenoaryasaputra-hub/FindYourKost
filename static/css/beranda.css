@@ -4,8 +4,8 @@
 
     background:
     linear-gradient(
-    rgba(0,0,0,.4),
-    rgba(0,0,0,.4)
+    rgba(0,0,0,.45),
+    rgba(0,0,0,.45)
     ),
     url("../images/hero.jpg");
 
@@ -15,18 +15,20 @@
 
     display:flex;
 
-    align-items:center;
-
     justify-content:center;
+
+    align-items:center;
 
     text-align:center;
 
-    color:white;
+    color:#fff;
+
 }
 
 .hero-content{
 
     max-width:700px;
+
 }
 
 .hero h1{
@@ -34,13 +36,17 @@
     font-size:52px;
 
     margin-bottom:15px;
+
 }
 
 .hero p{
 
     font-size:18px;
 
-    margin-bottom:25px;
+    margin-bottom:30px;
+
+    line-height:1.6;
+
 }
 
 .search-box{
@@ -49,165 +55,380 @@
 
     justify-content:center;
 
-    gap:10px;
+    gap:12px;
+
 }
 
 .search-box input{
 
-    width:450px;
+    width:470px;
 
-    padding:15px;
+    padding:16px;
 
     border:none;
 
-    border-radius:10px;
+    border-radius:12px;
+
+    outline:none;
+
+    font-size:15px;
+
 }
 
 .search-box button{
 
     background:#1453e5;
 
-    color:white;
+    color:#fff;
 
     border:none;
 
-    padding:15px 30px;
+    padding:16px 34px;
 
-    border-radius:10px;
+    border-radius:12px;
 
     cursor:pointer;
+
+    font-weight:600;
+
+    transition:.2s;
+
 }
+
+.search-box button:hover{
+
+    background:#0d43bf;
+
+}
+
+/* ========================= */
 
 .kost-section{
 
-    max-width:1300px;
+    max-width:1400px;
 
-    margin:50px auto;
+    margin:60px auto;
 
-    padding:0 20px;
+    padding:0 25px;
+
 }
 
 .section-header{
 
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
     margin-bottom:30px;
+
 }
 
 .section-header h2{
 
-    font-size:32px;
+    font-size:40px;
+
+    font-weight:700;
+
 }
 
-.kost-grid{
+/* ========================= */
 
-    display:grid;
+.slider-nav{
 
-    grid-template-columns:
-    repeat(
-    auto-fill,
-    minmax(280px,1fr)
-    );
+    display:flex;
 
-    gap:25px;
+    gap:14px;
+
+    align-items:center;
+
 }
 
-.kost-card{
+.slider-nav .swiper-button-prev,
 
-    background:white;
+.slider-nav .swiper-button-next{
 
-    border-radius:15px;
+    position:static;
+
+    width:50px;
+
+    height:50px;
+
+    border-radius:50%;
+
+    background:#fff;
+
+    box-shadow:0 5px 18px rgba(0,0,0,.12);
+
+    color:#222;
+
+    margin:0;
+
+}
+
+.slider-nav .swiper-button-prev::after,
+
+.slider-nav .swiper-button-next::after{
+
+    font-size:20px;
+
+    font-weight:bold;
+
+}
+
+/* ========================= */
+
+.rekomendasiSwiper{
 
     overflow:hidden;
 
+    padding:8px 2px 18px;
+
+}
+
+.swiper-slide{
+
+    height:auto;
+
+    display:flex;
+
+}
+
+/* ========================= */
+
+.kost-card{
+
+    width:100%;
+
+    background:#fff;
+
+    border-radius:22px;
+
+    overflow:hidden;
+
+    cursor:pointer;
+
+    display:flex;
+
+    flex-direction:column;
+
     box-shadow:
-    0 4px 15px rgba(
+
+    0 8px 25px rgba(
+
     0,0,0,.08
+
     );
 
-    transition:.2s;
+    transition:.25s;
+
 }
 
 .kost-card:hover{
 
-    transform:translateY(-5px);
+    transform:translateY(-6px);
+
 }
 
-.kost-card img{
+.image-wrapper{
+
+    position:relative;
+
+}
+
+.image-wrapper img{
 
     width:100%;
 
-    height:220px;
+    height:250px;
 
     object-fit:cover;
+
+    display:block;
+
 }
 
-.kost-body{
+/* ========================= */
 
-    padding:18px;
+.badge{
+
+    position:absolute;
+
+    top:14px;
+
+    left:14px;
+
+    color:#fff;
+
+    padding:6px 14px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:700;
+
 }
+
+.silver{
+
+    background:#8d8d8d;
+
+}
+
+.gold{
+
+    background:#d4af37;
+
+}
+
+.premium{
+
+    background:#7e22ce;
+
+}
+
+/* ========================= */
 
 .verified{
 
-    display:inline-block;
+    position:absolute;
+
+    top:14px;
+
+    right:14px;
 
     background:#dcfce7;
 
     color:#166534;
 
-    padding:5px 10px;
+    padding:6px 14px;
 
-    border-radius:20px;
+    border-radius:999px;
 
     font-size:12px;
 
-    margin-bottom:10px;
+    font-weight:600;
+
+}
+
+/* ========================= */
+
+.kost-body{
+
+    padding:18px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    flex:1;
+
 }
 
 .kost-body h3{
 
+    font-size:22px;
+
     margin-bottom:10px;
+
+    min-height:56px;
+
+    line-height:1.3;
+
 }
 
 .alamat{
 
     color:#6b7280;
 
-    margin-bottom:10px;
+    margin-bottom:12px;
+
+    min-height:42px;
+
 }
 
 .tipe{
 
     color:#1453e5;
 
-    font-weight:600;
+    font-weight:700;
 
-    margin-bottom:10px;
+    margin-bottom:14px;
+
 }
 
 .harga{
 
-    font-size:20px;
-
-    font-weight:700;
+    font-size:18px;
 
     color:#1453e5;
 
-    margin-bottom:10px;
+    font-weight:700;
+
+}
+
+.harga span{
+
+    color:#444;
+
+    font-weight:500;
+
 }
 
 .sisa{
 
-    color:#374151;
+    margin-top:10px;
+
+    color:#555;
+
+    margin-bottom:18px;
+
 }
 
-footer{
+.detail-btn{
 
-    margin-top:60px;
+    margin-top:auto;
+
+    display:block;
 
     text-align:center;
 
+    background:#1453e5;
+
+    color:#fff;
+
+    text-decoration:none;
+
+    padding:13px;
+
+    border-radius:12px;
+
+    font-weight:600;
+
+    transition:.2s;
+
+}
+
+.detail-btn:hover{
+
+    background:#0d43bf;
+
+}
+
+/* ========================= */
+
+footer{
+
+    margin-top:70px;
+
     padding:25px;
+
+    text-align:center;
 
     border-top:1px solid #e5e7eb;
 
-    color:#6b7280;
+    color:#777;
+
 }

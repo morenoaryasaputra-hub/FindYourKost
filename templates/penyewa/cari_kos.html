@@ -1,4 +1,4 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
 
 {% block title %}
 Cari Kos
@@ -19,21 +19,34 @@ href="{{ url_for(
 
 <div class="cari-kos-page">
 
-    <!-- SEARCH BAR -->
+<form
+method="GET">
+
+    <!-- SEARCH -->
 
     <div class="search-section">
 
         <div class="search-box">
 
-            <span class="search-icon">
-
-                🔍
-
-            </span>
+            <i
+            class="fa-solid fa-magnifying-glass search-icon"></i>
 
             <input
+
             type="text"
-            placeholder="Cari lokasi atau nama kos...">
+
+            name="keyword"
+
+            value="{{ keyword }}"
+
+            placeholder="Cari nama kos atau alamat...">
+
+            <button
+            type="submit">
+
+                Cari
+
+            </button>
 
         </div>
 
@@ -43,39 +56,82 @@ href="{{ url_for(
 
     <div class="top-filter-bar">
 
-        <button class="filter-main-btn">
+        <div class="filter-left">
 
-            ☰ Filter
+            <button
+            type="button"
+            class="filter-main-btn">
 
-        </button>
+                <i
+                class="fa-solid fa-sliders"></i>
 
-        <button class="filter-chip">
+                Filter
 
-            Harga
+            </button>
 
-        </button>
+            <div class="sort-box">
 
-        <button class="filter-chip">
+                <select
+                name="sort"
+                onchange="this.form.submit()">
 
-            Gender
+                    <option
+                    value="premium"
 
-        </button>
+                    {% if request.args.get("sort", "premium") == "premium" %}
+                    selected
+                    {% endif %}>
 
-        <button class="filter-chip">
+                        Prioritas Premium
 
-            Kampus
+                    </option>
 
-        </button>
+                    <option
+                    value="baru"
 
-        <button class="filter-chip">
+                    {% if request.args.get("sort") == "baru" %}
+                    selected
+                    {% endif %}>
 
-            Fasilitas
+                        Terbaru
 
-        </button>
+                    </option>
+
+                    <option
+                    value="murah"
+
+                    {% if request.args.get("sort") == "murah" %}
+                    selected
+                    {% endif %}>
+
+                        Harga Termurah
+
+                    </option>
+
+                    <option
+                    value="mahal"
+
+                    {% if request.args.get("sort") == "mahal" %}
+                    selected
+                    {% endif %}>
+
+                        Harga Termahal
+
+                    </option>
+
+                    <i class="fa-solid fa-chevron-down"></i>
+
+                </select>
+
+            </div>
+
+        </div>
 
         <div class="hasil-info">
 
-            ⓘ Ditemukan 124 properti di sekitar Anda
+            {{ total }}
+
+            Kos ditemukan
 
         </div>
 
@@ -83,273 +139,392 @@ href="{{ url_for(
 
     <div class="content-layout">
 
-        <!-- SIDEBAR -->
+<!-- SIDEBAR -->
 
-        <aside class="sidebar-filter">
+<aside class="sidebar-filter">
+
+    <h2>
+
+        Filter Lanjutan
+
+    </h2>
+
+    <!-- HARGA -->
+
+    <div class="filter-group">
+
+        <label>
+
+            Harga Maksimum
+
+        </label>
+
+        <input
+
+        type="range"
+
+        name="max_harga"
+
+        min="500000"
+
+        max="5000000"
+
+        step="100000"
+
+        value="{{ request.args.get('max_harga',5000000) }}"
+
+        oninput="hargaOutput.innerHTML='Rp '+Number(this.value).toLocaleString('id-ID')">
+
+        <p
+        id="hargaOutput">
+
+            Rp {{ "{:,.0f}".format(request.args.get("max_harga",5000000)|int) }}
+
+        </p>
+
+    </div>
+
+    <!-- GENDER -->
+
+    <div class="filter-group">
+
+        <label>
+
+            Tipe Penghuni
+
+        </label>
+
+        <div class="gender-buttons">
+
+            <label>
+
+                <input
+
+                type="radio"
+
+                name="gender"
+
+                value="putra"
+
+                {% if request.args.get("gender")=="putra" %}
+                checked
+                {% endif %}>
+
+                Putra
+
+            </label>
+
+            <label>
+
+                <input
+
+                type="radio"
+
+                name="gender"
+
+                value="putri"
+
+                {% if request.args.get("gender")=="putri" %}
+                checked
+                {% endif %}>
+
+                Putri
+
+            </label>
+
+            <label>
+
+                <input
+
+                type="radio"
+
+                name="gender"
+
+                value="campur"
+
+                {% if request.args.get("gender")=="campur" %}
+                checked
+                {% endif %}>
+
+                Campur
+
+            </label>
+
+        </div>
+
+    </div>
+
+    <!-- FASILITAS -->
+
+    <div class="filter-group">
+
+        <label>
+
+            Fasilitas
+
+        </label>
+
+        <label>
+
+            <input
+            type="checkbox">
+
+            Wifi
+
+        </label>
+
+        <label>
+
+            <input
+            type="checkbox">
+
+            AC
+
+        </label>
+
+        <label>
+
+            <input
+            type="checkbox">
+
+            Kamar Mandi Dalam
+
+        </label>
+
+        <label>
+
+            <input
+            type="checkbox">
+
+            Parkir
+
+        </label>
+
+    </div>
+
+    <button
+
+    type="submit"
+
+    class="apply-btn">
+
+        Terapkan Filter
+
+    </button>
+
+</aside>
+
+<section class="listing-section">
+
+    <div class="listing-header">
+
+        {% if keyword %}
+
+        <h2>
+
+            Hasil pencarian
+
+            "{{ keyword }}"
+
+        </h2>
+
+        {% else %}
+
+        <h2>
+
+            Semua Kos
+
+        </h2>
+
+        {% endif %}
+
+        <span class="hasil-text">
+
+            {{ total }}
+
+            kos ditemukan
+
+        </span>
+
+    </div>
+
+    <div class="kost-grid">
+
+        {% for kost in kost_list %}
+
+        <div
+        class="kost-card"
+        onclick="window.location='/detail-kost/{{ kost[0] }}'">
+
+            <div class="image-wrapper">
+
+                {% if kost[5] %}
+
+                <img
+                src="{{ kost[5] }}"
+                alt="{{ kost[1] }}">
+
+                {% else %}
+
+                <img
+                src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900"
+                alt="{{ kost[1] }}">
+
+                {% endif %}
+
+                <!-- PREMIUM -->
+
+                {% if kost[8] == "premium" %}
+
+                <span class="premium-badge premium">
+
+                    PREMIUM
+
+                </span>
+
+                {% elif kost[8] == "gold" %}
+
+                <span class="premium-badge gold">
+
+                    GOLD
+
+                </span>
+
+                {% elif kost[8] == "silver" %}
+
+                <span class="premium-badge silver">
+
+                    SILVER
+
+                </span>
+
+                {% endif %}
+
+                <!-- WISHLIST -->
+
+                <button
+                type="button"
+                class="wishlist-btn"
+                onclick="event.stopPropagation()">
+
+                    <i class="fa-regular fa-heart"></i>
+
+                </button>
+
+            </div>
+
+            <div class="kost-body">
+
+                <div class="card-top">
+
+                    <span class="gender-tag">
+
+                        {{ kost[4]|upper }}
+
+                    </span>
+
+                    {% if kost[7] == 1 %}
+
+                    <span class="verified">
+
+                        <i class="fa-solid fa-circle-check"></i>
+
+                        Terverifikasi
+
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+                <h3>
+
+                    {{ kost[1] }}
+
+                </h3>
+
+                <p class="alamat">
+
+                    <i class="fa-solid fa-location-dot"></i>
+
+                    {{ kost[2] }}
+
+                </p>
+
+                <div class="price">
+
+                    Rp {{ "{:,.0f}".format(kost[3]) }}
+
+                    <span>
+
+                        / bulan
+
+                    </span>
+
+                </div>
+
+                <div class="info-row">
+
+                    <i class="fa-solid fa-door-open"></i>
+
+                    Sisa
+
+                    <b>
+
+                        {{ kost[6] }}
+
+                    </b>
+
+                    kamar
+
+                </div>
+
+                <a
+
+                href="/detail-kost/{{ kost[0] }}"
+
+                class="detail-btn"
+
+                onclick="event.stopPropagation()">
+
+                    Lihat Detail
+
+                </a>
+
+            </div>
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <i
+            class="fa-solid fa-house-circle-xmark"></i>
 
             <h2>
 
-                Filter Lanjutan
+                Tidak ada kos ditemukan
 
             </h2>
 
-            <div class="filter-group">
+            <p>
 
-                <label>
+                Coba gunakan kata kunci lain.
 
-                    Rentang Harga (Bulanan)
+            </p>
 
-                </label>
+        </div>
 
-                <input
-                type="range">
-
-                <div class="price-range">
-
-                    <span>
-
-                        Rp 500rb
-
-                    </span>
-
-                    <span>
-
-                        Rp 5jt+
-
-                    </span>
-
-                </div>
-
-            </div>
-
-            <div class="filter-group">
-
-                <label>
-
-                    Tipe Penghuni
-
-                </label>
-
-                <div class="gender-buttons">
-
-                    <button>
-
-                        Putra
-
-                    </button>
-
-                    <button class="active">
-
-                        Putri
-
-                    </button>
-
-                    <button>
-
-                        Campur
-
-                    </button>
-
-                </div>
-
-            </div>
-
-            <div class="filter-group">
-
-                <label>
-
-                    Fasilitas Utama
-
-                </label>
-
-                <label>
-
-                    <input type="checkbox">
-
-                    AC
-
-                </label>
-
-                <label>
-
-                    <input
-                    type="checkbox"
-                    checked>
-
-                    Kamar Mandi Dalam
-
-                </label>
-
-                <label>
-
-                    <input type="checkbox">
-
-                    Wifi
-
-                </label>
-
-                <label>
-
-                    <input type="checkbox">
-
-                    Parkir Mobil
-
-                </label>
-
-            </div>
-
-            <div class="filter-group">
-
-                <label>
-
-                    Radius dari Kampus
-
-                </label>
-
-                <select>
-
-                    <option>
-                        < 1 KM
-                    </option>
-
-                    <option>
-                        < 3 KM
-                    </option>
-
-                    <option>
-                        < 5 KM
-                    </option>
-
-                </select>
-
-            </div>
-
-            <button class="apply-btn">
-
-                Terapkan Filter
-
-            </button>
-
-        </aside>
-
-        <!-- LISTING -->
-
-        <section class="listing-section">
-
-            <div class="listing-header">
-
-                <h2>
-
-                    Rekomendasi Kos di Salatiga
-
-                </h2>
-
-                <div class="sorting">
-
-                    Urutkan:
-
-                    <select>
-
-                        <option>
-                            Paling Populer
-                        </option>
-
-                        <option>
-                            Termurah
-                        </option>
-
-                        <option>
-                            Terdekat
-                        </option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-            <div class="kost-grid">
-
-                {% for i in range(6) %}
-
-                <div class="kost-card">
-
-                    <div class="image-wrapper">
-
-                        <img
-                        src="https://placehold.co/500x300">
-
-                        <div class="wishlist-btn">
-
-                            ♡
-
-                        </div>
-
-                        <div class="premium-badge">
-
-                            Premium
-
-                        </div>
-
-                    </div>
-
-                    <div class="kost-body">
-
-                        <div class="price">
-
-                            Rp 1.500.000
-
-                            <span>
-
-                                / bln
-
-                            </span>
-
-                        </div>
-
-                        <div class="gender-tag">
-
-                            PUTRI
-
-                        </div>
-
-                        <h3>
-
-                            Kos Melati Salatiga
-
-                        </h3>
-
-                        <div class="alamat">
-
-                            📍 Sidorejo, Salatiga
-
-                        </div>
-
-                        <div class="rating">
-
-                            ⭐ 4.8
-
-                        </div>
-
-                        <a
-                        href="/detail-kost"
-                        class="detail-btn">
-
-                            Detail
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-                {% endfor %}
-
-            </div>
-
-        </section>
+        {% endfor %}
 
     </div>
+
+</section>
+
+</div>
+
+</form>
 
 </div>
 
