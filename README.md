@@ -43,13 +43,13 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-### 3. Instal dependencies
+### 3. Instal Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Konfigurasi environment variables
+### 4. Konfigurasi Environment Variables
 
 Buat file `.env` di direktori utama (root) project anda, kemudian isi dengan kredensial dan *API key* yang diperlukan sesuai dengan konfigurasi lingkungan Anda.
 
@@ -65,7 +65,7 @@ MIDTRANS_SERVER_KEY=your_midtrans_server_key
 MIDTRANS_CLIENT_KEY=your_midtrans_client_key
 ```
 
-### 5. Jalankan aplikasi
+### 5. Jalankan Aplikasi
 
 ```bash
 python app.py
