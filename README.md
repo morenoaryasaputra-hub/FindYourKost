@@ -71,6 +71,8 @@ MIDTRANS_CLIENT_KEY=your_midtrans_client_key
 python app.py
 ```
 
+---
+
 ## 👨‍💻 Contributors
 - Moreno Arya Saputra 
 - Agape Dhaniel Wibowo
