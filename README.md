@@ -78,5 +78,3 @@ python app.py
 - Yuka Asfwa Atalla
 
 Dikembangkan sebagai projek akademik untuk mata kuliah Pengembangan Aplikasi.
-
-Dikembangkan sebagai # M
