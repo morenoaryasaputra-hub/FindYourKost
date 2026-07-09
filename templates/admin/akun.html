@@ -1,0 +1,162 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Profil Saya
+{% endblock %}
+
+{% block css %}
+
+<link
+rel="stylesheet"
+href="{{ url_for(
+    'static',
+    filename='css/auth.css'
+) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="akun-container">
+
+    <div class="akun-card">
+
+        <div class="akun-header">
+
+            <h2>
+
+                Informasi Pribadi
+
+            </h2>
+
+            <a
+            href="/profil"
+            class="btn-edit">
+
+                Edit Profil
+
+            </a>
+
+        </div>
+
+        <div class="akun-body">
+
+            <div class="avatar-besar">
+
+                {% if user[9] %}
+
+                    <img
+                        src="{{ user[9] }}"
+                        alt="Avatar">
+
+                {% else %}
+
+                    <div class="default-avatar-large">
+
+                        {{ user[0][0]|upper }}
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+            <div class="akun-info">
+
+                <div>
+
+                    <span>Nama Lengkap</span>
+
+                    <h3>
+
+                        {{ user[0] }}
+
+                    </h3>
+
+                </div>
+
+                <div>
+
+                    <span>Email</span>
+
+                    <h3>
+
+                        {{ user[1] }}
+
+                    </h3>
+
+                </div>
+
+                <div>
+
+                    <span>Nomor Telepon</span>
+
+                    <h3>
+
+                        {{ user[2] }}
+
+                    </h3>
+
+                </div>
+
+                <div>
+
+                    <span>Pekerjaan</span>
+
+                    <h3>
+
+                        {{ user[5] or '-' }}
+
+                    </h3>
+
+                </div>
+
+                <div>
+
+                    <span>Instansi</span>
+
+                    <h3>
+
+                        {{ user[6] or '-' }}
+
+                    </h3>
+
+                </div>
+
+                <div>
+
+                    <span>Status Akun</span>
+
+                    <h3>
+
+                        {% if user[8] %}
+
+                            <span class="verified">
+
+                                ✓ Profil Lengkap
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="not-verified">
+
+                                Profil Belum Lengkap
+
+                            </span>
+
+                        {% endif %}
+
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

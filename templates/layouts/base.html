@@ -18,15 +18,11 @@
     </title>
 
     <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-
-    <link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/navbar.css'
-    ) }}">
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/navbar.css'
+        ) }}">
 
     {% block css %}
     {% endblock %}
@@ -35,12 +31,10 @@
 
 <body>
 
-    {% if session.get("user_id") %}
-
-        {% include "components/navbar.html" %}
-
+    {% if session.get('user_id') %}
+        {% include 'components/navbar.html' %}
     {% endif %}
-
+    
     <main>
 
         {% block content %}

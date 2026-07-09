@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+{% block title %}Admin | Kelola Pengguna{% endblock %}
+{% block page_header %}Manajemen Pengguna Platform{% endblock %}
+
+{% block content %}
+<div class="card card-admin p-4">
+    <div class="table-responsive">
+        <table class="table table-borderless align-middle">
+            <thead class="table-light border-bottom">
+                <tr>
+                    <th>ID</th>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status KTP</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-bottom">
+                    <td>#102</td>
+                    <td class="fw-bold">Budi Santoso</td>
+                    <td>budi@gmail.com</td>
+                    <td><span class="badge bg-secondary">Pemilik</span></td>
+                    <td><span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check me-1"></i>Terverifikasi</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-ban"></i> Suspend</button>
+                    </td>
+                </tr>
+                <tr class="border-bottom">
+                    <td>#103</td>
+                    <td class="fw-bold">Rian Wijaya</td>
+                    <td>rian@gmail.com</td>
+                    <td><span class="badge bg-dark">Penyewa</span></td>
+                    <td><span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-hourglass-start me-1"></i>Pending</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-success text-white me-1"><i class="fa-solid fa-check"></i> Setujui</button>
+                        <button class="btn btn-sm btn-danger"><i class="fa-solid fa-xmark"></i> Tolak</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'pemilik/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-wallet fa-3x text-primary mb-3"></i>
+                    <h4 class="fw-bold mb-1">Halaman Pembayaran</h4>
+                    <p class="text-muted small">FindYourKost Premium Gateway via Midtrans</p>
+                    
+                    <div class="bg-light p-3 rounded-3 my-4 text-start">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Produk:</span>
+                            <span class="fw-bold">Premium Owner Listing (1 Bulan)</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Metode:</span>
+                            <span class="badge bg-secondary">Midtrans Snap API</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-0">
+                            <span class="h6 fw-bold">Total Tagihan:</span>
+                            <span class="h5 fw-bold text-success">Rp 99.000</span>
+                        </div>
+                    </div>
+
+                    <button id="pay-button" class="btn btn-primary btn-lg w-100 shadow-sm fw-bold">
+                        <i class="fas fa-shield-alt me-2"></i>Bayar Sekarang
+                    </button>
+                    
+                    <a href="{{ url_for('pemilik.premium') }}" class="btn btn-link text-muted btn-sm mt-3 text-decoration-none">Batal & Kembali</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Di bagian bawah file pembayaran.html -->
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="CLIENT_KEY_KAMU_DI_ENV"></script>
+
+<script type="text/javascript">
+    document.getElementById('pay-button').onclick = function(){
+        // Minta token ke backend
+        fetch('/create-transaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: 99000 }) // Sesuai harga di HTML
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Jalankan Snap Midtrans
+            window.snap.pay(data.token, {
+            onSuccess: function(result){ 
+                // 1. Tembak backend untuk update database
+                fetch('/payment-success', {
+                    method: 'POST'
+                })
+                .then(res => res.json())
+                .then(response => {
+                    // 2. Beri notifikasi dan lemparkan kembali ke dashboard
+                    alert("Pembayaran Berhasil! Selamat, fitur Premium Anda sudah terbuka.");
+                    window.location.href = "/pemilik/dashboard";
+                });
+            },
+            onPending: function(result){ alert("Menunggu pembayaran..."); },
+            onError: function(result){ alert("Pembayaran Gagal!"); }
+        });
+        });
+    };
+</script>
+{% endblock %}

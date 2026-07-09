@@ -1,0 +1,81 @@
+{% extends 'pemilik/base.html' %}
+{% block content %}
+<div class="container mt-4" style="font-family: 'Inter', sans-serif;">
+    <h3 class="mb-4 fw-bold text-dark">🛡️ Verifikasi Pengajuan Sewa</h3>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary">
+                        <tr>
+                            <th class="px-4 py-3" style="font-size: 14px;">Nama Penyewa</th>
+                            <th style="font-size: 14px;">Properti Kos</th>
+                            <th style="font-size: 14px;">Tanggal Masuk</th>
+                            <th style="font-size: 14px;">Durasi</th>
+                            <th style="font-size: 14px;">Status</th>
+                            <th class="text-center" style="font-size: 14px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if bookings %}
+                            {% for b in bookings %}
+                            <tr>
+                                <td class="px-4 fw-semibold text-dark">{{ b.penyewa.nama }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ b.kos.nama_kost }}</span></td>
+                                <td class="text-muted">{{ b.tanggal_masuk }}</td>
+                                <td>{{ b.durasi_bulan }} Bulan</td>
+                                <td>
+                                    {% if b.status == 'pending' or b.status == 'Menunggu' %}
+                                        <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-medium">Menunggu</span>
+                                    {% elif b.status == 'approved' or b.status == 'Disetujui' %}
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-medium">Disetujui</span>
+                                    {% else %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill fw-medium">Ditolak</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if b.status == 'pending' or b.status == 'Menunggu' %}
+                                        <form action="{{ url_for('pemilik.verifikasi_aksi', booking_id=b.id, aksi='terima') }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success rounded-3 px-3 fw-medium me-1">
+                                                <i class="fas fa-check me-1"></i> Terima
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('pemilik.verifikasi_aksi', booking_id=b.id, aksi='tolak') }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger rounded-3 px-3 fw-medium" onclick="return confirm('Apakah Anda yakin ingin menolak pengajuan ini?')">
+                                                <i class="fas fa-times me-1"></i> Tolak
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted small fw-medium"><i class="fas fa-check-double text-muted me-1"></i> Selesai Diproses</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3 text-secondary opacity-20"></i>
+                                    <h5 class="fw-bold text-dark mb-1">Belum ada pengajuan sewa masuk</h5>
+                                    <p class="small text-muted mb-0">Pengajuan booking dari penyewa akan muncul di sini.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

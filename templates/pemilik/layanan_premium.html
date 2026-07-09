@@ -1,0 +1,41 @@
+{% extends 'pemilik/base.html' %}
+{% block content %}
+<div class="mb-4 text-center mt-3">
+    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-2"><i class="fas fa-crown me-1"></i> FindYourKost VIP</span>
+    <h2 class="fw-bold">Tingkatkan Visibilitas Properti Anda</h2>
+    <p class="text-muted">Dapatkan penyewa lebih cepat dengan fitur Premium Listing.</p>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-md-4">
+        <div class="card card-metric border-0 shadow-sm p-4 h-100">
+            <h5 class="text-secondary fw-bold text-center">Basic</h5>
+            <h2 class="fw-bold text-center my-3">Gratis</h2>
+            <ul class="list-unstyled mt-4 mb-5">
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Listing properti standar</li>
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Maksimal 5 foto per kos</li>
+                <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Posisi pencarian di bawah</li>
+                <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Tanpa lencana "Rekomendasi"</li>
+            </ul>
+            <button class="btn btn-light w-100 mt-auto" disabled>Paket Saat Ini</button>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card card-metric border-2 border-primary shadow p-4 h-100 position-relative">
+            <div class="position-absolute top-0 start-50 translate-middle badge bg-primary rounded-pill px-3 py-2">Paling Laris</div>
+            <h5 class="text-primary fw-bold text-center mt-2">Premium Listing</h5>
+            <h2 class="fw-bold text-center my-3">Rp 99.000<span class="fs-6 text-muted fw-normal">/bln</span></h2>
+            <ul class="list-unstyled mt-4 mb-5">
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Tampil di halaman pencarian paling atas</li>
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Lencana <span class="badge bg-warning text-dark">Rekomendasi</span></li>
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Upload hingga 20 foto & video</li>
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Dukungan prioritas (CS 24/7)</li>
+            </ul>
+            <a href="{{ url_for('pemilik.pembayaran') }}" class="btn btn-primary w-100 mt-auto">
+    <i class="fas fa-rocket me-2"></i>Upgrade Sekarang
+</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

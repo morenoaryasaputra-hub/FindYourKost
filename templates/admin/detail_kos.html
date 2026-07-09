@@ -1,0 +1,142 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div class="container-fluid px-4 mt-3 mb-5" style="background-color: #f8fafc; font-family: 'Inter', sans-serif;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-3 pt-2">
+        <nav style="--bs-breadcrumb-divider: '>'; font-size: 13px;">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.approval_kos') }}" class="text-decoration-none text-muted">Verifikasi Kos</a></li>
+                <li class="breadcrumb-item active fw-bold text-primary" aria-current="page">Detail Verifikasi</li>
+            </ol>
+        </nav>
+        <span class="badge px-3 py-2 rounded-pill fw-semibold" style="background-color: #ffe4e6; color: #b91c1c;">MENUNGGU PENINJAUAN</span>
+    </div>
+
+    <h2 class="fw-bold text-dark mb-4" style="font-size: 28px;">Detail Verifikasi Kos</h2>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            
+            <div class="row g-2 mb-4">
+                <div class="col-md-7">
+                    <img src="https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=600&q=80" class="w-100 rounded-4 shadow-sm" style="height: 380px; object-fit: cover;">
+                </div>
+                <div class="col-md-5 d-flex flex-column gap-2">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=280&q=80" class="w-100 rounded-3 border" style="height: 115px; object-fit: cover;">
+                        </div>
+                        <div class="col-6">
+                            <img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=280&q=80" class="w-100 rounded-3 border" style="height: 115px; object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="position-relative flex-grow-1">
+                        <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=500&q=80" class="w-100 h-100 rounded-4 border" style="object-fit: cover; min-height: 250px;">
+                        <button class="btn btn-white btn-sm position-absolute bottom-0 end-0 m-3 rounded-3 shadow-sm border fw-semibold bg-white text-dark" style="font-size: 12px; padding: 6px 12px;">
+                            <i class="fas fa-images me-1"></i> Lihat Semua Foto (12)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h3 class="fw-bold text-dark mb-0" style="font-size: 24px;">{{ kos.nama_kost }}</h3>
+                    <div class="text-end">
+                        <h3 class="fw-bold text-primary mb-0" style="font-size: 24px;">Rp {{ "{:,.0f}".format(kos.harga) }}</h3>
+                        <small class="text-muted">per bulan</small>
+                    </div>
+                </div>
+                <p class="text-muted small mb-4"><i class="fas fa-map-marker-alt me-1 text-danger"></i> {{ kos.alamat }}</p>
+
+                <div class="row row-cols-2 row-cols-md-4 g-2 bg-light p-3 rounded-4 mb-4" style="font-size: 13px;">
+                    <div class="col d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-circle bg-white text-primary border shadow-sm"><i class="fas fa-user"></i></div>
+                        <div><small class="text-muted d-block">Pemilik</small><span class="fw-bold text-dark">{{ kos.pemilik.nama if kos.pemilik else 'Mitra Owner' }}</span></div>
+                    </div>
+                    <div class="col d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-circle bg-white text-primary border shadow-sm"><i class="fas fa-users"></i></div>
+                        <div><small class="text-muted d-block">Tipe Kos</small><span class="fw-bold text-dark">Kos {{ kos.tipe_penghuni }}</span></div>
+                    </div>
+                    <div class="col d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-circle bg-white text-primary border shadow-sm"><i class="fas fa-door-open"></i></div>
+                        <div><small class="text-muted d-block">Sisa Kamar</small><span class="fw-bold text-dark">{{ kos.sisa_kamar }} / {{ kos.total_kamar }} Unit</span></div>
+                    </div>
+                    <div class="col d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-circle bg-white text-primary border shadow-sm"><i class="fas fa-shield-alt"></i></div>
+                        <div><small class="text-muted d-block">Status ID</small><span class="fw-bold text-success">Terverifikasi</span></div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-dark mb-2">Deskripsi Properti</h5>
+                <p class="text-secondary small lh-lg mb-4">
+                    Properti ini diupload langsung oleh pemilik mitra FindYourKost. Dilengkapi fasilitas penunjang utama yang strategis, sirkulasi udara optimal, struktur bangunan kokoh, serta aksesibilitas prima yang cocok untuk mahasiswa maupun karyawan lokal.
+                </p>
+
+                <h5 class="fw-bold text-dark mb-3">Fasilitas Unggulan</h5>
+                <div class="row row-cols-2 row-cols-md-3 g-3 text-secondary" style="font-size: 13.5px;">
+                    <div class="col"><i class="fas fa-snowflake text-primary me-2"></i> AC Inverter</div>
+                    <div class="col"><i class="fas fa-wifi text-primary me-2"></i> High Speed WiFi</div>
+                    <div class="col"><i class="fas fa-bath text-primary me-2"></i> Kamar Mandi Dalam</div>
+                    <div class="col"><i class="fas fa-car text-primary me-2"></i> Parkir Mobil & Motor</div>
+                    <div class="col"><i class="fas fa-video text-primary me-2"></i> CCTV 24 Jam</div>
+                    <div class="col"><i class="fas fa-tshirt text-primary me-2"></i> Laundry Kiloan</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 20px;">
+                <h5 class="fw-bold text-dark mb-1">Panel Verifikasi</h5>
+                <p class="text-muted small mb-4">Pastikan semua data sesuai sebelum menyetujui listing.</p>
+
+                <div class="d-flex flex-column gap-2.5 mb-4">
+                    <label class="d-flex align-items-center p-3 rounded-3 border bg-light bg-opacity-20 style-label" style="cursor: pointer; font-size: 13.5px;">
+                        <input type="checkbox" checked class="form-check-input me-3 border-secondary-subtle" style="width: 20px; height: 20px;">
+                        <div><span class="fw-bold d-block text-dark">Foto Sesuai</span><small class="text-muted">Foto tidak blur & representatif.</small></div>
+                    </label>
+
+                    <label class="d-flex align-items-center p-3 rounded-3 border bg-light bg-opacity-20 style-label" style="cursor: pointer; font-size: 13.5px;">
+                        <input type="checkbox" checked class="form-check-input me-3 border-secondary-subtle" style="width: 20px; height: 20px;">
+                        <div><span class="fw-bold d-block text-dark">Informasi Lengkap</span><small class="text-muted">Deskripsi & tipe kamar jelas.</small></div>
+                    </label>
+
+                    <label class="d-flex align-items-center p-3 rounded-3 border bg-light bg-opacity-20 style-label" style="cursor: pointer; font-size: 13.5px;">
+                        <input type="checkbox" checked class="form-check-input me-3 border-secondary-subtle" style="width: 20px; height: 20px;">
+                        <div><span class="fw-bold d-block text-dark">Lokasi Valid</span><small class="text-muted">Pin map sesuai dengan alamat.</small></div>
+                    </label>
+
+                    <label class="d-flex align-items-center p-3 rounded-3 border bg-light bg-opacity-20 style-label" style="cursor: pointer; font-size: 13.5px;">
+                        <input type="checkbox" checked class="form-check-input me-3 border-secondary-subtle" style="width: 20px; height: 20px;">
+                        <div><span class="fw-bold d-block text-dark">Fasilitas Valid</span><small class="text-muted">Ikon fasilitas sesuai deskripsi.</small></div>
+                    </label>
+                </div>
+
+                <form action="{{ url_for('admin.proses_verifikasi', kost_id=kos.id) }}" method="POST">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-secondary">Catatan Admin (Opsional)</label>
+                        <textarea name="catatan_admin" class="form-control rounded-3" rows="3" placeholder="Masukkan alasan jika menolak..."></textarea>
+                    </div>
+
+                    <div class="d-flex flex-column gap-2">
+                        <input type="hidden" name="action_type" id="action_type" value="setujui">
+                        <button type="submit" onclick="document.getElementById('action_type').value='setujui'" class="btn btn-primary py-2.5 rounded-3 fw-bold w-100" style="background-color: #0b57d0; border: none;">
+                            <i class="fas fa-check-circle me-1"></i> Setujui Kos
+                        </button>
+                        <button type="submit" onclick="document.getElementById('action_type').value='tolak'" class="btn btn-outline-danger py-2.5 rounded-3 fw-bold w-100">
+                            <i class="fas fa-times-circle me-1"></i> Tolak Kos
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 p-3 rounded-3 text-start" style="background-color: #eff6ff; border: 1px solid #bfdbfe; font-size: 12.5px;">
+                    <span class="fw-bold text-primary d-block mb-1"><i class="fas fa-question-circle me-1"></i> Butuh bantuan?</span>
+                    <p class="text-secondary mb-2">Hubungi pemilik kos untuk konfirmasi data tambahan.</p>
+                    <a href="#" class="text-primary fw-bold text-decoration-none">Panggil Pemilik</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

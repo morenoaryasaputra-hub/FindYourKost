@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Register | FindYourKost</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/auth.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- KIRI -->
+
+    <div class="left-panel">
+
+        <div class="branding">
+
+            <h1>FindYourKost</h1>
+
+            <h2>
+                Mulai Perjalanan Anda Bersama FindYourKost
+            </h2>
+
+            <p>
+                Temukan hunian impian atau kelola
+                properti Anda dengan platform
+                manajemen kost terpercaya.
+            </p>
+
+            <ul class="feature-list">
+
+                <li>✓ 100+ Pilihan Kost Terverifikasi</li>
+
+                <li>✓ Sistem Pembayaran Aman</li>
+
+                <li>✓ Manajemen Properti Modern</li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    <!-- KANAN -->
+
+    <div class="right-panel">
+
+        <div class="form-card">
+
+            <h2>Buat Akun Baru</h2>
+
+            <p>
+                Pilih jenis akun yang sesuai
+                dengan kebutuhan Anda.
+            </p>
+
+            {% with messages =
+            get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                <div class="alert">
+
+                    {{ message }}
+
+                </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+            {% endwith %}
+
+            <form method="POST">
+
+                <label>Nama Lengkap</label>
+
+                <input
+                    type="text"
+                    name="nama"
+                    placeholder="Contoh: John Doe"
+                    required>
+
+                <label>Email</label>
+
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="nama@email.com"
+                    required>
+
+                <label>Nomor Telepon</label>
+
+                <input
+                    type="text"
+                    name="no_hp"
+                    placeholder="+62 8xxxxxxxxx"
+                    required>
+
+                <label>Jenis Akun</label>
+
+                <div class="role-group">
+
+                    <label class="role-card">
+
+                        <input
+                            type="radio"
+                            name="role"
+                            value="penyewa"
+                            checked>
+
+                        <span>
+                            Pencari Kost
+                        </span>
+
+                    </label>
+
+                    <label class="role-card">
+
+                        <input
+                            type="radio"
+                            name="role"
+                            value="pemilik">
+
+                        <span>
+                            Pemilik Kost
+                        </span>
+
+                    </label>
+
+                </div>
+
+                <label>Kata Sandi</label>
+
+                <input
+                    type="password"
+                    name="password"
+                    required>
+
+                <label>Konfirmasi Kata Sandi</label>
+
+                <input
+                    type="password"
+                    name="confirm_password"
+                    required>
+
+                <div class="checkbox">
+
+                    <input
+                        type="checkbox"
+                        required>
+
+                    <span>
+                        Saya menyetujui
+                        Syarat & Ketentuan
+                    </span>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn-primary">
+
+                    Daftar
+
+                </button>
+
+                <a
+                    href="/login/google"
+                    class="btn-google">
+
+                    <img
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                        alt="Google">
+
+                    Daftar dengan Google
+
+                </a>
+
+            </form>
+
+            <p class="register-link">
+
+                Sudah memiliki akun?
+
+                <a href="/login">
+
+                    Masuk
+
+                </a>
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

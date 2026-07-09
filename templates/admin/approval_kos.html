@@ -1,0 +1,97 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div class="container-fluid px-4 mt-3" style="background-color: #f8fafc; min-height: 90vh; font-family: 'Inter', sans-serif;">
+    
+    <div class="mb-4 pt-2">
+        <h2 class="fw-bold text-dark mb-1" style="font-size: 26px;">Verifikasi Kos</h2>
+        <p class="text-muted small">Kelola dan tinjau pengajuan properti kost baru.</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card p-4 border-0 shadow-sm rounded-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted fw-semibold d-block mb-1" style="font-size: 12px;">Total Menunggu</small>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_menunggu }} Properti</h3>
+                    </div>
+                    <div class="rounded-circle p-3 text-warning" style="background-color: #fffbeb;"><i class="fas fa-clipboard-list fs-4"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border-0 shadow-sm rounded-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted fw-semibold d-block mb-1" style="font-size: 12px;">Disetujui Platform</small>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_disetujui }} Properti</h3>
+                    </div>
+                    <div class="rounded-circle p-3 text-success" style="background-color: #f0fdf4;"><i class="fas fa-check-double fs-4"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border-0 shadow-sm rounded-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted fw-semibold d-block mb-1" style="font-size: 12px;">Efisiensi Verifikasi</small>
+                        <h3 class="fw-bold mb-0 text-dark">98%</h3>
+                    </div>
+                    <div class="rounded-circle p-3 text-primary" style="background-color: #eff6ff;"><i class="fas fa-bolt fs-4"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} rounded-3 mb-3">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 14px;">
+                <thead style="background-color: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
+                    <tr>
+                        <th class="py-3 ps-4">Foto</th>
+                        <th>Nama Kos</th>
+                        <th>Pemilik</th>
+                        <th>Lokasi</th>
+                        <th>Status</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for kos in list_kos %}
+                    <tr>
+                        <td class="py-3 ps-4">
+                            <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=80&q=80" class="rounded-3 border" style="object-fit: cover; width: 65px; height: 45px;">
+                        </td>
+                        <td class="fw-bold text-dark">{{ kos.nama_kost }}</td>
+                        <td class="text-secondary">{{ kos.pemilik.nama if kos.pemilik else 'Mitra Owner' }}</td>
+                        <td class="text-muted">{{ kos.alamat | truncate(30) }}</td>
+                        <td>
+                            {% if kos.status_verifikasi %}
+                                <span class="badge rounded-pill px-2.5 py-1.5 fw-medium text-success" style="background-color: #e0f2fe; color: #0369a1 !important;">Disetujui</span>
+                            {% else %}
+                                <span class="badge rounded-pill px-2.5 py-1.5 fw-medium text-warning" style="background-color: #ffedd5; color: #c2410c !important;">Menunggu Verifikasi</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ url_for('admin.detail_kos', kost_id=kos.id) }}" class="btn btn-sm px-3 rounded-3 fw-medium btn-light border-secondary-subtle" style="font-size: 12px;">Tinjau</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">Belum ada properti kos baru yang diupload pemilik.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

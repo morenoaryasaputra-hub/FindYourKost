@@ -1,0 +1,67 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-4">👥 Manajemen Akun & Pengguna</h3>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Nama Pengguna</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status Akun</th>
+                        <th class="text-center">Tindakan Admin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td class="ps-3 fw-bold">{{ u.nama }}</td>
+                        <td>{{ u.email }}</td>
+                        <td><span class="badge bg-secondary">{{ u.role | upper }}</span></td>
+                        <td>
+                            <span class="badge {% if u.status_akun == 'aktif' %}bg-success{% elif u.status_akun == 'suspended' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                {{ u.status_akun or 'aktif' }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <!-- Aksi Suspend -->
+                            <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="action_type" value="suspend">
+                                <button type="submit" class="btn btn-sm btn-warning text-dark">Suspend</button>
+                            </form>
+
+                            <!-- Aksi Blokir -->
+                            <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="action_type" value="blokir">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Blokir permanen user ini?');">Blokir</button>
+                            </form>
+
+                            <!-- Aksi Aktifkan Kembali -->
+                            <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="action_type" value="aktifkan">
+                                <button type="submit" class="btn btn-sm btn-success">Aktifkan</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">Tidak ada data pengguna terdaftar.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

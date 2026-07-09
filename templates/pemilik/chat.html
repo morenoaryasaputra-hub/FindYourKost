@@ -1,0 +1,233 @@
+{% extends "pemilik/base.html" %}
+
+{% block title %}Pesan Masuk{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+
+<!-- CSS SAKTI (DIREVISI): Hanya menghapus padding, JANGAN sentuh margin agar tidak nabrak sidebar! -->
+<style>
+    .padding-small { padding: 5px !important; }
+    .padding-normal { padding: 10px !important; }
+    .container-fluid, .content, main, .main-content {
+        padding: 0 !important;
+        background-color: #fff !important;
+        /* margin: 0 !important; <--- INI BIANG KEROKNYA SUDAH SAYA BUANG! */
+    }
+
+    .chat-wrapper {
+        height: calc(100vh - 70px) !important;
+        width: 100%;
+        display: flex;
+    }
+
+    .chat-container {
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 auto; /* Memastikan posisinya di tengah area yang tersisa */
+    }
+
+    .chat-sidebar {
+        border-right: 1px solid #e2e8f0 !important;
+    }
+
+    .search-box {
+        padding: 20px 20px 15px 20px !important;
+        border-bottom: 1px solid #f1f5f9;
+        margin-top: 0 !important;
+    }
+</style>
+
+<div class="chat-wrapper">
+    <div class="chat-container">
+        
+        <!-- SIDEBAR KIRI -->
+        <div class="chat-sidebar">
+            
+            <!-- KOTAK PENCARIAN -->
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Cari percakapan...">
+            </div>
+            
+            <!-- DAFTAR CHAT -->
+            <div class="chat-list">
+                {% for room in rooms %}
+                <a href="{{ url_for('chat.open_room', room_id=room[0]) }}" class="chat-item {% if room[0] == active_room %}active{% endif %}">
+                    <img src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}" class="avatar">
+                    
+                    <div class="chat-info">
+                        <div class="top">
+                            <h4 class="mb-0 fw-bold">{{ room[1] }}</h4>
+                            {% if room[5] %}
+                            <small>{{ room[5].strftime("%H:%M") }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- BADGE NAMA KOS -->
+                        <div class="mb-1">
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle" style="font-size: 0.70rem; border-radius: 6px;">
+                                <i class="fas fa-building me-1"></i> {{ room[3] }}
+                            </span>
+                        </div>
+                        
+                        <p class="mb-0 text-muted" style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {{ room[4] if room[4] else "Belum ada pesan" }}
+                        </p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- CHAT ROOM KANAN -->
+        <div class="chat-room">
+            {% if active_room %}
+            {% set room = rooms|selectattr(0, 'equalto', active_room)|first %}
+            
+            <!-- HEADER CHAT ROOM -->
+            <div class="chat-header">
+                <div class="header-left">
+                    <img src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}" class="avatar">
+                    <div>
+                        <h3 class="mb-0 fw-bold">{{ room[1] }}</h3>
+                        <span class="text-muted" style="font-size: 0.85rem;">
+                            <i class="fas fa-home text-primary me-1"></i> Terkait Properti: <strong>{{ room[3] }}</strong>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                </div>
+            </div>
+
+            <!-- BUBBLE PESAN -->
+            <div id="messages" class="messages">
+<!-- GANTI BAGIAN LOOPING PESAN DENGAN INI -->
+{% for msg in messages %}
+<div class="message {{ 'mine' if msg[1] == session['user_id'] }}">
+    <div class="bubble {{ 'padding-small' if msg[5] else 'padding-normal' }}">
+        
+        {% if msg[5] %}
+            <!-- JIKA ADA FILE_PATH -->
+            {% if msg[5].lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+                <img src="/{{ msg[5] }}" style="max-width:200px; border-radius:10px;">
+            {% elif msg[5].lower().endswith(('.mp4', '.webm')) %}
+                <video width="200" controls><source src="/{{ msg[5] }}"></video>
+            {% else %}
+                <a href="/{{ msg[5] }}" target="_blank" style="color: blue;">📄 Lihat File</a>
+            {% endif %}
+            
+        {% else %}
+            <!-- JIKA PESAN BIASA (BUKAN FILE) -->
+            {{ msg[2]|safe }} 
+        {% endif %}
+        
+    </div>
+    <span class="time">{{ msg[3].strftime("%H:%M") }}</span>
+</div>
+{% endfor %}
+            </div>
+
+            <!-- INPUT PESAN BAWAH -->
+<form id="chat-form" class="chat-input">
+    <input type="hidden" id="room_id" name="room_id" value="{{ active_room }}">
+    
+    <!-- TAMBAHKAN BARIS INI: Input file tersembunyi -->
+    <input type="file" id="file-input" style="display:none" accept="image/*,video/*,.pdf,.doc">
+    
+    <!-- UBAH TOMBOL INI: Tambahkan onclick -->
+    <button type="button" class="attach-btn" onclick="document.getElementById('file-input').click()">
+        <i class="fa-solid fa-paperclip"></i>
+    </button>
+    
+    <input id="message" type="text" placeholder="Tulis pesan..." autocomplete="off" required>
+    <button class="send-btn" type="submit">
+        <i class="fa-solid fa-paper-plane"></i>
+    </button>
+</form>
+
+            {% else %}
+            <!-- TAMPILAN JIKA BELUM ADA CHAT YANG DIKLIK -->
+            <div class="empty-chat">
+                <i class="fa-solid fa-comments"></i>
+                <h2>Belum ada percakapan</h2>
+                <p>Pilih percakapan di sebelah kiri untuk mulai chatting.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT SOCKET.IO -->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    const socket = io("/", { transports: ["websocket"] });
+
+    socket.on("connect", function () {
+        console.log("CONNECTED", socket.id);
+    });
+
+    const roomId = document.getElementById("room_id");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("message");
+    const messages = document.getElementById("messages");
+
+    if (roomId) {
+        socket.emit("join", { room: roomId.value });
+    }
+
+    if (messages) {
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    if (form) {
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const pesan = input.value.trim();
+            if (pesan === "") return;
+
+            socket.emit("send_message", {
+                room: roomId.value,
+                message: pesan
+            });
+
+            input.value = "";
+            input.focus();
+        });
+    }
+
+socket.on("receive_message", function(data) {
+    if (!messages) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = (Number(data.sender_id) === Number("{{ session['user_id'] }}")) ? "message mine" : "message";
+
+    let content = `<div class="bubble">${data.message}</div>`;
+    
+    // LOGIKA SAKTI: Jika ada file_path, tampilkan sebagai media!
+    if (data.file_path) {
+        if (data.file_type && data.file_type.startsWith('image/')) {
+            content = `<div class="bubble" style="padding:5px;"><img src="/${data.file_path}" style="max-width:200px; border-radius:10px;"></div>`;
+        } else if (data.file_type && data.file_type.startsWith('video/')) {
+            content = `<div class="bubble" style="padding:5px;"><video width="200" controls><source src="/${data.file_path}"></video></div>`;
+        } else {
+            content = `<div class="bubble"><a href="/${data.file_path}" target="_blank">📄 Download File</a></div>`;
+        }
+    }
+
+    wrapper.innerHTML = `
+        ${content}
+        <span class="time">${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+    `;
+
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+});
+</script>
+<!-- Pastikan script ini dipanggil setelah script socket.io -->
+<script src="{{ url_for('static', filename='js/chat_upload.js') }}"></script>
+{% endblock %}

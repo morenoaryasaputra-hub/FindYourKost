@@ -1,35 +1,300 @@
 {% extends 'pemilik/base.html' %}
 {% block content %}
-<h2>Tambah Kos Baru</h2>
-<form method="POST" enctype="multipart/form-data" class="mt-3">
-    <div class="mb-3">
-        <label>Nama Kos</label>
-        <input type="text" name="nama_kost" class="form-control" required>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<div class="container-fluid px-4 mt-3" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pt-2">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Tambah Properti</h3>
+            <p class="text-muted small">Lengkapi formulir di bawah untuk mendaftarkan unit kos baru Anda ke platform.</p>
+        </div>
+        <a href="{{ url_for('pemilik.data_kos') }}" class="btn btn-outline-secondary btn-sm rounded-3 px-3">
+            <i class="fas fa-arrow-left me-1"></i> Kembali
+        </a>
     </div>
-    <div class="mb-3">
-        <label>Alamat</label>
-        <textarea name="alamat" class="form-control" required></textarea>
-    </div>
-    <div class="mb-3">
-        <label>Harga (per bulan)</label>
-        <input type="number" name="harga" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label>Total Kamar</label>
-        <input type="number" name="total_kamar" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label>Tipe Penghuni</label>
-        <select name="tipe_penghuni" class="form-control">
-            <option value="putra">Putra</option>
-            <option value="putri">Putri</option>
-            <option value="campur">Campur</option>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label>Foto Thumbnail</label>
-        <input type="file" name="foto_thumbnail" class="form-control" accept="image/*">
-    </div>
-    <button type="submit" class="btn btn-success">Simpan Data</button>
-</form>
+
+    <form action="{{ url_for('pemilik.tambah_kos') }}" method="POST" enctype="multipart/form-data">
+        <div class="row g-4">
+            
+            <div class="col-lg-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white sticky-top" style="top: 20px;">
+                    <div class="list-group list-group-flush border-0 flex-column gap-1" id="form-navigation">
+                        <a href="#section-dasar" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium active-premium"><i class="fas fa-info-circle me-2 text-primary"></i> Informasi Dasar</a>
+                        <a href="#section-harga" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-money-bill-wave me-2"></i> Informasi Harga</a>
+                        <a href="#section-fasilitas-kamar" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-bed me-2"></i> Fasilitas Kamar</a>
+                        <a href="#section-fasilitas-sekitar" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-building me-2"></i> Lokasi & Peta</a>
+                        <a href="#section-galeri" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-images me-2"></i> Galeri Foto</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-dasar">
+                    <h5 class="fw-bold text-dark mb-4"><i class="fas fa-info-circle text-primary me-2"></i>Informasi Dasar</h5>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Nama Kos <span class="text-danger">*</span></label>
+                        <input type="text" name="nama_kost" class="form-control rounded-3" placeholder="Contoh: Kost Exclusive Mentari Pagi" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Wilayah / Daerah <span class="text-danger">*</span></label>
+                            <select name="wilayah" id="wilayahSelect" class="form-select rounded-3" required>
+                                <option value="" disabled selected>-- Pilih Wilayah Salatiga & Sekitarnya --</option>
+                                <option value="Salatiga">Salatiga (Kota)</option>
+                                <option value="Tuntang">Tuntang</option>
+                                <option value="Bawen">Bawen</option>
+                                <option value="Ambarawa">Ambarawa</option>
+                                <option value="Tengaran">Tengaran</option>
+                                <option value="Suruh">Suruh</option>
+                                <option value="Pabelan">Pabelan</option>
+                                <option value="Beringin">Beringin</option>
+                                <option value="Banyubiru">Banyubiru</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Gender Penghuni <span class="text-danger">*</span></label>
+                            <select name="tipe_penghuni" class="form-select rounded-3" required>
+                                <option value="Campur">Campur</option><option value="Putra">Putra</option><option value="Putri">Putri</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold text-secondary">Deskripsi Properti</label>
+                        <textarea name="deskripsi" class="form-control rounded-3" rows="3" placeholder="Ceritakan keunggulan kos Anda..."></textarea>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-fasilitas-sekitar">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="fw-bold text-dark mb-0"><i class="fas fa-map-marked-alt text-info me-2"></i>Titik Lokasi Peta & Fasilitas</h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-2 border fw-medium" style="font-size: 10px;">Geoapify Maps Terintegrasi</span>
+                    </div>
+                    <p class="text-muted small mb-3">Geser pin merah pada peta. Alamat akan <b>otomatis terisi</b> ke kolom di bawah.</p>
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            <div id="mapPicker" style="height: 350px; width: 100%; border-radius: 12px; z-index: 1; border: 2px solid #e2e8f0;"></div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="border rounded-3 p-3 bg-light h-100" id="wrapperFasilitas" style="max-height: 350px; overflow-y: auto;">
+                                <div class="text-center text-muted py-5">
+                                    <i class="fas fa-street-view fa-3x mb-3 opacity-30 text-primary"></i>
+                                    <p class="small mb-0">Klik/geser peta untuk mendeteksi fasilitas terdekat.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold text-secondary">Alamat Lengkap <span class="text-primary">(Terisi Otomatis dari Peta)</span> <span class="text-danger">*</span></label>
+                        <textarea name="alamat" id="alamatInput" class="form-control rounded-3 bg-light border-primary" rows="3" placeholder="Geser pin peta untuk mengisi alamat secara otomatis..." required readonly></textarea>
+                    </div>
+
+                    <input type="hidden" name="latitude" id="latInput" value="-7.3305">
+                    <input type="hidden" name="longitude" id="lngInput" value="110.5084">
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-harga">
+                    <h5 class="fw-bold text-dark mb-4"><i class="fas fa-money-bill-wave text-success me-2"></i>Informasi Harga</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Harga Bulanan (Rp) <span class="text-danger">*</span></label>
+                            <input type="text" id="hargaDisplay" class="form-control rounded-3" placeholder="Contoh: 1.500.000" required>
+                            <input type="hidden" name="harga" id="hargaAsli">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Uang Muka / DP (Rp)</label>
+                            <input type="text" id="dpDisplay" class="form-control rounded-3" placeholder="Maksimal 50% dari harga bulanan">
+                            <input type="hidden" name="uang_muka" id="dpAsli">
+                            <small id="dpError" class="text-danger d-none fw-bold" style="font-size: 11px;">DP dibatasi maksimal 50%!</small>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-semibold text-secondary">Total Seluruh Kamar <span class="text-danger">*</span></label>
+                            <input type="number" name="total_kamar" class="form-control rounded-3" placeholder="Contoh: 10" required min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-fasilitas-kamar">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fas fa-bed text-warning me-2"></i>Fasilitas Kamar</h5>
+                    <div class="row row-cols-2 row-cols-md-3 g-3">
+                        <div class="col"><label class="form-check-label"><input type="checkbox" checked class="form-check-input me-2"> AC Inverter</label></div>
+                        <div class="col"><label class="form-check-label"><input type="checkbox" checked class="form-check-input me-2"> WiFi Kecepatan Tinggi</label></div>
+                        <div class="col"><label class="form-check-label"><input type="checkbox" class="form-check-input me-2"> Kamar Mandi Dalam</label></div>
+                        <div class="col"><label class="form-check-label"><input type="checkbox" class="form-check-input me-2"> Kasur Springbed</label></div>
+                        <div class="col"><label class="form-check-label"><input type="checkbox" class="form-check-input me-2"> Meja Kerja & Kursi</label></div>
+                        <div class="col"><label class="form-check-label"><input type="checkbox" class="form-check-input me-2"> Lemari Pakaian</label></div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-galeri">
+                    <h5 class="fw-bold text-dark mb-2"><i class="fas fa-images text-danger me-2"></i>Galeri Foto</h5>
+                    <div class="p-4 border border-2 border-dashed border-secondary-subtle rounded-3 text-center bg-light bg-opacity-50" style="cursor: pointer;">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3 opacity-75"></i>
+                        <h6 class="fw-bold text-dark mb-1">Pilih File Gambar Kos</h6>
+                        <input type="file" name="galeri_foto" class="form-control form-control-sm mx-auto" multiple accept="image/*" style="max-width: 300px;">
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-end">
+                    <button type="submit" class="btn btn-primary px-4 py-2.5 fw-bold rounded-3 shadow-sm" style="background-color: #0b57d0; border: none;">
+                        <i class="fas fa-save me-1"></i> Ajukan Properti Kos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .active-premium { background-color: #eff6ff !important; color: #0b57d0 !important; }
+    #form-navigation .list-group-item:hover:not(.active-premium) { background-color: #f8fafc; color: #0b57d0 !important; }
+    .fasilitas-item { padding: 10px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: start; }
+    .fasilitas-item:last-child { border-bottom: none; }
+</style>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // FORMAT RUPIAH & DP 50%
+    function formatRupiah(angka) {
+        let number_string = angka.replace(/[^,\d]/g, '').toString(),
+            split = number_string.split(','),
+            sisa = split[0].length % 3,
+            rupiah = split[0].substr(0, sisa),
+            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+        if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
+        return rupiah;
+    }
+
+    const hargaDisp = document.getElementById('hargaDisplay'), hargaAsli = document.getElementById('hargaAsli');
+    const dpDisp = document.getElementById('dpDisplay'), dpAsli = document.getElementById('dpAsli'), dpError = document.getElementById('dpError');
+
+    function applyFormatAndValidate(inputDisp, inputAsli) {
+        inputDisp.addEventListener('keyup', function() {
+            this.value = formatRupiah(this.value);
+            inputAsli.value = this.value.replace(/\./g, '');
+            let harga = parseInt(hargaAsli.value) || 0, dp = parseInt(dpAsli.value) || 0, maxDp = harga * 0.5;
+            if (dp > maxDp && harga > 0) {
+                dpError.classList.remove('d-none'); dpAsli.value = maxDp; dpDisp.value = formatRupiah(maxDp.toString()); 
+            } else { dpError.classList.add('d-none'); }
+        });
+    }
+    applyFormatAndValidate(hargaDisp, hargaAsli); applyFormatAndValidate(dpDisp, dpAsli);
+
+    // ==========================================
+    // LOGIKA MAPS: DROPDOWN WILAYAH -> MAP PINDAH
+    // ==========================================
+    const API_KEY = "{{ geoapify_key }}" || "b5ebf0b5ae1047cc8ea72c255a6c3b1a"; // Fallback Aman Anti Error!
+    
+    // Data Koordinat Wilayah Sekitar Salatiga
+    const regionCoords = {
+        "Salatiga": [-7.3305, 110.5084],
+        "Tuntang": [-7.2700, 110.4550],
+        "Bawen": [-7.2400, 110.4250],
+        "Ambarawa": [-7.2600, 110.3950],
+        "Tengaran": [-7.3850, 110.5350],
+        "Suruh": [-7.3600, 110.5850],
+        "Pabelan": [-7.2900, 110.5650],
+        "Beringin": [-7.2450, 110.5500],
+        "Banyubiru": [-7.2950, 110.4000]
+    };
+
+    let defaultLat = -7.3305;
+    let defaultLng = 110.5084;
+
+    const map = L.map('mapPicker').setView([defaultLat, defaultLng], 14);
+    L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${API_KEY}`, {
+        attribution: "© Geoapify", maxZoom: 19
+    }).addTo(map);
+
+    let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+    // Event Listener Dropdown Wilayah
+    document.getElementById("wilayahSelect").addEventListener("change", function() {
+        let selectedWilayah = this.value;
+        if(regionCoords[selectedWilayah]) {
+            let coords = regionCoords[selectedWilayah];
+            map.flyTo(coords, 14); // Animasi map pindah halus
+            marker.setLatLng(coords);
+            loadFasilitasDanAlamat(coords[0], coords[1]); // Langsung update alamat & fasilitas
+        }
+    });
+
+    async function loadFasilitasDanAlamat(lat, lng) {
+        document.getElementById("latInput").value = lat;
+        document.getElementById("lngInput").value = lng;
+        document.getElementById("wrapperFasilitas").innerHTML = '<div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br><small>Menarik data satelit...</small></div>';
+        document.getElementById("alamatInput").value = "Sedang melacak alamat otomatis...";
+
+        try {
+            // REVERSE GEOCODING (Menarik Alamat Asli)
+            let geoUrl = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${API_KEY}`;
+            let geoResp = await fetch(geoUrl);
+            let geoData = await geoResp.json();
+            if(geoData.features && geoData.features.length > 0) {
+                // Berhasil! Masukkan ke textarea
+                document.getElementById("alamatInput").value = geoData.features[0].properties.formatted;
+            } else {
+                document.getElementById("alamatInput").value = "Alamat tidak ditemukan, silakan ketik manual.";
+                document.getElementById("alamatInput").readOnly = false; // Buka kunci kalau gagal
+            }
+
+            // PLACES API (Diperluas Kategori Pencariannya biar tidak kosong)
+            let categories = "commercial,education,catering"; 
+            let placeUrl = `https://api.geoapify.com/v2/places?categories=${categories}&filter=circle:${lng},${lat},2000&bias=proximity:${lng},${lat}&limit=15&apiKey=${API_KEY}`;
+            let placeResp = await fetch(placeUrl);
+            let placeData = await placeResp.json();
+
+            let listHtml = "";
+            if(placeData.features && placeData.features.length > 0) {
+                placeData.features.forEach(item => {
+                    let p = item.properties;
+                    if(p.name) {
+                        let icon = "fa-map-pin text-secondary";
+                        if(p.categories.includes("education")) icon = "fa-graduation-cap text-primary";
+                        else if(p.categories.includes("commercial")) icon = "fa-shopping-cart text-success";
+                        else if(p.categories.includes("catering")) icon = "fa-utensils text-danger";
+                        
+                        listHtml += `
+                        <div class="fasilitas-item">
+                            <i class="fas ${icon} mt-1 me-2 fs-6"></i>
+                            <div class="w-100">
+                                <div class="d-flex justify-content-between">
+                                    <strong class="text-dark d-block" style="font-size: 13px;">${p.name}</strong>
+                                    <span class="badge bg-secondary bg-opacity-10 text-dark border text-xs">${Math.round(p.distance)} m</span>
+                                </div>
+                            </div>
+                        </div>`;
+                    }
+                });
+            } else {
+                listHtml = '<div class="text-muted text-center py-4 small">Fasilitas umum belum terdata oleh satelit di area ini.</div>';
+            }
+            document.getElementById("wrapperFasilitas").innerHTML = listHtml;
+        } catch (e) {
+            console.error(e);
+            document.getElementById("wrapperFasilitas").innerHTML = '<div class="text-danger text-center py-4 small">Koneksi ke server satelit terputus.</div>';
+            document.getElementById("alamatInput").value = "";
+            document.getElementById("alamatInput").readOnly = false;
+        }
+    }
+
+    // Eksekusi Peta Awal
+    loadFasilitasDanAlamat(defaultLat, defaultLng);
+
+    marker.on('dragend', function() {
+        let pos = marker.getLatLng();
+        loadFasilitasDanAlamat(pos.lat, pos.lng);
+    });
+
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        loadFasilitasDanAlamat(e.latlng.lat, e.latlng.lng);
+    });
+});
+</script>
 {% endblock %}

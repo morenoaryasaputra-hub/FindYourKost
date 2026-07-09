@@ -1,0 +1,315 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+
+<div class="container-fluid px-4 py-3" style="background-color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 100vh;">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} rounded-3 shadow-sm mb-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('admin.profil') }}" method="POST">
+        
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-4 text-center text-md-start flex-column flex-md-row">
+                    <div class="position-relative">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-2 shadow" style="width: 90px; height: 90px; background: linear-gradient(135deg, #0d6efd, #0052cc);">
+                            {{ (admin.nama or 'A')[0] | upper }}
+                        </div>
+                        <span class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-1.5 shadow border border-2 border-white" style="cursor: pointer; font-size: 11px;">
+                            <i class="fas fa-camera"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start flex-wrap">
+                            <h4 class="fw-bold text-dark mb-0">{{ admin.nama or 'Admin FindYourKost' }}</h4>
+                            <span class="badge bg-primary px-2.5 py-1.5 rounded-pill text-xs fw-semibold" style="font-size: 11px; background-color: #0b57d0 !important;">Administrator Sistem</span>
+                            <span class="badge bg-success bg-opacity-10 text-success px-2.5 py-1.5 rounded-pill text-xs fw-semibold" style="font-size: 11px;"><i class="fas fa-circle me-1 small" style="font-size: 8px;"></i> Aktif</span>
+                        </div>
+                        <p class="text-muted small mb-0 mt-1.5">Bergabung sejak: 12 Januari 2023</p>
+                        <small class="text-secondary d-block mt-1" style="font-size: 12px;"><i class="fas fa-envelope me-1"></i> {{ admin.email }} &nbsp;•&nbsp; <i class="fas fa-phone me-1"></i> {{ admin.no_hp or '+62 812-3456-7890' }}</small>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold rounded-3 shadow-sm" style="background-color: #0b57d0; border: none; font-size: 14px;">Simpan Perubahan</button>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger px-3 py-2 fw-semibold rounded-3 border-secondary-subtle text-dark" style="font-size: 14px;"><i class="fas fa-sign-out-alt me-1 text-danger"></i> Keluar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card p-3 border-0 border-start border-4 border-primary shadow-sm rounded-3 bg-white">
+                    <small class="text-muted fw-bold d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">KOS DIVERIFIKASI</small>
+                    <h4 class="fw-bold text-dark mb-0">{{ kos_diverifikasi }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card p-3 border-0 border-start border-4 border-danger shadow-sm rounded-3 bg-white">
+                    <small class="text-muted fw-bold d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">LAPORAN DITANGANI</small>
+                    <h4 class="fw-bold text-dark mb-0">{{ laporan_ditangani }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card p-3 border-0 border-start border-4 border-success shadow-sm rounded-3 bg-white">
+                    <small class="text-muted fw-bold d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">ESCROW DIPROSES</small>
+                    <h4 class="fw-bold text-dark mb-0" style="color: #198754;">{{ escrow_nominal }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card p-3 border-0 border-start border-4 border-secondary shadow-sm rounded-3 bg-white">
+                    <small class="text-muted fw-bold d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">PENGGUNA DIKELOLA</small>
+                    <h4 class="fw-bold text-dark mb-0">{{ pengguna_dikelola }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-8">
+                
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0" style="font-size: 16px;"><i class="fas fa-id-card text-primary me-2"></i>Informasi Pribadi</h5>
+                        <small class="text-muted" style="font-size: 11px;">Data terakhir diperbarui hari ini, 09:41</small>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Nama Lengkap</label>
+                            <input type="text" name="nama_lengkap" class="form-control rounded-3" value="{{ admin.nama or 'Admin FindYourKost' }}" required style="font-size: 14px; background-color: #fafafa;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Email Pekerjaan</label>
+                            <input type="email" class="form-control rounded-3 text-muted" value="{{ admin.email }}" disabled style="font-size: 14px; cursor: not-allowed; background-color: #f1f5f9;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Nomor Telepon</label>
+                            <input type="text" name="nomor_telepon" class="form-control rounded-3" value="{{ admin.no_hp or '+62 812-3456-7890' }}" style="font-size: 14px; background-color: #fafafa;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Jabatan</label>
+                            <input type="text" class="form-control rounded-3 text-muted" value="Senior System Administrator" disabled style="font-size: 14px; background-color: #f1f5f9;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">Tanggal Bergabung</label>
+                            <input type="text" class="form-control rounded-3 text-muted" value="12 Januari 2023" disabled style="font-size: 14px; background-color: #f1f5f9;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary">ID Administrator</label>
+                            <input type="text" class="form-control rounded-3 text-muted" value="ADM-992-FYK" disabled style="font-size: 14px; background-color: #f1f5f9;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <h5 class="fw-bold text-dark mb-3" style="font-size: 16px;"><i class="fas fa-shield-alt text-primary me-2"></i>Hak Akses Administrator</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 border style-access-card" style="background-color: #fafafa; font-size: 13.5px;">
+                                <span class="text-dark"><i class="fas fa-check-circle text-success me-2"></i> Verifikasi Unit Kos</span>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-1" style="font-size: 9px; font-weight: 700;">FULL ACCESS</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 border style-access-card" style="background-color: #fafafa; font-size: 13.5px;">
+                                <span class="text-dark"><i class="fas fa-check-circle text-success me-2"></i> Manajemen Pengguna</span>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-1" style="font-size: 9px; font-weight: 700;">FULL ACCESS</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 border style-access-card" style="background-color: #fafafa; font-size: 13.5px;">
+                                <span class="text-dark"><i class="fas fa-check-circle text-success me-2"></i> Pencairan Escrow</span>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-1" style="font-size: 9px; font-weight: 700;">FULL ACCESS</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 border style-access-card" style="background-color: #fafafa; font-size: 13.5px;">
+                                <span class="text-dark"><i class="fas fa-check-circle text-success me-2"></i> Akses Log Audit</span>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-1" style="font-size: 9px; font-weight: 700;">FULL ACCESS</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 border style-access-card" style="background-color: #fafafa; font-size: 13.5px;">
+                                <span class="text-dark"><i class="fas fa-check-circle text-success me-2"></i> Manajemen Konten Iklan</span>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-1" style="font-size: 9px; font-weight: 700;">FULL ACCESS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0" style="font-size: 16px;"><i class="fas fa-history text-primary me-2"></i>Aktivitas Terbaru</h5>
+                        <a href="#" class="text-decoration-none small fw-semibold" style="color: #0b57d0; font-size: 13px;">Lihat Semua</a>
+                    </div>
+                    
+                    <div class="d-flex flex-column gap-3 mt-2" style="font-size: 13.5px;">
+                        <div class="d-flex align-items-start justify-content-between border-bottom pb-2">
+                            <div class="d-flex gap-3">
+                                <div class="p-2 rounded-circle bg-primary bg-opacity-10 text-primary text-center" style="width: 35px; height: 35px;"><i class="fas fa-check"></i></div>
+                                <div>
+                                    <span class="d-block fw-bold text-dark">Menyetujui Verifikasi Unit "Kartini Residence"</span>
+                                    <small class="text-muted">2 jam yang lalu &nbsp;•&nbsp; ID: VER-10293</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start justify-content-between border-bottom pb-2">
+                            <div class="d-flex gap-3">
+                                <div class="p-2 rounded-circle bg-success bg-opacity-10 text-success text-center" style="width: 35px; height: 35px;"><i class="fas fa-wallet"></i></div>
+                                <div>
+                                    <span class="d-block fw-bold text-dark">Memproses pencairan dana escrow #FYK-TX-9021</span>
+                                    <small class="text-muted">4 jam yang lalu &nbsp;•&nbsp; Rp 4.200.000</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="d-flex gap-3">
+                                <div class="p-2 rounded-circle bg-danger bg-opacity-10 text-danger text-center" style="width: 35px; height: 35px;"><i class="fas fa-ban"></i></div>
+                                <div>
+                                    <span class="d-block fw-bold text-dark">Memblokir sementara akun pengguna @user_nakal99</span>
+                                    <small class="text-muted">Kemarin, 14:20 &nbsp;•&nbsp; Pelanggaran</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-lg-4">
+                
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <h5 class="fw-bold text-dark mb-3" style="font-size: 16px;"><i class="fas fa-lock text-primary me-2"></i>Keamanan Akun</h5>
+                    
+                    <div class="p-3 rounded-3 mb-3" style="background-color: #f8fafc; font-size: 13px;">
+                        <span class="text-secondary d-block">Password terakhir diubah</span>
+                        <span class="fw-bold text-dark">24 Mei 2026</span>
+                    </div>
+
+                    <div class="p-3 rounded-3 mb-3" style="background-color: #f8fafc; font-size: 13px;">
+                        <span class="text-secondary d-block">Sesi login terakhir</span>
+                        <span class="fw-bold text-dark">Hari ini, 08:12 WIB • Salatiga, ID</span>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100 py-2 rounded-3 fw-medium mb-3 border-secondary-subtle text-dark" style="font-size: 13px;" data-bs-toggle="modal" data-bs-target="#modalUbahPassword">
+    <i class="fas fa-key me-1 text-primary"></i> Ubah Password
+</button>
+
+                    <div class="d-flex align-items-center justify-content-between border-top pt-3" style="font-size: 13.5px;">
+                        <div>
+                            <span class="fw-bold d-block text-dark">Otentikasi 2FA</span>
+                            <small class="text-success fw-medium" style="font-size: 11px;">AKTIF & TERPROTEKSI</small>
+                        </div>
+                        <div class="form-check form-switch mb-0 fs-5">
+                            <input class="form-check-input" type="checkbox" role="switch" checked style="background-color: #198754; border-color: #198754; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <h5 class="fw-bold text-dark mb-3" style="font-size: 16px;"><i class="fas fa-bell text-primary me-2"></i>Notifikasi Admin</h5>
+                    
+                    <div class="d-flex flex-column gap-3" style="font-size: 13.5px;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="fw-bold d-block text-dark">Pengajuan Kos Baru</span>
+                                <small class="text-muted">Terima alert untuk verifikasi unit.</small>
+                            </div>
+                            <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked style="cursor: pointer;"></div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="fw-bold d-block text-dark">Laporan Pengguna</span>
+                                <small class="text-muted">Aduan mendesak dari penyewa/pemilik.</small>
+                            </div>
+                            <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked style="cursor: pointer;"></div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="fw-bold d-block text-dark">Sistem & Security</span>
+                                <small class="text-muted">Alert anomali trafik & server.</small>
+                            </div>
+                            <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" style="cursor: pointer;"></div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="fw-bold d-block text-dark">Ringkasan Harian</span>
+                                <small class="text-muted">Laporan harian via email.</small>
+                            </div>
+                            <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked style="cursor: pointer;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 text-white rounded-4 p-4 shadow-sm" style="background: linear-gradient(135deg, #0d6efd, #0b57d0);">
+                    <h5 class="fw-bold mb-2" style="font-size: 15px;">Butuh Bantuan Teknis?</h5>
+                    <p class="small opacity-75 mb-4 lh-base" style="font-size: 12.5px;">Tim IT Support siap membantu 24/7 untuk masalah akses server.</p>
+                    <button type="button" class="btn btn-white bg-white text-primary fw-bold w-100 rounded-3 border-0 py-2 shadow-sm" style="font-size: 13px;">Hubungi IT Support</button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+</div>
+
+<div class="modal fade" id="modalUbahPassword" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalUbahPasswordLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            
+            <div class="modal-header border-0 bg-light p-3 rounded-top-4">
+                <h5 class="modal-title fw-bold text-dark" id="modalUbahPasswordLabel"><i class="fas fa-shield-alt text-primary me-2"></i>Ubah Password Admin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form action="{{ url_for('admin.ubah_password') }}" method="POST">
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-4">Demi keamanan akun, silakan masukkan password lama Anda sebelum menetapkan password baru.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Password Lama</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-lock-open"></i></span>
+                            <input type="password" name="password_lama" class="form-control rounded-end-3 border-start-0" placeholder="Masukkan password saat ini" required style="font-size: 14px;">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-3 opacity-25">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Password Baru</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-key"></i></span>
+                            <input type="password" name="password_baru" class="form-control rounded-end-3 border-start-0" placeholder="Minimal 6 karakter" required style="font-size: 14px;">
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold text-secondary">Konfirmasi Password Baru</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-check-double"></i></span>
+                            <input type="password" name="konfirmasi_password" class="form-control rounded-end-3 border-start-0" placeholder="Ulangi password baru Anda" required style="font-size: 14px;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary btn-sm px-3 rounded-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 rounded-3 fw-bold" style="background-color: #0b57d0; border: none;">Perbarui Password</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

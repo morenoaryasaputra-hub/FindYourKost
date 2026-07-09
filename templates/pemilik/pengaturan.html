@@ -1,0 +1,36 @@
+{% extends 'pemilik/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Ganti Password</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('pemilik.pengaturan') }}" method="POST">
+                        <div class="mb-3">
+                            <label>Password Lama</label>
+                            <input type="password" name="password_lama" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Password Baru</label>
+                            <input type="password" name="password_baru" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Simpan Password Baru</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

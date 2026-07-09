@@ -154,89 +154,114 @@ def register():
         "auth/register.html"
     )
 
-@auth_bp.route(
-    "/login",
-    methods=["GET","POST"]
-)
+# ==========================================
+# LOGIN PENYEWA & PEMILIK
+# ==========================================
+@auth_bp.route("/login", methods=["GET","POST"])
 def login():
-
     if "user_id" in session:
-
+        if session.get("role") == "admin":
+            return redirect("/admin/dashboard")
+        elif session.get("role") == "pemilik":
+            return redirect("/pemilik/dashboard")
         return redirect("/")
 
     if request.method == "POST":
-
         email = request.form["email"]
-
         password = request.form["password"]
 
         conn = get_db()
-
         cursor = conn.cursor()
 
         cursor.execute(
             """
             SELECT
-                id,
-                nama,
-                email,
-                password_hash,
-                role,
-                is_profile_complete,
-                foto_profil
+                id, nama, email, password_hash,
+                role, is_profile_complete, foto_profil
             FROM users
             WHERE email=%s
             """,
             (email,)
         )
-
         user = cursor.fetchone()
+        cursor.close()
+        conn.close()
 
+        # JIKA USER TIDAK ADA ATAU DIA ADALAH ADMIN (Admin dilarang lewat sini)
+        if not user or user[4] == "admin":
+            flash("Email tidak ditemukan atau akses ditolak", "danger")
+            return redirect("/login")
+
+        if not bcrypt.check_password_hash(user[3], password):
+            flash("Password salah", "danger")
+            return redirect("/login")
+
+        # Set Session
+        session["user_id"] = user[0]
+        session["nama"] = user[1]
+        session["email"] = user[2]
+        session["role"] = user[4]
+        session["is_profile_complete"] = bool(user[5])
+        session["foto_profil"] = user[6]
+
+        flash("Login berhasil!", "success")
+        if user[4] == "pemilik":
+            return redirect("/pemilik/dashboard")
+        
+        return redirect("/") # Penyewa diarahkan ke home/profil
+
+    return render_template("auth/login.html")
+
+
+# ==========================================
+# LOGIN KHUSUS ADMIN (PINTU RAHASIA)
+# ==========================================
+@auth_bp.route("/login/admin", methods=["GET","POST"])
+def login_admin():
+    if "user_id" in session:
+        if session.get("role") == "admin":
+            return redirect("/admin/dashboard")
+        return redirect("/")
+
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # AMBIL DATA HANYA JIKA ROLENYA ADMIN
+        cursor.execute(
+            """
+            SELECT id, nama, email, password_hash, role 
+            FROM users 
+            WHERE email=%s AND role='admin'
+            """,
+            (email,)
+        )
+        user = cursor.fetchone()
         cursor.close()
         conn.close()
 
         if not user:
+            flash("Akses ditolak! Anda bukan admin.", "danger")
+            return redirect("/login/admin")
 
-            flash(
-                "Email tidak ditemukan",
-                "danger"
-            )
+        if not bcrypt.check_password_hash(user[3], password):
+            flash("Password salah", "danger")
+            return redirect("/login/admin")
 
-            return redirect("/login")
-
-        if not bcrypt.check_password_hash(
-            user[3],
-            password
-        ):
-
-            flash(
-                "Password salah",
-                "danger"
-            )
-
-            return redirect("/login")
-
+        # Set Session Admin
         session["user_id"] = user[0]
         session["nama"] = user[1]
         session["email"] = user[2]
         session["role"] = user[4]
 
-        session["is_profile_complete"] = bool(
-            user[5]
-        )
-        session["foto_profil"] = user[6]
+        flash("Selamat datang, Admin Pusat!", "success")
+        return redirect("/admin/dashboard")
 
-        if user[4] == "pemilik":
-
-            return redirect(
-                "/pemilik/dashboard"
-            )
-
-        return redirect("/")
-
-    return render_template(
-        "auth/login.html"
-    )
+    # Pastikan kalian bikin file login_admin.html di folder templates/auth/
+    return render_template("auth/login_admin.html")
 
 @auth_bp.route(
     "/lupa-password",

@@ -1,227 +1,134 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-
         {% block title %}
             FindYourKost Owner
         {% endblock %}
-
     </title>
 
-    <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/pemilik.css'
-    ) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pemilik.css') }}">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 
 <body class="admin-body">
 
     <aside class="sidebar">
-
         <div class="sidebar-logo">
-
-            <h2>
-
-                FindYourKost
-
-            </h2>
-
+            <h2>FindYourKost</h2>
         </div>
 
         <ul class="sidebar-menu">
-
             <li>
-
-                <a
-                href="{{ url_for('pemilik.dashboard') }}"
-                class="{% if request.endpoint == 'pemilik.dashboard' %}active{% endif %}">
-
-                    <i class="fa-solid fa-chart-pie"></i>
-
-                    Dashboard
-
+                <a href="{{ url_for('pemilik.dashboard') }}"
+                   class="{% if request.endpoint == 'pemilik.dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
                 </a>
-
             </li>
 
             <li>
-
-                <a
-                href="{{ url_for('pemilik.data_kos') }}"
-                class="{% if request.endpoint == 'pemilik.data_kos' %}active{% endif %}">
-
-                    <i class="fa-solid fa-building"></i>
-
-                    Data Kos
-
+                <a href="{{ url_for('pemilik.data_kos') }}"
+                   class="{% if request.endpoint in ['pemilik.data_kos', 'pemilik.tambah_kos', 'pemilik.edit_kos'] %}active{% endif %}">
+                    <i class="fa-solid fa-building"></i> Data Kos
                 </a>
-
             </li>
 
             <li>
-
-                <a href="#">
-
-                    <i class="fa-solid fa-users"></i>
-
-                    Data Penyewa
-
+                <a href="{{ url_for('pemilik.verifikasi') }}"
+                   class="{% if request.endpoint == 'pemilik.verifikasi' %}active{% endif %}">
+                    <i class="fa-solid fa-users"></i> Data Penyewa
                 </a>
-
             </li>
 
             <li>
-
-                <a href="#">
-
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-
-                    Data Tagihan
-
-                </a>
-
+               <a href="{{ url_for('chat.open_room') }}" class="{% if request.blueprint == 'chat' %}active{% endif %}">
+                    <i class="fa-solid fa-comments"></i> Fitur Chat
+               </a>
             </li>
+
+            <!-- MENU GABUNGAN: MANAJEMEN KEUANGAN (PREMIUM) -->
+            {% if session.get('is_premium') %}
+                <li>
+                    <a href="{{ url_for('pemilik.laporan_keuangan') }}"
+                       class="{% if request.endpoint == 'pemilik.laporan_keuangan' %}active{% endif %}">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Manajemen Keuangan
+                    </a>
+                </li>
+            {% else %}
+                <li>
+                    <a href="{{ url_for('pemilik.premium') }}" class="locked-feature" style="opacity: 0.6;">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Manajemen Keuangan 
+                        <i class="fa-solid fa-lock" style="font-size: 12px; float: right; margin-top: 5px;"></i>
+                    </a>
+                </li>
+            {% endif %}
 
             <li>
-
-                <a href="#">
-
-                    <i class="fa-solid fa-chart-line"></i>
-
-                    Laporan Keuangan
-
+                <a href="{{ url_for('pemilik.premium') }}"
+                   class="{% if request.endpoint == 'pemilik.premium' %}active{% endif %}" style="color: #d97706; font-weight: 600;">
+                    <i class="fa-solid fa-crown"></i> Layanan Premium
                 </a>
-
             </li>
+
+            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 10px 20px;">
 
             <li>
-
-                <a href="#">
-
-                    <i class="fa-solid fa-gear"></i>
-
-                    Pengaturan Akun
-
+                <a href="{{ url_for('pemilik.profil_pemilik') }}"
+                   class="{% if request.endpoint == 'pemilik.profil_pemilik' %}active{% endif %}">
+                    <i class="fa-solid fa-user-gear"></i> Profil Saya
                 </a>
-
             </li>
-
         </ul>
 
         <div class="sidebar-footer">
-
-            <a
-            href="{{ url_for('auth.logout') }}"
-            class="logout-btn">
-
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-
-                Keluar
-
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
             </a>
-
         </div>
-
     </aside>
 
     <main class="main-content">
-
         <header class="topbar">
-
             <div class="page-title">
-
                 <h1>
-
-                    {% block page_header %}
-                        Dashboard
-                    {% endblock %}
-
+                    {% block page_header %}Dashboard{% endblock %}
                 </h1>
-
                 <p>
-
-                    {% block page_desc %}
-                        Selamat datang di panel kontrol Anda.
-                    {% endblock %}
-
+                    {% block page_desc %}Selamat datang di panel kontrol Anda.{% endblock %}
                 </p>
-
             </div>
 
             <div class="user-profile-top">
-
-                <div
-                class="nav-icons"
-                style="margin-right:15px;">
-
-                    <i
-                    class="fa-regular fa-bell"
-                    style="
-                        font-size:18px;
-                        color:#4b5563;
-                        cursor:pointer;
-                    ">
-                    </i>
-
+                <div class="nav-icons" style="margin-right:15px;">
+                    <i class="fa-regular fa-bell" style="font-size:18px; color:#4b5563; cursor:pointer;"></i>
                 </div>
 
                 <div class="avatar">
-
-                    {{ session["nama"][0]|upper }}
-
+                    {{ (session.get("nama", "U")[0]) | upper }}
                 </div>
-
-                <span
-                style="
-                    font-weight:500;
-                    font-size:14px;
-                    color:#374151;
-                ">
-
-                    {{ session["nama"] }}
-
+                <span style="font-weight:500; font-size:14px; color:#374151;">
+                    {{ session.get("nama", "User") }}
                 </span>
-
             </div>
-
         </header>
 
         <div class="content-area">
-
             {% block content %}
             {% endblock %}
-
         </div>
-
     </main>
 
-    <script
-    src="{{ url_for(
-        'static',
-        filename='js/script.js'
-    ) }}">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
 </html>

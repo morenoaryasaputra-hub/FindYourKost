@@ -1,0 +1,204 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+
+<div class="container-fluid px-4 mt-3" style="background-color: #f8fafc; min-height: 90vh; font-family: 'Inter', sans-serif;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pt-2">
+        <div>
+            <h2 class="fw-bold text-dark mb-1" style="font-size: 28px;">Manajemen Tier Properti</h2>
+            <p class="text-muted small">Kelola paket langganan dan prioritas tampilan listing untuk mitra properti.</p>
+        </div>
+        <button class="btn btn-primary px-3 py-2 fw-semibold rounded-3 shadow-sm" style="background-color: #0b57d0; border: none;">
+            <i class="fas fa-plus-circle me-1"></i> Tambah Tier Baru
+        </button>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row g-4 mb-5">
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 bg-white position-relative">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-light text-secondary px-2.5 py-1.5 rounded-pill fw-semibold text-xs" style="font-size: 11px; background-color: #f1f5f9 !important;">Free</span>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" checked disabled style="cursor: not-allowed;">
+                    </div>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">Tier Standar</h4>
+                <h3 class="fw-bold text-primary mb-4" style="font-size: 24px;">Rp 0<span class="text-muted fw-normal fs-6">/bulan</span></h3>
+                
+                <ul class="list-unstyled flex-grow-1 mb-4" style="font-size: 13.5px; color: #475569;">
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> Listing Normal</li>
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> 3 Foto per Properti</li>
+                    <li class="mb-2.5 text-muted opacity-50"><i class="fas fa-times-circle text-danger me-2"></i> Tanpa Badge Premium</li>
+                    <li class="mb-2.5 text-muted opacity-50"><i class="fas fa-times-circle text-danger me-2"></i> Tanpa Featured Banner</li>
+                </ul>
+                
+                <div class="d-flex gap-2 mt-auto">
+                    <button class="btn btn-outline-secondary btn-sm w-50 py-2 rounded-3 text-dark fw-medium" style="border-color: #cbd5e1;" disabled><i class="fas fa-pen me-1"></i> Harga</button>
+                    <button class="btn btn-outline-secondary btn-sm w-50 py-2 rounded-3 text-dark fw-medium" style="border-color: #cbd5e1;" disabled><i class="fas fa-list me-1"></i> Benefit</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge text-dark px-2.5 py-1.5 rounded-pill fw-semibold" style="font-size: 11px; background-color: #e2e8f0;">Silver Tier</span>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" checked style="background-color: #198754; border-color: #198754;">
+                    </div>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">Premium Silver</h4>
+                <h3 class="fw-bold text-dark mb-4" style="font-size: 24px;">Rp 75k<span class="text-muted fw-normal fs-6"> /bulan</span></h3>
+                
+                <ul class="list-unstyled flex-grow-1 mb-4" style="font-size: 13.5px; color: #475569;">
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> Prioritas Pencarian (Low)</li>
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> 10 Foto per Properti</li>
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> Badge Silver Premium</li>
+                    <li class="mb-2.5 text-muted opacity-50"><i class="fas fa-times-circle text-danger me-2"></i> Tanpa Featured Banner</li>
+                </ul>
+                
+                <div class="d-flex gap-2 mt-auto">
+                    <button class="btn btn-outline-secondary btn-sm w-50 py-2 rounded-3 text-dark fw-medium" style="border-color: #cbd5e1;" data-bs-toggle="modal" data-bs-target="#editHargaSilver"><i class="fas fa-pen me-1"></i> Harga</button>
+                    <button class="btn btn-outline-secondary btn-sm w-50 py-2 rounded-3 text-dark fw-medium" style="border-color: #cbd5e1;"><i class="fas fa-list me-1"></i> Benefit</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm rounded-4 p-4 bg-white position-relative" style="border: 2px solid #ffc107 !important;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge text-dark px-2.5 py-1.5 rounded-pill fw-semibold" style="font-size: 11px; background-color: #fff3cd; color: #856404 !important;">Best Value</span>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" checked style="background-color: #198754; border-color: #198754;">
+                    </div>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">Premium Gold</h4>
+                <h3 class="fw-bold text-dark mb-4" style="font-size: 24px;">Rp 125k<span class="text-muted fw-normal fs-6">/bulan</span></h3>
+                
+                <ul class="list-unstyled flex-grow-1 mb-4" style="font-size: 13.5px; color: #475569;">
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> Prioritas Pencarian (Mid)</li>
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> Unlimited Foto & Video</li>
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> Badge Gold Premium</li>
+                    <li class="mb-2.5"><i class="fas fa-check-circle text-success me-2"></i> Featured Sidebar Ads</li>
+                </ul>
+                
+                <div class="d-flex gap-2 mt-auto">
+                    <button class="btn btn-outline-secondary btn-sm w-50 py-2 rounded-3 text-dark fw-medium" style="border-color: #cbd5e1;" data-bs-toggle="modal" data-bs-target="#editHargaGold"><i class="fas fa-pen me-1"></i> Harga</button>
+                    <button class="btn btn-outline-secondary btn-sm w-50 py-2 rounded-3 text-dark fw-medium" style="border-color: #cbd5e1;"><i class="fas fa-list me-1"></i> Benefit</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold text-dark mb-0" style="font-size: 18px;">Statistik Penggunaan Tier</h5>
+            <select class="form-select form-select-sm rounded-3 bg-light border-0 fw-medium text-secondary" style="width: 150px; padding: 6px 12px;">
+                <option>30 Hari Terakhir</option>
+                <option>7 Hari Terakhir</option>
+            </select>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #f1f5f9;">
+                    <small class="text-secondary fw-semibold d-block mb-1" style="font-size: 11px; letter-spacing: 0.5px;">AKTIF: STANDAR</small>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h3 class="fw-bold text-dark mb-0">{{ standar_aktif }}</h3>
+                        <span class="text-success fw-bold" style="font-size: 12px;">+12%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #f1f5f9;">
+                    <small class="text-secondary fw-semibold d-block mb-1" style="font-size: 11px; letter-spacing: 0.5px;">AKTIF: SILVER</small>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h3 class="fw-bold text-dark mb-0">{{ silver_aktif }}</h3>
+                        <span class="text-success fw-bold" style="font-size: 12px;">+8%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #f1f5f9;">
+                    <small class="text-secondary fw-semibold d-block mb-1" style="font-size: 11px; letter-spacing: 0.5px;">AKTIF: GOLD</small>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h3 class="fw-bold text-dark mb-0">{{ gold_aktif }}</h3>
+                        <span class="text-success fw-bold" style="font-size: 12px;">+24%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="d-flex justify-content-between align-items-center py-4 border-top mt-5 text-muted" style="font-size: 12px;">
+        <span>&copy; 2026 FindYourKost. Enterprise Admin Suite.</span>
+        <div class="d-flex gap-3">
+            <a href="#" class="text-decoration-none text-muted">Panduan Admin</a>
+            <a href="#" class="text-decoration-none text-muted">Kebijakan Keamanan</a>
+            <a href="#" class="text-decoration-none text-muted">Pusat Bantuan</a>
+        </div>
+    </footer>
+</div>
+
+<div class="modal fade" id="editHargaSilver" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 bg-light p-3 rounded-top-4">
+                <h5 class="modal-title fw-bold text-dark">Ubah Harga Paket Silver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.layanan_premium') }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="tier_id" value="2">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Harga Baru Bulanan (Rp)</label>
+                        <input type="number" name="harga_baru" class="form-control rounded-3" value="75000" required min="0">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-3 text-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-3 text-sm">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editHargaGold" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 bg-light p-3 rounded-top-4">
+                <h5 class="modal-title fw-bold text-dark">Ubah Harga Paket Gold</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.layanan_premium') }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="tier_id" value="3">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Harga Baru Bulanan (Rp)</label>
+                        <input type="number" name="harga_baru" class="form-control rounded-3" value="125000" required min="0">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-3 text-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-3 text-sm">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

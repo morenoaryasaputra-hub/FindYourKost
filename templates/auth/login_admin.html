@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | FindYourKost</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <style>
+        /* CSS tambahan untuk memberikan nuansa "Admin" yang lebih serius */
+        .right-panel .form-card { border-top: 5px solid #0f172a; }
+        .branding h1 { color: #0f172a; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left-panel">
+        <div class="branding">
+            <h1>FindYourKost</h1>
+            <h2>Admin Portal</h2>
+            <p>Sistem Manajemen Pusat untuk pengawasan platform FindYourKost.</p>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="form-card">
+            <h2>Portal Admin</h2>
+            <p>Masukkan kredensial administrator untuk mengakses sistem.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth.login_admin') }}">
+                <label>Email Admin</label>
+                <input type="email" name="email" placeholder="admin@findyourkost.com" required>
+
+                <label>Kata Sandi</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+
+                <button type="submit" class="btn-primary" style="margin-top: 20px;">
+                    Masuk ke Sistem
+                </button>
+            </form>
+
+            <p class="register-link" style="margin-top: 30px; font-size: 0.8rem; color: #666;">
+                &copy; 2026 FindYourKost Management
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

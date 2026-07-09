@@ -1,0 +1,125 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+
+<div class="container-fluid px-4 mt-3">
+    <div class="mb-4">
+        <h3 class="fw-bold text-dark">Ringkasan Platform</h3>
+        <p class="text-muted small">Data analitik pusat yang tersinkronisasi langsung dengan database.</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card p-4 border-0 shadow-sm bg-white h-100 d-flex flex-row align-items-center justify-content-between">
+                <div>
+                    <small class="text-muted fw-medium d-block mb-1">Total Pengguna</small>
+                    <h2 class="fw-bold mb-0 text-dark">{{ total_pengguna | default(0) }}</h2>
+                </div>
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 fs-3">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 border-0 shadow-sm bg-white h-100 d-flex flex-row align-items-center justify-content-between">
+                <div>
+                    <small class="text-muted fw-medium d-block mb-1">Menunggu Approval</small>
+                    <h2 class="fw-bold mb-0 text-warning">{{ menunggu_approval | default(0) }}</h2>
+                </div>
+                <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-3 fs-3">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 border-0 shadow-sm bg-white h-100 d-flex flex-row align-items-center justify-content-between">
+                <div>
+                    <small class="text-muted fw-medium d-block mb-1">Total Properti Aktif</small>
+                    <h2 class="fw-bold mb-0 text-success">{{ total_properti_aktif | default(0) }}</h2>
+                </div>
+                <div class="bg-success bg-opacity-10 text-success rounded-circle p-3 fs-3">
+                    <i class="fa-solid fa-building"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm p-4 h-100 bg-white">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Proporsi Peran Pengguna</h5>
+                <p class="text-muted small mb-4">Grafik riil pembagian akun terdaftar berdasarkan tipe hak akses (Role).</p>
+                <div class="d-flex justify-content-center align-items-center" style="position: relative; height:240px;">
+                    <canvas id="roleDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm p-4 h-100 bg-white">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bolt me-2 text-warning"></i>Registrasi User Terbaru</h5>
+                <p class="text-muted small mb-3">Daftar pengguna yang baru saja membuat akun di platform.</p>
+                
+                <div class="list-group list-group-flush mt-2">
+                    {% for u in user_terbaru %}
+                    <div class="list-group-item px-0 py-3 border-secondary-subtle bg-transparent d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-secondary bg-opacity-10 text-secondary rounded-circle fw-bold d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                {{ (u.nama or 'U')[:1] | upper }}
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark">{{ u.nama or 'User Tanpa Nama' }}</h6>
+                                <small class="text-muted">{{ u.email }}</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark border border-secondary-subtle">{{ (u.role or 'user') | capitalize }}</span>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted small">Belum ada user terdaftar dalam database.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById('roleDistributionChart').getContext('2d');
+        
+        // Mengamankan nilai default jika data dari backend kosong
+        const pemilikCount = parseInt("{{ pemilik_count }}") || 0;
+        const penyewaCount = parseInt("{{ penyewa_count }}") || 0;
+        const adminCount = parseInt("{{ admin_count }}") || 0;
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pemilik Kos', 'Penyewa/Pencari', 'Admin Pusat'],
+                datasets: [{
+                    data: [pemilikCount, penyewaCount, adminCount],
+                    backgroundColor: ['#0d6efd', '#198754', '#6c757d'],
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: { family: 'Inter', size: 12 }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}
