@@ -79,5 +79,4 @@ python app.py
 
 Dikembangkan sebagai projek akademik untuk mata kuliah Pengembangan Aplikasi.
 
-Dikembangkan sebagai # Mengaktifkan di Mac/Linux
-source venv/bin/activate
+Dikembangkan sebagai # M
