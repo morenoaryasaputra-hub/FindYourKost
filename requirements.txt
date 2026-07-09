@@ -9,3 +9,5 @@ cloudinary
 resend
 gunicorn
 Flask-SocketIO==5.3.6
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.36
