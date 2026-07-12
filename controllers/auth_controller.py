@@ -595,127 +595,244 @@ def reset_password(token):
         token=token
     )
 
-@auth_bp.route(
-    "/login/google"
-)
+@auth_bp.route("/login/google")
 def login_google():
 
-    google = oauth.create_client(
-        "google"
-    )
-
     redirect_uri = url_for(
+
         "auth.google_callback",
+
         _external=True
+
     )
 
-    return google.authorize_redirect(
+    return oauth.google.authorize_redirect(
+
         redirect_uri
+
     )
 
-@auth_bp.route(
-    "/login/google/callback"
-)
+@auth_bp.route("/login/google/callback")
 def google_callback():
 
-    google = oauth.create_client(
-        "google"
-    )
+    token = oauth.google.authorize_access_token()
 
-    token = google.authorize_access_token()
+    user_info = token.get("userinfo")
 
-    user_info = token[
-        "userinfo"
-    ]
+    if not user_info:
 
-    email = user_info["email"]
+        user_info = oauth.google.userinfo()
 
-    nama = user_info["name"]
+    email = user_info.get("email")
+
+    nama = user_info.get("name")
 
     conn = get_db()
+
     cursor = conn.cursor()
 
     cursor.execute(
+
         """
+
         SELECT
+
             id,
             nama,
             email,
             role,
-            is_profile_complete,
-            foto_profil
+            is_profile_complete
+
         FROM users
+
         WHERE email=%s
+
         """,
+
         (email,)
+
     )
 
     user = cursor.fetchone()
 
-    if not user:
+    if user:
+
+        session["user_id"] = user[0]
+
+        session["nama"] = user[1]
+
+        session["email"] = user[2]
+
+        session["role"] = user[3]
+
+        cursor.close()
+
+        conn.close()
+
+        if user[4]:
+
+            if user[3] == "admin":
+
+                return redirect("/admin")
+
+            elif user[3] == "pemilik":
+
+                return redirect("/pemilik")
+
+            else:
+
+                return redirect("/")
+
+        return redirect("/profil")
+
+    session["google_nama"] = nama
+
+    session["google_email"] = email
+
+    cursor.close()
+
+    conn.close()
+
+    return redirect("/pilih-role-google")
+
+@auth_bp.route(
+    "/pilih-role-google",
+    methods=[
+        "GET",
+        "POST"
+    ]
+)
+def pilih_role_google():
+
+    if "google_email" not in session:
+
+        return redirect("/login")
+
+    if request.method == "POST":
+
+        role = request.form.get("role")
+
+        if role not in [
+
+            "penyewa",
+            "pemilik"
+
+        ]:
+
+            flash(
+
+                "Silakan pilih jenis akun.",
+
+                "danger"
+
+            )
+
+            return redirect(
+                "/pilih-role-google"
+            )
+
+        conn = get_db()
+
+        cursor = conn.cursor()
 
         cursor.execute(
+
             """
+
             INSERT INTO users
             (
+
                 nama,
                 email,
                 role,
                 is_profile_complete
+
             )
+
             VALUES
             (
+
                 %s,
                 %s,
-                'penyewa',
+                %s,
                 FALSE
+
             )
+
             """,
+
             (
-                nama,
-                email
+
+                session["google_nama"],
+                session["google_email"],
+                role
+
             )
+
         )
 
         conn.commit()
 
         user_id = cursor.lastrowid
 
-        session["user_id"] = user_id
-        session["nama"] = nama
-        session["email"] = email
-        session["role"] = "penyewa"
-        session["is_profile_complete"] = False
-        session["foto_profil"] = None
-
         cursor.close()
         conn.close()
 
-        return redirect("/profil")
+        session["user_id"] = user_id
 
-    session["user_id"] = user[0]
-    session["nama"] = user[1]
-    session["email"] = user[2]
-    session["role"] = user[3]
-    session["is_profile_complete"] = bool(
-        user[4]
-    )
-    session["foto_profil"] = user[5]
+        session["nama"] = session["google_nama"]
 
-    cursor.close()
-    conn.close()
+        session["email"] = session["google_email"]
 
-    if not user[4]:
+        session["role"] = role
 
-        return redirect("/profil")
-    
-    if user[3] == "pemilik":
+        session["is_profile_complete"] = False
 
-        return redirect(
-            "/pemilik"
+        session["foto_profil"] = None
+
+        session.pop(
+
+            "google_nama",
+
+            None
+
         )
 
-    return redirect("/")
+        session.pop(
+
+            "google_email",
+
+            None
+
+        )
+
+        flash(
+
+            "Registrasi berhasil.",
+
+            "success"
+
+        )
+
+        if role == "pemilik":
+
+            return redirect(
+                "/pemilik/dashboard"
+            )
+
+        return redirect(
+            "/profil"
+        )
+
+    return render_template(
+
+        "auth/pilih_role_google.html",
+
+        nama=session["google_nama"],
+
+        email=session["google_email"]
+
+    )
 
 @auth_bp.route(
     "/profil",

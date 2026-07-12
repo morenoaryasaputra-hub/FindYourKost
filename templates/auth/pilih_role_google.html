@@ -1,0 +1,135 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Pilih Jenis Akun
+{% endblock %}
+
+{% block css %}
+
+<link
+rel="stylesheet"
+href="{{ url_for(
+    'static',
+    filename='css/pilih_role_google.css'
+) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="role-page">
+
+    <div class="role-card">
+
+        <div class="google-icon">
+
+            <i
+            class="fa-brands fa-google"></i>
+
+        </div>
+
+        <h1>
+
+            Selamat Datang
+
+        </h1>
+
+        <p>
+
+            Akun Google Anda berhasil terhubung.
+
+        </p>
+
+        <div class="google-info">
+
+            <h3>
+
+                {{ nama }}
+
+            </h3>
+
+            <span>
+
+                {{ email }}
+
+            </span>
+
+        </div>
+
+        <form
+        method="POST">
+
+            <h4>
+
+                Saya ingin menggunakan FindYourKost sebagai
+
+            </h4>
+
+            <label
+            class="role-item">
+
+                <input
+                type="radio"
+                name="role"
+                value="penyewa"
+                required>
+
+                <div>
+
+                    <strong>
+
+                        Penyewa
+
+                    </strong>
+
+                    <p>
+
+                        Cari kos, booking kamar, chat pemilik, dan simpan wishlist.
+
+                    </p>
+
+                </div>
+
+            </label>
+
+            <label
+            class="role-item">
+
+                <input
+                type="radio"
+                name="role"
+                value="pemilik">
+
+                <div>
+
+                    <strong>
+
+                        Pemilik Kos
+
+                    </strong>
+
+                    <p>
+
+                        Kelola kos, menerima booking, dan mengelola penyewa.
+
+                    </p>
+
+                </div>
+
+            </label>
+
+            <button
+            type="submit"
+            class="submit-btn">
+
+                Lanjutkan
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
