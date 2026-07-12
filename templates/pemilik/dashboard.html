@@ -2,8 +2,9 @@
 {% block content %}
 
 <div class="container-fluid px-4 mt-3" style="background-color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 95vh;">
+    
     <div class="mb-4 pt-2">
-        <h2 class="fw-bold text-dark mb-1" style="font-size: 26px;">Selamat Datang, {{ session.get('nama') }}</h2>
+        <h2 class="fw-bold text-dark mb-1" style="font-size: 26px;">Selamat Datang, {{ nama_pemilik }}</h2>
         <p class="text-muted small">Kelola properti Anda dengan mudah dan pantau performa bisnis hari ini.</p>
     </div>
 
@@ -12,9 +13,10 @@
             <div class="card p-4 border-0 shadow-sm rounded-4 bg-white h-100">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="rounded-3 p-2.5 text-primary" style="background-color: #eff6ff;"><i class="fa-solid fa-building fs-5"></i></div>
+                    <span class="text-success small fw-bold" style="font-size: 12px;"><i class="fas fa-arrow-up me-0.5"></i> 12%</span>
                 </div>
                 <small class="text-muted fw-semibold d-block mb-1" style="font-size: 13px;">Total Properti</small>
-                <h2 class="fw-bold mb-0 text-dark" style="font-size: 28px;">{{ total_properti|default('0') }}</h2>
+                <h2 class="fw-bold mb-0 text-dark" style="font-size: 28px;">{{ total_properti }}</h2>
             </div>
         </div>
 
@@ -22,9 +24,10 @@
             <div class="card p-4 border-0 shadow-sm rounded-4 bg-white h-100">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="rounded-3 p-2.5 text-success" style="background-color: #f0fdf4;"><i class="fa-solid fa-door-open fs-5"></i></div>
+                    <span class="text-danger small fw-bold" style="font-size: 12px;"><i class="fas fa-arrow-down me-0.5"></i> 2%</span>
                 </div>
                 <small class="text-muted fw-semibold d-block mb-1" style="font-size: 13px;">Kamar Tersedia</small>
-                <h2 class="fw-bold mb-0 text-dark" style="font-size: 28px;">{{ kamar_tersedia|default('0') }}</h2>
+                <h2 class="fw-bold mb-0 text-dark" style="font-size: 28px;">{{ kamar_tersedia }}</h2>
             </div>
         </div>
 
@@ -32,27 +35,42 @@
             <div class="card p-4 border-0 shadow-sm rounded-4 bg-white h-100">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="rounded-3 p-2.5 text-warning" style="background-color: #fffbeb;"><i class="fa-solid fa-calendar-check fs-5"></i></div>
+                    <span class="text-success small fw-bold" style="font-size: 12px;"><i class="fas fa-arrow-up me-0.5"></i> 8%</span>
                 </div>
                 <small class="text-muted fw-semibold d-block mb-1" style="font-size: 13px;">Booking Aktif</small>
-                <h2 class="fw-bold mb-0 text-dark" style="font-size: 28px;">{{ booking_aktif|default('0') }}</h2>
+                <h2 class="fw-bold mb-0 text-dark" style="font-size: 28px;">{{ booking_aktif }}</h2>
             </div>
         </div>
 
         <div class="col-6 col-md-3">
             <div class="card p-4 border-0 shadow-sm rounded-4 bg-white h-100">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="rounded-3 p-2.5 text-info" style="background-color: #ecfeff;"><i class="fa-solid fa-crown fs-5"></i></div>
+                    <div class="rounded-3 p-2.5 text-info" style="background-color: #ecfeff;"><i class="fa-solid fa-wallet fs-5"></i></div>
+                    <span class="text-success small fw-bold" style="font-size: 12px;"><i class="fas fa-arrow-up me-0.5"></i> 20%</span>
                 </div>
-                <small class="text-muted fw-semibold d-block mb-1" style="font-size: 13px;">Status Akun</small>
-                <h2 class="fw-bold mb-0 text-dark" style="font-size: 20px;">
-                    {% if session.get('is_premium') %}
-                        <span class="text-warning">Premium</span>
-                    {% else %}
-                        <span class="text-secondary">Basic</span>
-                    {% endif %}
-                </h2>
+                <small class="text-muted fw-semibold d-block mb-1" style="font-size: 13px;">Pendapatan Bulan Ini</small>
+                <h2 class="fw-bold mb-0 text-dark" style="font-size: 26px;">{{ pendapatan_display }}</h2>
             </div>
         </div>
     </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0" style="font-size: 16px;">Analitik Pendapatan</h5>
+                        <small class="text-muted" style="font-size: 12px;">Januari - Juni 2026</small>
+                    </div>
+                    <div class="btn-group btn-group-sm rounded-3 overflow-hidden border">
+                        <button class="btn btn-primary btn-sm px-3 fw-medium border-0" style="background-color: #eff6ff; color: #0b57d0; font-size: 12px;">Bulanan</button>
+                        <button class="btn btn-white btn-sm px-3 text-secondary border-0" style="font-size: 12px;">Tahunan</button>
+                    </div>
+                </div>
+                
+                <div class="flex-grow-1 d-flex align-items-center" style="position: relative; min-height: 250px;">
+                    <canvas id="incomeAnalyticsChart" data-chart="{{ chart_data | tojson | default('[]') }}"></canvas>
+                </div>
+                </div>
 </div>
 {% endblock %}

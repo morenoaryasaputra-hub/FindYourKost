@@ -5,266 +5,113 @@ Pesan
 {% endblock %}
 
 {% block css %}
-
-<link
-rel="stylesheet"
-href="{{ url_for(
-    'static',
-    filename='css/chat.css'
-) }}">
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
 {% endblock %}
 
 {% block content %}
 
 <div class="chat-container">
 
-    <!-- SIDEBAR -->
-
     <div class="chat-sidebar">
-
         <div class="sidebar-header">
-
-            <h2>
-
-                Pesan
-
-            </h2>
-
+            <h2>Pesan</h2>
         </div>
-
         <div class="search-box">
-
             <i class="fa-solid fa-magnifying-glass"></i>
-
-            <input
-            type="text"
-            placeholder="Cari percakapan...">
-
+            <input type="text" placeholder="Cari percakapan...">
         </div>
-
+        
         <div class="chat-list">
-
             {% for room in rooms %}
-
-            <a
-            href="{{ url_for('chat.open_room', room_id=room[0]) }}"
-            class="chat-item {% if room[0] == active_room %}active{% endif %}">
-
-                <img
-                src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}"
-                class="avatar">
-
+            <a href="{{ url_for('chat.open_room', room_id=room[0]) }}" class="chat-item {% if room[0] == active_room %}active{% endif %}">
+                <img src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}" class="avatar">
                 <div class="chat-info">
-
                     <div class="top">
-
-                        <h4>
-
-                            {{ room[1] }}
-
-                        </h4>
-
+                        <h4>{{ room[1] }}</h4>
                         {% if room[5] %}
-
-                        <small>
-
-                            {{ room[5].strftime("%H:%M") }}
-
-                        </small>
-
+                        <small>{{ room[5].strftime("%H:%M") }}</small>
                         {% endif %}
-
                     </div>
-
-                    <span>
-
-                        {{ room[3] }}
-
-                    </span>
-
-                    <p>
-
-                        {{ room[4] if room[4] else "Belum ada pesan" }}
-
-                    </p>
-
+                    <span>{{ room[3] }}</span>
+                    <p>{{ room[4] if room[4] else "Belum ada pesan" }}</p>
                 </div>
-
             </a>
-
             {% endfor %}
-
         </div>
-
     </div>
-
-    <!-- CHAT ROOM -->
 
     <div class="chat-room">
-
-    {% if active_room %}
-
-    {% set room = rooms|selectattr(0, 'equalto', active_room)|first %}
+        {% if active_room %}
+        {% set room = rooms|selectattr(0, 'equalto', active_room)|first %}
 
         <div class="chat-header">
-
             <div class="header-left">
-
-                <img
-                src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}"
-                class="avatar">
-
+                <img src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}" class="avatar">
                 <div>
+                    <h3>{{ room[1] }}</h3>
+                    <span>{{ room[3] }}</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <i class="fa-solid fa-phone"></i>
+                <i class="fa-solid fa-video"></i>
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </div>
+        </div>
 
-                    <h3>
-
-                        {{ room[1] }}
-
-                    </h3>
-
-                    <span>
-
-                        {{ room[3] }}
-
-                    </span>
+        <div id="messages" class="messages">
+            {% for msg in messages %}
+            <div class="message {% if msg[1] == session['user_id'] %}mine{% endif %}">
+                <div class="bubble" {% if msg[5] %}style="padding:5px;"{% endif %}>
+                    
+                    {% if msg[5] %}
+                        {% if msg[5].lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+                            <img src="/{{ msg[5] }}" style="max-width:200px; border-radius:10px;">
+                        {% elif msg[5].lower().endswith(('.mp4', '.webm')) %}
+                            <video width="200" controls><source src="/{{ msg[5] }}"></video>
+                        {% else %}
+                            <a href="/{{ msg[5] }}" target="_blank" style="color: blue;">📄 Lihat File</a>
+                        {% endif %}
+                    {% else %}
+                        {{ msg[2]|safe }}
+                    {% endif %}
 
                 </div>
-
+                <span class="time">{{ msg[3].strftime("%H:%M") }}</span>
             </div>
-
-            <div class="header-right">
-
-                <i class="fa-solid fa-phone"></i>
-
-                <i class="fa-solid fa-video"></i>
-
-                <i class="fa-solid fa-ellipsis-vertical"></i>
-
-            </div>
-
+            {% endfor %}
         </div>
 
-        <div
-        id="messages"
-        class="messages">
+        <form id="chat-form" class="chat-input">
+            <input type="hidden" id="room_id" name="room_id" value="{{ active_room }}">
+            
+            <input type="file" id="file-input" style="display:none" accept="image/*,video/*,.pdf,.doc">
+            
+            <button type="button" class="attach-btn" onclick="document.getElementById('file-input').click()">
+                <i class="fa-solid fa-paperclip"></i>
+            </button>
+            
+            <input id="message" type="text" placeholder="Tulis pesan..." autocomplete="off">
+            
+            <button class="send-btn" type="submit">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
 
-        {% for msg in messages %}
-
-    {% if msg[1] == session["user_id"] %}
-
-    <div class="message mine">
-
-        <div class="bubble">
-
-            {{ msg[2] }}
-
+        {% else %}
+        <div class="empty-chat">
+            <i class="fa-solid fa-comments"></i>
+            <h2>Belum ada percakapan</h2>
+            <p>Pilih percakapan di sebelah kiri untuk mulai chatting.</p>
         </div>
-
-        <span class="time">
-
-            {{ msg[3].strftime("%H:%M") }}
-
-        </span>
-
+        {% endif %}
     </div>
-
-    {% else %}
-
-    <div class="message">
-
-        <div class="bubble">
-
-            {{ msg[2] }}
-
-        </div>
-
-        <span class="time">
-
-            {{ msg[3].strftime("%H:%M") }}
-
-        </span>
-
-    </div>
-
-    {% endif %}
-
-{% endfor %}
-
-</div>
-
-<form
-id="chat-form"
-class="chat-input">
-
-    <input
-    type="hidden"
-    id="room_id"
-    name="room_id"
-    value="{{ active_room }}">
-
-    <button
-    type="button"
-    class="attach-btn">
-
-        <i class="fa-solid fa-paperclip"></i>
-
-    </button>
-
-    <input
-
-    id="message"
-
-    type="text"
-
-    placeholder="Tulis pesan..."
-
-    autocomplete="off"
-
-    required>
-
-    <button
-
-    class="send-btn"
-
-    type="submit">
-
-        <i class="fa-solid fa-paper-plane"></i>
-
-    </button>
-
-</form>
-
-{% else %}
-
-<div class="empty-chat">
-
-    <i class="fa-solid fa-comments"></i>
-
-    <h2>
-
-        Belum ada percakapan
-
-    </h2>
-
-    <p>
-
-        Pilih percakapan di sebelah kiri untuk mulai chatting.
-
-    </p>
-
-</div>
-
-{% endif %}
-
-</div>
 
 </div>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <script>
-
 const socket = io("/", {
     transports: ["websocket"]
 });
@@ -277,167 +124,86 @@ socket.on("disconnect", function () {
     console.log("DISCONNECT");
 });
 
-socket.onAny((event, data) => {
-    console.log("EVENT:", event, data);
-});
-
 const roomId = document.getElementById("room_id");
-
 const form = document.getElementById("chat-form");
-
 const input = document.getElementById("message");
-
 const messages = document.getElementById("messages");
 
 // ======================
 // JOIN ROOM
 // ======================
-
 if(roomId){
-
-    socket.emit(
-        "join",
-        {
-            room: roomId.value
-        }
-    );
-
+    socket.emit("join", { room: roomId.value });
 }
-
-// ======================
-// AUTO SCROLL
-// ======================
 
 if(messages){
-
-    messages.scrollTop =
-        messages.scrollHeight;
-
+    messages.scrollTop = messages.scrollHeight;
 }
 
 // ======================
-// KIRIM PESAN
+// KIRIM PESAN TEXT (Socket)
 // ======================
-
 if(form){
-
-    form.addEventListener(
-
-        "submit",
-
-        function(e){
-
-            e.preventDefault();
-
-            const pesan =
-                input.value.trim();
-
-            if(pesan==""){
-
-                return;
-
-            }
-
-            socket.emit(
-
-                "send_message",
-
-                {
-
-                    room: roomId.value,
-
-                    message: pesan
-
-                }
-
-            );
-
-            input.value="";
-
-            input.focus();
-
+    form.addEventListener("submit", function(e){
+        e.preventDefault();
+        
+        // PENTING: Jika ada file yang dipilih, biarkan chat_upload.js yang bekerja
+        const fileInput = document.getElementById('file-input');
+        if (fileInput && fileInput.files.length > 0) {
+            // Biarkan JavaScript eksternal yang handle upload ini (chat_upload.js)
+            return; 
         }
 
-    );
+        const pesan = input.value.trim();
+        if(pesan == ""){
+            return;
+        }
 
+        socket.emit("send_message", {
+            room: roomId.value,
+            message: pesan
+        });
+
+        input.value = "";
+        input.focus();
+    });
 }
 
 // ======================
-// TERIMA PESAN
+// TERIMA PESAN REALTIME
 // ======================
-
-socket.on(
-
-    "receive_message",
-
-    function(data){
-
-        if(!messages){
-
-            return;
-
-        }
-
-        const wrapper =
-            document.createElement(
-                "div"
-            );
-
-        if(
-
-            Number(data.sender_id) ===
-
-            Number("{{ session['user_id'] }}")
-
-        ){
-
-            wrapper.className =
-                "message mine";
-
-        }
-
-        else{
-
-            wrapper.className =
-                "message";
-
-        }
-
-        wrapper.innerHTML =
-
-        `
-        <div class="bubble">
-
-            ${data.message}
-
-        </div>
-
-        <span class="time">
-
-            ${new Date().toLocaleTimeString(
-                [],
-                {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                }
-            )}
-
-        </span>
-        `;
-
-        console.log(wrapper);
-
-        messages.appendChild(
-            wrapper
-        );
-
-        messages.scrollTop =
-            messages.scrollHeight;
-
+socket.on("receive_message", function(data){
+    if(!messages){
+        return;
     }
 
-);
+    const wrapper = document.createElement("div");
+    wrapper.className = (Number(data.sender_id) === Number("{{ session['user_id'] }}")) ? "message mine" : "message";
+
+    // --- LOGIKA SAKTI UNTUK SOCKET.IO ---
+    let content = `<div class="bubble">${data.message}</div>`;
+    
+    if (data.file_path) {
+        if (data.file_type && data.file_type.startsWith('image/')) {
+            content = `<div class="bubble" style="padding:5px;"><img src="/${data.file_path}" style="max-width:200px; border-radius:10px;"></div>`;
+        } else if (data.file_type && data.file_type.startsWith('video/')) {
+            content = `<div class="bubble" style="padding:5px;"><video width="200" controls><source src="/${data.file_path}"></video></div>`;
+        } else {
+            content = `<div class="bubble"><a href="/${data.file_path}" target="_blank">📄 Download File</a></div>`;
+        }
+    }
+
+    wrapper.innerHTML = `
+        ${content}
+        <span class="time">${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+    `;
+
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+});
 
 </script>
+
+<script src="{{ url_for('static', filename='js/chat_upload.js') }}"></script>
 
 {% endblock %}

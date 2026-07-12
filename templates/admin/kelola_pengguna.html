@@ -1,67 +1,189 @@
 {% extends 'admin/base.html' %}
-{% block content %}
-<div class="container mt-4">
-    <h3 class="mb-4">👥 Manajemen Akun & Pengguna</h3>
+{% block title %}Admin | Kelola Pengguna{% endblock %}
+{% block page_header %}Manajemen Pengguna Platform{% endblock %}
 
+{% block content %}
+<div class="container-fluid p-0">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm mb-4">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 bg-white rounded-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-users-gear text-primary me-2"></i>Daftar Pengguna Terdaftar</h5>
+        </div>
+        
         <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-3">Nama Pengguna</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status Akun</th>
-                        <th class="text-center">Tindakan Admin</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for u in users %}
-                    <tr>
-                        <td class="ps-3 fw-bold">{{ u.nama }}</td>
-                        <td>{{ u.email }}</td>
-                        <td><span class="badge bg-secondary">{{ u.role | upper }}</span></td>
-                        <td>
-                            <span class="badge {% if u.status_akun == 'aktif' %}bg-success{% elif u.status_akun == 'suspended' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                                {{ u.status_akun or 'aktif' }}
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <!-- Aksi Suspend -->
-                            <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="action_type" value="suspend">
-                                <button type="submit" class="btn btn-sm btn-warning text-dark">Suspend</button>
-                            </form>
-
-                            <!-- Aksi Blokir -->
-                            <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="action_type" value="blokir">
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Blokir permanen user ini?');">Blokir</button>
-                            </form>
-
-                            <!-- Aksi Aktifkan Kembali -->
-                            <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="action_type" value="aktifkan">
-                                <button type="submit" class="btn btn-sm btn-success">Aktifkan</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">Tidak ada data pengguna terdaftar.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-muted small fw-bold">
+                        <tr>
+                            <th class="ps-4 py-3">Nama Pengguna</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status Akun</th>
+                            <th class="text-center pe-4">Tindakan Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for u in users %}
+                            <tr class="border-bottom">
+                                <td class="ps-4 fw-bold text-dark">{{ u.nama }}</td>
+                                <td class="text-secondary">{{ u.email }}</td>
+                                <td><span class="badge bg-secondary text-uppercase">{{ u.role }}</span></td>
+                                
+                                <td>
+                                    {% if u.status_akun == 'aktif' or not u.status_akun %}
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill"><i class="fa-solid fa-check-circle me-1"></i>Aktif</span>
+                                    {% elif u.status_akun == 'suspended' %}
+                                        <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i>Suspended</span>
+                                    {% else %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="fa-solid fa-ban me-1"></i>Diblokir</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="text-center pe-4">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        {% if u.status_akun == 'suspended' or u.status_akun == 'diblokir' %}
+                                            <button type="button" class="btn btn-sm btn-success rounded-3 px-3 fw-medium" data-bs-toggle="modal" data-bs-target="#modalAktif{{ u.id }}">
+                                                <i class="fa-solid fa-unlock me-1"></i>Aktifkan
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-warning text-dark rounded-3 fw-medium" data-bs-toggle="modal" data-bs-target="#modalSuspend{{ u.id }}">
+                                                <i class="fa-solid fa-pause me-1"></i>Suspend
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger rounded-3 fw-medium" data-bs-toggle="modal" data-bs-target="#modalBlokir{{ u.id }}">
+                                                <i class="fa-solid fa-ban me-1"></i>Blokir
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">Belum ada pengguna yang terdaftar di sistem.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+{% for u in users %}
+<div class="modal fade" id="modalSuspend{{ u.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <i class="fa-solid fa-clock text-warning" style="font-size: 50px;"></i>
+                    </div>
+                    <h5 class="fw-bold text-center mb-2">Suspend Akun</h5>
+                    <p class="text-muted text-center mb-4">Bekukan akses login akun <strong>{{ u.nama }}</strong> selama 7 hari otomatis.</p>
+                    
+                    <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST">
+                        <input type="hidden" name="action_type" value="suspend">
+                        
+                        <div class="mb-3 text-start position-relative">
+                            <label class="form-label fw-bold small text-secondary">Pilih Alasan Pelanggaran:</label>
+                            <select name="alasan_dropdown" class="form-select bg-light border-warning-subtle shadow-none" id="alasanDropdown{{ u.id }}" data-userid="{{ u.id }}" onchange="toggleAlasan(this.dataset.userid)" required style="cursor: pointer; position: relative; z-index: 1060;">
+                                <option value="" disabled selected>-- Pilih Alasan --</option>
+                                <option value="Indikasi Penipuan / Transaksi Fiktif">Indikasi Penipuan / Transaksi Fiktif</option>
+                                <option value="Spam / Aktivitas Mencurigakan">Spam / Aktivitas Mencurigakan</option>
+                                <option value="Pelanggaran Tata Tertib Properti Kos">Pelanggaran Tata Tertib Properti Kos</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4 text-start" id="alasanManualBox{{ u.id }}" style="display: none;">
+                            <label class="form-label fw-bold small text-secondary">Berikan Alasan Manual:</label>
+                            <textarea name="alasan_text" class="form-control bg-light" rows="2" placeholder="Tulis alasan detil di sini..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-2 mt-2">
+                            <button type="button" class="btn btn-light rounded-3 px-4 fw-medium" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-warning text-dark rounded-3 px-4 fw-bold">Suspend 1 Minggu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="modalBlokir{{ u.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <i class="fa-solid fa-ban text-danger" style="font-size: 50px;"></i>
+                    </div>
+                    <h5 class="fw-bold text-center mb-2">Blokir Permanen</h5>
+                    <p class="text-muted text-center mb-4">Akun <strong>{{ u.nama }}</strong> akan dinonaktifkan selamanya dari platform.</p>
+                    
+                    <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST">
+                        <input type="hidden" name="action_type" value="blokir">
+                        <div class="mb-4 text-start">
+                            <label class="form-label fw-bold small text-secondary">Alasan Blokir:</label>
+                            <textarea name="alasan" class="form-control bg-light" rows="3" placeholder="Sebutkan pelanggaran berat akun ini..." required></textarea>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-light rounded-3 px-4 fw-medium" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger rounded-3 px-4 fw-bold">Ya, Blokir</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAktif{{ u.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body text-center p-4">
+                    <i class="fa-solid fa-unlock-keyhole text-success mb-3" style="font-size: 50px;"></i>
+                    <h5 class="fw-bold mb-2">Pulihkan Status Akun</h5>
+                    <p class="text-muted mb-4">Apakah Anda yakin ingin memulihkan status <strong>{{ u.nama }}</strong> menjadi Aktif normal kembali?</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light rounded-3 px-4 fw-medium" data-bs-dismiss="modal">Batal</button>
+                        <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST">
+                            <input type="hidden" name="action_type" value="aktifkan">
+                            <button type="submit" class="btn btn-success rounded-3 px-4 fw-bold">Ya, Aktifkan</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<script>
+    function toggleAlasan(userId) {
+        var dropdown = document.getElementById('alasanDropdown' + userId);
+        var manualBox = document.getElementById('alasanManualBox' + userId);
+        if (!dropdown || !manualBox) return;
+        
+        var textArea = manualBox.querySelector('textarea');
+        
+        if (dropdown.value === 'Lainnya') {
+            manualBox.style.display = 'block';
+            if (textArea) textArea.required = true;
+        } else {
+            manualBox.style.display = 'none';
+            if (textArea) {
+                textArea.required = false;
+                textArea.value = '';
+            }
+        }
+    }
+</script>
 {% endblock %}

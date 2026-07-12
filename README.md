@@ -12,7 +12,8 @@ Proyek ini dibangun sebagai bagian dari tugas pengembangan perangkat lunak kelom
 2. **Dashboard Pemilik Kos**: Halaman khusus bagi pemilik untuk memantau metrik properti dan transaksi.
 3. **Fitur Chat Real-Time (Socket.io)**: Chat interaktif langsung antara penyewa dan pemilik kos tanpa perlu refresh halaman.
 4. **Berbagi Media di Chat**: Mendukung pengiriman file, gambar (max 2MB), dan video dengan batasan ukuran aman untuk mencegah pembengkakan database.
-5. **Premium Listing Gateway (Midtrans)**: Integrasi pembayaran aman menggunakan Midtrans Snap API bagi pemilik kos yang ingin menaikkan visibilitas propertinya ke baris paling atas.
+5. **Premium Listing**: Bemilik bisa menaikkan visibilitas propertinya ke baris paling atas dengan mengupgrade plan mereka.
+6. **Integrasi Payment Gateway**: Terintegrasi dengan Midtrans Snap API untuk memproses pembayaran kos.
 
 ---
 
@@ -40,6 +41,42 @@ python -m venv venv
 
 # Mengaktifkan di Windows
 venv\Scripts\activate
+```
 
-# Mengaktifkan di Mac/Linux
-source venv/bin/activate
+### 3. Instal Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Konfigurasi Environment Variables
+
+Buat file `.env` di direktori utama (root) project anda, kemudian isi dengan kredensial dan *API key* yang diperlukan sesuai dengan konfigurasi lingkungan Anda.
+
+Contoh:
+
+```env
+SECRET_KEY=your_secret_key
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=findyourkost
+MIDTRANS_SERVER_KEY=your_midtrans_server_key
+MIDTRANS_CLIENT_KEY=your_midtrans_client_key
+```
+
+### 5. Jalankan Aplikasi
+
+```bash
+python app.py
+```
+
+---
+
+## 👨‍💻 Contributors
+- Moreno Arya Saputra 
+- Agape Dhaniel Wibowo
+- Vanessa Ruth Walingkas
+- Yuka Asfwa Atalla
+
+Dikembangkan sebagai projek akademik untuk mata kuliah Pengembangan Aplikasi.

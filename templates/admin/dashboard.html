@@ -24,10 +24,10 @@
             <div class="card p-4 border-0 shadow-sm bg-white h-100 d-flex flex-row align-items-center justify-content-between">
                 <div>
                     <small class="text-muted fw-medium d-block mb-1">Menunggu Approval</small>
-                    <h2 class="fw-bold mb-0 text-warning">{{ menunggu_approval | default(0) }}</h2>
+                    <h2 class="fw-bold mb-0 text-dark">{{ menunggu_approval | default(0) }}</h2>
                 </div>
                 <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-3 fs-3">
-                    <i class="fa-solid fa-clock"></i>
+                    <i class="fa-solid fa-house-medical-circle-exclamation"></i>
                 </div>
             </div>
         </div>
@@ -35,49 +35,103 @@
         <div class="col-md-4">
             <div class="card p-4 border-0 shadow-sm bg-white h-100 d-flex flex-row align-items-center justify-content-between">
                 <div>
-                    <small class="text-muted fw-medium d-block mb-1">Total Properti Aktif</small>
-                    <h2 class="fw-bold mb-0 text-success">{{ total_properti_aktif | default(0) }}</h2>
+                    <small class="text-muted fw-medium d-block mb-1">Total Transaksi Selesai</small>
+                    <h2 class="fw-bold mb-0 text-dark">{{ total_transaksi | default(0) }}</h2>
                 </div>
                 <div class="bg-success bg-opacity-10 text-success rounded-circle p-3 fs-3">
-                    <i class="fa-solid fa-building"></i>
+                    <i class="fa-solid fa-money-bill-transfer"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm p-4 h-100 bg-white">
-                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Proporsi Peran Pengguna</h5>
-                <p class="text-muted small mb-4">Grafik riil pembagian akun terdaftar berdasarkan tipe hak akses (Role).</p>
-                <div class="d-flex justify-content-center align-items-center" style="position: relative; height:240px;">
-                    <canvas id="roleDistributionChart"></canvas>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 bg-white rounded-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-envelope-open-text text-warning me-2"></i>Pengajuan Banding (Menunggu Tinjauan)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted small fw-bold">
+                                <tr>
+                                    <th class="ps-4 py-3">Tanggal Pengajuan</th>
+                                    <th>Email Pengguna</th>
+                                    <th>Alasan Banding</th>
+                                    <th>Status</th>
+                                    <th class="text-center pe-4">Aksi</th>
+                                </tr>
+                            </thead>
+<tbody>
+    {% if daftar_banding %}
+        {% for b in daftar_banding %}
+        <tr class="border-bottom">
+            <td class="ps-4 text-muted small fw-medium">
+    {% if b['created_at'] %}
+        {{ b['created_at'].strftime('%d %b %Y, %H:%M') if b['created_at'].strftime else b['created_at'] }}
+    {% else %}
+        -
+    {% endif %}
+</td>
+            
+            <td class="fw-bold text-dark">{{ b['email'] }}</td>
+            <td class="text-secondary">{{ b['alasan'] }}</td>
+            <td><span class="badge bg-warning bg-opacity-10 text-warning px-3 py-1 rounded-pill">Pending</span></td>
+            <td class="text-center pe-4">
+                <button type="button" class="btn btn-sm btn-success rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalBanding{{ b['id'] }}">
+                    <i class="fa-solid fa-check-circle me-1"></i> Terima Banding
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="5" class="text-center py-5 text-muted">
+                <i class="fa-solid fa-check-circle fs-1 text-success opacity-25 mb-2 d-block"></i>
+                Tidak ada pengajuan banding baru.
+            </td>
+        </tr>
+    {% endif %}
+</tbody>
+                        </table>
+                        {% for b in daftar_banding %}
+<div class="modal fade" id="modalBanding{{ b.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3 text-success">
+                    <i class="fa-solid fa-circle-check" style="font-size: 60px;"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Terima Pengajuan Banding?</h5>
+                <p class="text-muted mb-4">
+                    Anda akan mengaktifkan kembali akun <strong>{{ b.email }}</strong>. 
+                    Tindakan ini tidak dapat dibatalkan.
+                </p>
+                
+                <form action="{{ url_for('admin.proses_banding', banding_id=b.id) }}" method="POST">
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light px-4 rounded-3 fw-medium" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success px-4 rounded-3 fw-bold">Ya, Setujui Banding</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
+    <div class="row">
         <div class="col-lg-5">
-            <div class="card border-0 shadow-sm p-4 h-100 bg-white">
-                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bolt me-2 text-warning"></i>Registrasi User Terbaru</h5>
-                <p class="text-muted small mb-3">Daftar pengguna yang baru saja membuat akun di platform.</p>
-                
-                <div class="list-group list-group-flush mt-2">
-                    {% for u in user_terbaru %}
-                    <div class="list-group-item px-0 py-3 border-secondary-subtle bg-transparent d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-secondary bg-opacity-10 text-secondary rounded-circle fw-bold d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                {{ (u.nama or 'U')[:1] | upper }}
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold text-dark">{{ u.nama or 'User Tanpa Nama' }}</h6>
-                                <small class="text-muted">{{ u.email }}</small>
-                            </div>
-                        </div>
-                        <span class="badge bg-light text-dark border border-secondary-subtle">{{ (u.role or 'user') | capitalize }}</span>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4 text-muted small">Belum ada user terdaftar dalam database.</div>
-                    {% endfor %}
+            <div class="card p-4 border-0 shadow-sm bg-white h-100 rounded-4">
+                <h5 class="fw-bold text-dark mb-4">Distribusi Pengguna Platform</h5>
+                <div style="height: 250px;">
+                    <canvas id="roleDistributionChart"></canvas>
                 </div>
             </div>
         </div>
@@ -121,5 +175,4 @@
         });
     });
 </script>
-
 {% endblock %}

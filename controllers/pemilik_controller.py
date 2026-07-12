@@ -6,8 +6,11 @@ from flask import request
 from flask import url_for
 from flask import flash
 import os
+from resend import response
 from werkzeug.utils import secure_filename
 from extensions import get_db
+import requests
+from PIL import Image
 
 # ==========================================
 # IMPORT PYTHON STANDARD LIBRARIES
@@ -26,6 +29,7 @@ pemilik_bp = Blueprint(
     __name__,
     url_prefix="/pemilik"
 )
+
 
 # ====================================
 # PROTEKSI SEMUA HALAMAN PEMILIK
@@ -154,32 +158,51 @@ def hapus_kos(id):
     flash("Properti kos berhasil dihapus secara permanen.", "success")
     return redirect(url_for("pemilik.data_kos"))
 
-# ==========================================
-# TAMBAH KOS (PREMIUM MULTI-SECTION & UPLOAD)
-# ==========================================
+
+# ========================================================
+# GABUNGAN PENUH: TAMBAH KOS (SAMPURNA & AMAN DARI RESET)
+# ========================================================
 @pemilik_bp.route("/tambah-kos", methods=["GET", "POST"])
 def tambah_kos():
+    
+    user = User.query.get(session["user_id"])
+    if not user.is_ktp_verified:
+        flash("Maaf, kamu harus upload KTP dan menunggu verifikasi Admin sebelum bisa menambah kos.", "danger")
+        return redirect(url_for("pemilik.profil_pemilik"))
+    
     if "user_id" not in session or session.get("role") != "pemilik":
         return redirect("/login")
 
     if request.method == "POST":
-        # 1. Ambil data dari Form Section: Informasi Dasar & Wilayah
+        # 1. Ambil data harga & uang muka terlebih dahulu untuk divalidasi
+        try:
+            harga = int(request.form.get("harga", 0))
+            uang_muka = int(request.form.get("uang_muka", 0))
+        except ValueError:
+            harga = 0
+            uang_muka = 0
+
+        # VALIDASI AMAN: Jika DP melebihi 50% dari Harga Kos
+        if uang_muka > (harga * 0.5):
+            flash("Pengajuan Gagal! Uang Muka (DP) maksimal adalah 50% dari harga bulanan kos.", "danger")
+            geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
+            # Kembalikan form_data=request.form agar teks input di browser TIDAK HILANG
+            return render_template("pemilik/tambah_kos.html", geoapify_key=geoapify_key, form_data=request.form)
+
+        # 2. Ambil seluruh data dari Form Section jika lolos validasi harga
         nama_kost = request.form.get("nama_kost")
-        alamat = request.form.get("alamat")
+        alamat = request.form.get("alamat")                # Dari map interaktif otomatis
+        alamat_spesifik = request.form.get("alamat_spesifik")  # Input manual (RT/RW/Patokan)
         wilayah = request.form.get("wilayah") 
         deskripsi = request.form.get("deskripsi") 
         tipe_penghuni = request.form.get("tipe_penghuni")
-
-        # 2. Ambil data dari Form Section: Informasi Harga & Kamar
-        harga = request.form.get("harga", 0)
-        uang_muka = request.form.get("uang_muka", 0) 
         total_kamar = request.form.get("total_kamar", 1)
         
-        # 3. TAMBAHAN BARU: Ambil data koordinat presisi dari Peta Geoapify
+        # Ambil koordinat presisi dari Peta Geoapify
         latitude = request.form.get("latitude")
         longitude = request.form.get("longitude")
 
-        # 4. Proses Upload Foto / Galeri Foto Bawaan Kamu
+        # 3. Proses Upload Foto / Galeri Foto Bawaan Kamu (Utanpa Dikurangi)
         foto_files = request.files.getlist("galeri_foto")
         nama_foto_tersimpan = "default_kos.jpg" 
         
@@ -193,26 +216,29 @@ def tambah_kos():
                 file.save(os.path.join(upload_folder, filename))
                 nama_foto_tersimpan = filename 
 
+        # 4. Gabungkan informasi Alamat Utama + Wilayah + Alamat Spesifik untuk disimpan ke DB
+        alamat_final = f"{alamat} ({wilayah}) - Patokan: {alamat_spesifik}"
+
         # 5. Simpan ke Database dengan Model ORM (Sesuai Struktur Aslimu)
         try:
             baru_kos = Kost(
                 nama_kost=nama_kost,
-                alamat=f"{alamat} ({wilayah})", 
+                alamat=alamat_final, 
                 tipe_penghuni=tipe_penghuni,
-                harga=int(harga),
+                harga=harga,
                 total_kamar=int(total_kamar),
                 sisa_kamar=int(total_kamar), 
                 status_verifikasi=False, 
                 pemilik_id=session.get("user_id")
             )
             
-            # Pengisian Koordinat Geolocation ke Model DB TiDB
+            # Pengisian Koordinat Geolocation ke Model DB
             if hasattr(baru_kos, 'latitude'): baru_kos.latitude = latitude
             if hasattr(baru_kos, 'longitude'): baru_kos.longitude = longitude
 
             # Pengisian Atribut Opsional Bawaan Kamu
             if hasattr(baru_kos, 'deskripsi'): baru_kos.deskripsi = deskripsi
-            if hasattr(baru_kos, 'uang_muka'): baru_kos.uang_muka = int(uang_muka)
+            if hasattr(baru_kos, 'uang_muka'): baru_kos.uang_muka = uang_muka
             if hasattr(baru_kos, 'foto'): baru_kos.foto = nama_foto_tersimpan
 
             db.session.add(baru_kos)
@@ -227,11 +253,12 @@ def tambah_kos():
 
     # Ambil token dari .env secara aman untuk disalurkan ke Map picker script
     geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
-    return render_template("pemilik/tambah_kos.html", geoapify_key=geoapify_key)
+    return render_template("pemilik/tambah_kos.html", geoapify_key=geoapify_key, form_data=None)
 
-# ==========================================
-# EDIT KOS (PREMIUM MULTI-SECTION & PRE-FILLED)
-# ==========================================
+
+# ========================================================
+# GABUNGAN PENUH: EDIT KOS (SAMPURNA & AMAN DARI RESET)
+# ========================================================
 @pemilik_bp.route("/edit-kos/<int:kost_id>", methods=["GET", "POST"])
 def edit_kos(kost_id):
     if "user_id" not in session or session.get("role") != "pemilik":
@@ -242,27 +269,42 @@ def edit_kos(kost_id):
 
     if request.method == "POST":
         try:
-            # 2. Update Form Section: Informasi Dasar & Wilayah
+            harga = int(request.form.get("harga", 0))
+            uang_muka = int(request.form.get("uang_muka", 0))
+        except ValueError:
+            harga = 0
+            uang_muka = 0
+
+        # VALIDASI AMAN: Jika perubahan DP melebihi 50% dari Harga Kos
+        if uang_muka > (harga * 0.5):
+            flash("Perubahan Gagal! Uang Muka (DP) maksimal adalah 50% dari harga bulanan kos.", "danger")
+            geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
+            # Kembalikan form_data=request.form ke html agar editan terakhir tidak hilang
+            return render_template("pemilik/edit_kos.html", kos=kos, geoapify_key=geoapify_key, form_data=request.form)
+
+        try:
+            # 2. Update Form Section Bawaan Kamu
             kos.nama_kost = request.form.get("nama_kost")
             alamat_raw = request.form.get("alamat")
+            alamat_spesifik = request.form.get("alamat_spesifik")
             wilayah = request.form.get("wilayah")
-            kos.alamat = f"{alamat_raw} ({wilayah})" 
+            
+            # Gabungkan kembali alamat dengan format yang konsisten
+            kos.alamat = f"{alamat_raw} ({wilayah}) - Patokan: {alamat_spesifik}"
             kos.tipe_penghuni = request.form.get("tipe_penghuni")
+            kos.harga = harga
+            kos.total_kamar = int(request.form.get("total_kamar", 1))
             
             if hasattr(kos, 'deskripsi'): 
                 kos.deskripsi = request.form.get("deskripsi")
-
-            # 3. Update Form Section: Informasi Harga & Kamar
-            kos.harga = int(request.form.get("harga", 0))
             if hasattr(kos, 'uang_muka'): 
-                kos.uang_muka = int(request.form.get("uang_muka", 0))
-            kos.total_kamar = int(request.form.get("total_kamar", 1))
+                kos.uang_muka = uang_muka
 
-            # 4. TAMBAHAN BARU: Ambil pembaruan koordinat dari Map Picker
+            # 3. Ambil pembaruan koordinat dari Map Picker
             if hasattr(kos, 'latitude'): kos.latitude = request.form.get("latitude")
             if hasattr(kos, 'longitude'): kos.longitude = request.form.get("longitude")
 
-            # 5. Proses Update File Gambar Baru Bawaan Kamu
+            # 4. Proses Update File Gambar Baru Bawaan Kamu (Utanpa Dikurangi)
             foto_files = request.files.getlist("galeri_foto")
             upload_folder = os.path.join('static', 'uploads')
             
@@ -284,17 +326,29 @@ def edit_kos(kost_id):
             print(f"Error Update Database: {e}")
             flash("Gagal menyimpan perubahan. Periksa kembali koneksi database Anda.", "danger")
 
-    # TIKET AMAN SKS: Ekstraksi teks wilayah bawaan kamu biar select dropdown otomatis terisi
+    # ========================================================
+    # LOGIKA PARSING GET REQUEST (MENGISI FORM DATA LAMA KOS)
+    # ========================================================
     wilayah_current = ""
     alamat_display = kos.alamat
-    if kos.alamat and "(" in kos.alamat and ")" in kos.alamat:
+    alamat_spesifik_current = ""
+
+    # Ekstraksi string patokan spesifik
+    if kos.alamat and " - Patokan: " in kos.alamat:
         try:
-            alamat_display = kos.alamat.split(" (")[0]
-            wilayah_current = kos.alamat.split(" (")[1].replace(")", "")
+            parts = kos.alamat.split(" - Patokan: ")
+            alamat_display = parts[0]
+            alamat_spesifik_current = parts[1]
         except Exception:
             pass
-        
-    
+
+    # Ekstraksi teks wilayah kurung buka-tutup bawaan kamu
+    if alamat_display and "(" in alamat_display and ")" in alamat_display:
+        try:
+            wilayah_current = alamat_display.split(" (")[1].replace(")", "")
+            alamat_display = alamat_display.split(" (")[0]
+        except Exception:
+            pass
 
     # Ambil token dari .env secara aman untuk disalurkan ke Map picker script di halaman edit
     geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
@@ -302,10 +356,11 @@ def edit_kos(kost_id):
         "pemilik/edit_kos.html", 
         kos=kos, 
         alamat_display=alamat_display, 
+        alamat_spesifik_current=alamat_spesifik_current,
         wilayah_current=wilayah_current,
-        geoapify_key=geoapify_key
+        geoapify_key=geoapify_key,
+        form_data=None
     )
-
 # ====================================
 # VERIFIKASI
 # ====================================
@@ -383,10 +438,6 @@ def verifikasi_aksi(booking_id, aksi):
     flash(f"Pengajuan sewa berhasil di-{aksi}!", "success")
     return redirect(url_for("pemilik.verifikasi"))
 
-# ====================================
-# TRANSAKSI
-# ====================================
-
 
 # ====================================
 # PREMIUM
@@ -452,7 +503,16 @@ def pengaturan():
 # ====================================
 # PROFIL PEMILIK & REKENING
 # ====================================
+
+
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+from flask import render_template, request, session, redirect, flash, url_for
+import os
+import re
+import requests
+from datetime import date
+from PIL import Image
 
 @pemilik_bp.route("/profil-pemilik", methods=["GET", "POST"])
 def profil_pemilik():
@@ -463,6 +523,7 @@ def profil_pemilik():
     conn = get_db()
     cursor = conn.cursor()
     
+    # === JALUR POST (SAAT TOMBOL DI-KLIK) ===
     if request.method == "POST":
         aksi = request.form.get("aksi")
         
@@ -474,7 +535,7 @@ def profil_pemilik():
             session['nama'] = nama
             flash("Informasi pribadi berhasil diperbarui!", "success")
             
-        # 2. UPDATE REKENING BANK (DENGAN DROPDOWN PADA HTML)
+        # 2. UPDATE REKENING BANK
         elif aksi == "update_rekening":
             nama_bank = request.form.get("nama_bank")
             no_rekening = request.form.get("no_rekening")
@@ -484,59 +545,195 @@ def profil_pemilik():
             """, (nama_bank, no_rekening, atas_nama_rekening, pemilik_id))
             flash("Informasi rekening bank berhasil diperbarui!", "success")
             
-        # 3. GANTI PASSWORD (KEAMANAN)
+        # 3. GANTI PASSWORD
         elif aksi == "update_password":
-            pw_sekarang = request.form.get("password_sekarang")
-            pw_baru = request.form.get("password_baru")
-            konfirmasi_pw = request.form.get("konfirmasi_password")
+            password_lama = request.form.get("password_lama")
+            password_baru = request.form.get("password_baru")
+            konfirmasi_password = request.form.get("konfirmasi_password")
             
-            if pw_baru != konfirmasi_pw:
-                flash("Konfirmasi password baru tidak cocok!", "danger")
-                return redirect(url_for("pemilik.profil_pemilik"))
-                
-            # Ambil password hash asli dari DB
             cursor.execute("SELECT password_hash FROM users WHERE id = %s", (pemilik_id,))
             user_data = cursor.fetchone()
             
-            if user_data and check_password_hash(user_data[0], pw_sekarang):
-                hash_baru = generate_password_hash(pw_baru)
-                cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (hash_baru, pemilik_id))
-                flash("Password akun Anda berhasil diubah!", "success")
+            if check_password_hash(user_data[0], password_lama):
+                if password_baru != konfirmasi_password:
+                    flash("Konfirmasi password baru tidak cocok!", "warning")
+                else:
+                    hash_baru = generate_password_hash(password_baru)
+                    cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (hash_baru, pemilik_id))
+                    flash("Password akun Anda berhasil diubah!", "success")
             else:
                 flash("Password saat ini yang Anda masukkan salah!", "danger")
                 
-        # 4. LUPA PASSWORD (KIRIM KODE KE EMAIL)
+        # 4. LUPA PASSWORD
         elif aksi == "lupa_password":
             cursor.execute("SELECT email FROM users WHERE id = %s", (pemilik_id,))
             email_user = cursor.fetchone()[0]
-            # Simulasi pengiriman kode OTP / Link ke Email
             flash(f"Kode verifikasi reset password sukses dikirim ke email: {email_user}", "info")
-            
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return redirect(url_for("pemilik.profil_pemilik"))
 
-    # AMBIL DATA UNTUK MERENDER HALAMAN
+        # 5. VERIFIKASI KTP (STRICT LOGIC & FIX TEMPAT/TANGGAL LAHIR)
+        elif aksi == "verifikasi_ktp":
+            hari_ini = date.today()
+            
+            # Cek kuota harian
+            cursor.execute("SELECT ktp_attempts, last_ktp_attempt FROM users WHERE id = %s", (pemilik_id,))
+            limit_data = cursor.fetchone()
+            attempts = limit_data[0] if limit_data[0] is not None else 0
+            if limit_data[1] != hari_ini: 
+                attempts = 0
+
+            if attempts >= 3:
+                flash("Batas harian tercapai! Anda hanya bisa mencoba verifikasi KTP 3 kali sehari.", "danger")
+                return redirect(url_for("pemilik.profil_pemilik"))
+
+            ktp_file = request.files.get("ktp_file")
+            if ktp_file and ktp_file.filename != '':
+                filename = secure_filename(ktp_file.filename)
+                upload_folder = os.path.abspath(os.path.join('static', 'uploads', 'ktp'))
+                if not os.path.exists(upload_folder): 
+                    os.makedirs(upload_folder)
+                
+                filepath = os.path.join(upload_folder, filename)
+                ktp_file.save(filepath)
+
+                # Kompresi gambar aman Windows
+                try:
+                    img = Image.open(filepath)
+                    if img.mode != 'RGB': 
+                        img = img.convert('RGB')
+                    img.thumbnail((1500, 1500))
+                    temp_filepath = filepath + ".tmp"
+                    img.save(temp_filepath, format="JPEG", optimize=True, quality=90)
+                    img.close()
+                    os.replace(temp_filepath, filepath)
+                except Exception as e:
+                    print("Error Kompresi:", e)
+                
+                attempts += 1
+                cursor.execute("UPDATE users SET ktp_attempts = %s, last_ktp_attempt = %s WHERE id = %s", (attempts, hari_ini, pemilik_id))
+                
+                # --- PANGGIL API OCR.SPACE ---
+                api_key = os.environ.get("OCR_API_KEY", "helloworld") 
+                api_url = "https://api.ocr.space/parse/image"
+                payload = {
+                    "apikey": api_key, 
+                    "language": "eng",            
+                    "isOverlayRequired": False,
+                    "detectOrientation": True,
+                    "OCREngine": "2"
+                }
+                
+                try:
+                    with open(filepath, 'rb') as f:
+                        response = requests.post(api_url, data=payload, files={"file": f}, timeout=20)
+                    
+                    data = response.json()
+                    
+                    if data.get("IsErroredOnProcessing") == True:
+                        pesan_error_ocr = data.get("ErrorMessage", ["Pesan error tidak diketahui"])[0]
+                        if os.path.exists(filepath): os.remove(filepath)
+                        flash(f"Ditolak oleh Server OCR: {pesan_error_ocr}", "danger")
+                        conn.commit()
+                        return redirect(url_for("pemilik.profil_pemilik"))
+
+                    parsed_results = data.get("ParsedResults")
+                    if not parsed_results:
+                        if os.path.exists(filepath): os.remove(filepath)
+                        flash("Verifikasi Gagal! Teks pada gambar tidak dapat diproses oleh sistem.", "danger")
+                        conn.commit()
+                        return redirect(url_for("pemilik.profil_pemilik"))
+                        
+                    parsed_text = parsed_results[0].get("ParsedText", "")
+                    
+                    # 1. CLEANING TEKS KHUSUS NIK
+                    teks_clean = parsed_text.upper().replace(' ', '').replace('\n', '').replace('\r', '')
+                    teks_clean = teks_clean.replace('O', '0').replace('I', '1').replace('L', '1').replace('S', '5').replace('B', '8')
+                    
+                    # 2. VALIDASI STRICT NIK
+                    nik_match = re.search(r'\d{16}', teks_clean)
+                    nik_api = nik_match.group(0) if nik_match else None
+                    
+                    if not nik_api:
+                        if os.path.exists(filepath): os.remove(filepath)
+                        flash(f"Foto Ditolak! Sistem tidak menemukan NIK valid. Pastikan foto KTP asli, tegak, dan jelas. (Sisa percobaan: {3 - attempts})", "danger")
+                        conn.commit()
+                        return redirect(url_for("pemilik.profil_pemilik"))
+
+                    # EKSTRAK DATA LAIN
+                    nama_match = re.search(r'NAM[A4]\s*[:;]?\s*([^\n]+)', parsed_text, re.IGNORECASE)
+                    nama_api = nama_match.group(1).strip() if nama_match else "Tidak Terbaca"
+                    
+                    alamat_match = re.search(r'ALAMAT\s*[:;]?\s*([^\n]+)', parsed_text, re.IGNORECASE)
+                    alamat = alamat_match.group(1).strip() if alamat_match else "Tidak Terbaca"
+
+                    # --- FIXED TANGGAL & TEMPAT LAHIR ---
+                    tempat_lahir = "-"
+                    tanggal_lahir = None
+                    
+                    birth_match = re.search(r'TEMPAT/TG[LI]\s*LAH[I1]R\s*[:;]?\s*([^\n]+)', parsed_text, re.IGNORECASE)
+                    if birth_match:
+                        full_birth = birth_match.group(1).strip()
+                        parts = re.split(r'[,\.]', full_birth, maxsplit=1)
+                        if parts:
+                            tempat_lahir = parts[0].strip()
+                            if len(parts) > 1:
+                                tgl_str = parts[1].strip()
+                                tgl_clean = re.search(r'(\d{2})-(\d{2})-(\d{4})', tgl_str)
+                                if tgl_clean:
+                                    tanggal_lahir = f"{tgl_clean.group(3)}-{tgl_clean.group(2)}-{tgl_clean.group(1)}"
+
+                    # SIMPAN KE DATABASE
+                    cursor.execute("""
+                        UPDATE users 
+                        SET nik = %s, nama_ktp = %s, tempat_lahir = %s, tanggal_lahir = %s, alamat_ktp = %s, foto_ktp = %s, is_ktp_verified = 1 
+                        WHERE id = %s
+                    """, (nik_api, nama_api, tempat_lahir, tanggal_lahir, alamat, filename, pemilik_id))
+                    
+                    flash("Verifikasi Identitas Sukses! Data KTP Anda telah diproses.", "success")
+                        
+                except Exception as e:
+                    print("Error Sistem API:", e)
+                    if os.path.exists(filepath): os.remove(filepath)
+                    flash(f"Gagal memproses gambar ke server API. (Sisa percobaan: {3 - attempts})", "warning")
+            else:
+                flash("Harap masukkan file gambar KTP terlebih dahulu!", "warning")
+            
+            conn.commit()
+            return redirect(url_for("pemilik.profil_pemilik"))
+
+    # === JALUR GET (SAAT DI-REFRESH / DI-BUKA BIASA) ===
+    # Pastikan bagian bawah ini sejajar di luar blok 'if request.method == "POST"'
     cursor.execute("""
-        SELECT nama, email, no_hp, nama_bank, no_rekening, atas_nama_rekening, is_premium 
+        SELECT nama, email, no_hp, nama_bank, no_rekening, atas_nama_rekening, is_premium,
+               nik, nama_ktp, foto_ktp, is_ktp_verified, tempat_lahir, tanggal_lahir, alamat_ktp
         FROM users WHERE id = %s
     """, (pemilik_id,))
     data = cursor.fetchone()
-    cursor.close()
-    conn.close()
     
     user_info = {
         "nama": data[0] if data[0] else "User",
         "email": data[1],
         "no_hp": data[2] if data[2] else "-",
-        "nama_bank": data[3] if data[3] else "Belum Diatur",
-        "no_rekening": data[4] if data[4] else "0000000000",
-        "atas_nama_rekening": data[5] if data[5] else "-",
-        "is_premium": data[6]
+        "nama_bank": data[3] if data[3] else "Belum diatur",
+        "no_rekening": data[4] if data[4] else "Belum diatur",
+        "atas_nama_rekening": data[5] if data[5] else "Belum diatur",
+        "is_premium": data[6],
+        "nik": data[7],
+        "nama_ktp": data[8],
+        "foto_ktp": data[9],
+        "is_ktp_verified": data[10],
+        "tempat_lahir": data[11] if data[11] else "-",
+        "tanggal_lahir": data[12] if data[12] else "-",
+        "alamat_ktp": data[13] if data[13] else "-"
     }
-    return render_template("pemilik/profil_pemilik.html", user=user_info)
-
+    
+    profil_lengkap = True
+    if not data[2] or not data[3] or not data[9]: 
+        profil_lengkap = False
+        
+    cursor.close()
+    conn.close()
+    
+    return render_template("pemilik/profil_pemilik.html", user_info=user_info, profil_lengkap=profil_lengkap)
 # ====================================
 # HALAMAN PEMBAYARAN MIDTRANS
 # ====================================

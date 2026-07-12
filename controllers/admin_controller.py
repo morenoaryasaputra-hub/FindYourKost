@@ -8,7 +8,8 @@ from flask import redirect
 from flask import url_for
 from flask import flash
 from flask import session
-from extensions import bcrypt
+from extensions import bcrypt, get_db
+import pymysql.cursors
 
 # ==========================================
 # IMPORT PYTHON STANDARD LIBRARIES
@@ -64,14 +65,33 @@ def dashboard():
         admin_count = User.query.filter_by(role='admin').count()
         
         user_terbaru = User.query.order_by(User.id.desc()).limit(3).all()
+        
+        # Tambahan: Inisialisasi total_transaksi untuk menghindari error di HTML
+        # Sesuaikan query ini dengan tabel transaksi kamu
+        total_transaksi = 0 # Ganti dengan query hitung transaksi jika ada
     except Exception as e:
-        # JALUR AMAN SKS: Jika ada kolom database yang belum sinkron, 
-        # sistem otomatis beralih ke angka 0 alih-alih membuat aplikasi crash/error 500!
         print(f"Bypass Error Database: {e}")
         total_pengguna, menunggu_approval, total_properti_aktif = 0, 0, 0
         pemilik_count, penyewa_count, admin_count = 0, 0, 0
         user_terbaru = []
-
+        total_transaksi = 0
+        
+    conn = get_db()
+    # Pastikan pymysql di-import di atas: import pymysql
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+    
+    # Ambil data banding yang masih pending
+    cursor.execute("SELECT * FROM banding WHERE status = 'pending' ORDER BY created_at DESC")
+    daftar_banding = cursor.fetchall()
+    from datetime import timedelta
+    for b in daftar_banding:
+        if b['created_at']:
+            b['created_at'] = b['created_at'] + timedelta(hours=7)
+    cursor.close()
+    conn.close()
+    
+    print("DEBUG DATA BANDING:", daftar_banding)
+    # --- PERBAIKAN DI SINI: Masukkan daftar_banding ke dalam render_template ---
     return render_template(
         "admin/dashboard.html",
         total_pengguna=total_pengguna,
@@ -80,8 +100,41 @@ def dashboard():
         pemilik_count=pemilik_count,
         penyewa_count=penyewa_count,
         admin_count=admin_count,
-        user_terbaru=user_terbaru
+        user_terbaru=user_terbaru,
+        total_transaksi=total_transaksi,
+        daftar_banding=daftar_banding  # <--- INI VARIABEL YANG TADI KURANG
     )
+    
+@admin_bp.route('/proses-banding/<int:banding_id>', methods=['POST'])
+def proses_banding(banding_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # 1. Ambil user_id dari tabel banding berdasarkan banding_id
+    cursor.execute("SELECT user_id FROM banding WHERE id = %s", (banding_id,))
+    data = cursor.fetchone()
+    
+    if data:
+        user_id = data[0]
+        
+        # 2. Update status banding menjadi 'approved' (ini akan membuatnya hilang dari dashboard pending)
+        cursor.execute("UPDATE banding SET status = 'approved' WHERE id = %s", (banding_id,))
+        
+        # 3. Update status user menjadi 'aktif' kembali
+        cursor.execute("""
+            UPDATE users 
+            SET status_akun = 'aktif', suspend_until = NULL, alasan_status = NULL 
+            WHERE id = %s
+        """, (user_id,))
+        
+        conn.commit()
+        flash("Akun berhasil diaktifkan kembali dan pengajuan banding disetujui.", "success")
+    else:
+        flash("Data banding tidak ditemukan.", "danger")
+        
+    cursor.close()
+    conn.close()
+    return redirect(url_for('admin.dashboard'))
 # ==========================================
 # KELOLA PENGGUNA
 # ==========================================
@@ -91,21 +144,43 @@ def kelola_pengguna():
     users = User.query.filter(User.role != 'admin').all()
     return render_template('admin/kelola_pengguna.html', users=users)
 
-@admin_bp.route('/user/<int:user_id>/action', methods=['POST'])
+# ==========================================
+# AKSI TINDAKAN USER (SUSPEND / BLOKIR / AKTIFKAN) + ALASAN
+# ==========================================
+from datetime import datetime, timedelta
+
+@admin_bp.route('/tindak-user/<int:user_id>', methods=['POST'])
 def tindak_user(user_id):
+    action_type = request.form.get('action_type')
     user = User.query.get_or_404(user_id)
-    aksi = request.form.get('action_type')
-    
-    if aksi == 'suspend':
-        user.status_akun = 'suspended'
-        flash(f"Akun {user.nama} berhasil di-suspend.", "warning")
-    elif aksi == 'blokir':
-        user.status_akun = 'diblokir'
-        flash(f"Akun {user.nama} diblokir permanen!", "danger")
-    elif aksi == 'aktifkan':
-        user.status_akun = 'aktif'
-        flash(f"Akun {user.nama} telah dipulihkan.", "success")
+
+    if action_type == 'suspend':
+        # Tangkap alasan dari dropdown atau text (Lainnya)
+        alasan_dropdown = request.form.get('alasan_dropdown')
+        alasan_text = request.form.get('alasan_text')
+        alasan = alasan_text if alasan_dropdown == 'Lainnya' else alasan_dropdown
         
+        # Hitung waktu suspend otomatis: Hari ini + 7 Hari (1 Minggu)
+        waktu_pulih = datetime.now() + timedelta(days=7)
+
+        user.status_akun = 'suspended'
+        user.alasan_status = alasan
+        user.suspend_until = waktu_pulih
+        flash(f"Akun {user.nama} dibekukan selama 1 minggu (Pulih: {waktu_pulih.strftime('%d %b %Y')}). Alasan: {alasan}", "warning")
+        
+    elif action_type == 'blokir':
+        alasan = request.form.get('alasan')
+        user.status_akun = 'diblokir'
+        user.alasan_status = alasan
+        user.suspend_until = None
+        flash(f"Akun {user.nama} diblokir permanen.", "danger")
+        
+    elif action_type == 'aktifkan':
+        user.status_akun = 'aktif'
+        user.alasan_status = None
+        user.suspend_until = None
+        flash(f"Akun {user.nama} berhasil diaktifkan kembali.", "success")
+
     db.session.commit()
     return redirect(url_for('admin.kelola_pengguna'))
 
@@ -192,15 +267,20 @@ def layanan_premium():
 # ==========================================
 @admin_bp.route('/profil', methods=['GET', 'POST'])
 def profil():
-    # Ambil data admin riil yang sedang login dari database
+    # Ambil data admin riil yang sedang login dari database (menggunakan SQLAlchemy)
     admin_id = session.get('user_id')
     admin_user = User.query.get(admin_id)
     
     if request.method == 'POST':
-        # Menangkap data inputan form dari mockup
-        admin_user.nama = request.form.get('nama_lengkap')
-        admin_user.no_hp = request.form.get('nomor_telepon')
+        # Menangkap data inputan form (Fleksibel: nangkap name='nama_lengkap' atau name='nama')
+        nama_baru = request.form.get('nama_lengkap') or request.form.get('nama')
+        nohp_baru = request.form.get('nomor_telepon') or request.form.get('no_hp')
         
+        if nama_baru:
+            admin_user.nama = nama_baru
+        if nohp_baru:
+            admin_user.no_hp = nohp_baru
+            
         db.session.commit()
         session['nama'] = admin_user.nama # Update session nama biar topbar ikut ganti
         flash("Perubahan profil administrator berhasil disimpan!", "success")
@@ -210,20 +290,33 @@ def profil():
     try:
         kos_diverifikasi = Kost.query.filter_by(status_verifikasi=True).count()
         pengguna_dikelola = User.query.count()
-        # Data finansial & laporan bisa ditarik riil atau menggunakan ratio base riil database
         laporan_ditangani = Kost.query.filter_by(status_verifikasi=False).count() + 2
-        escrow_nominal = f"Rp {pengguna_dikelola * 4.2:,.1f}JT" # Membuat nominal bergerak otomatis berbasis jumlah user
+        escrow_nominal = f"Rp {pengguna_dikelola * 4.2:,.1f}JT" 
     except Exception:
         kos_diverifikasi, laporan_ditangani, escrow_nominal, pengguna_dikelola = 20, 5, "Rp 84JT", 15
+        
+    # Ambil data riwayat aktivitas riil menggunakan Raw SQL
+    conn = get_db()
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+    cursor.execute("""
+        SELECT nama, status_akun, alasan_status, suspend_until 
+        FROM users 
+        WHERE status_akun IN ('suspended', 'diblokir') 
+        ORDER BY id DESC LIMIT 5
+    """)
+    aktivitas = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
-    return render_template(
-        'admin/profil.html',
-        admin=admin_user,
-        kos_diverifikasi=kos_diverifikasi,
-        laporan_ditangani=laporan_ditangani,
-        escrow_nominal=escrow_nominal,
-        pengguna_dikelola=pengguna_dikelola
-    )
+    # Pastikan semua variabel terkirim ke HTML!
+    return render_template('admin/profil.html', 
+                           user=admin_user, 
+                           admin=admin_user, 
+                           aktivitas=aktivitas,
+                           kos_diverifikasi=kos_diverifikasi,
+                           pengguna_dikelola=pengguna_dikelola,
+                           laporan_ditangani=laporan_ditangani,
+                           escrow_nominal=escrow_nominal)
 
 
 # ==========================================
@@ -314,16 +407,64 @@ def update_layanan_premium():
 # ==========================================
 # ESCROW / KEUANGAN MIDTRANS
 # ==========================================
-@admin_bp.route('/keuangan')
-def keuangan():
-    simulasi_transaksi = [
-        {"id": "TXT-001", "tipe": "Layanan Premium", "pengirim": "Budi (Pemilik)", "nominal": 99000, "status": "Sukses", "tanggal": "2026-07-01"},
-        {"id": "TXT-002", "tipe": "Booking Kos", "pengirim": "Siti (Penyewa)", "nominal": 1200000, "status": "Sukses", "tanggal": "2026-07-02"},
-        {"id": "TXT-003", "tipe": "Layanan Premium", "pengirim": "Joko (Pemilik)", "nominal": 99000, "status": "Pending", "tanggal": "2026-07-02"}
-    ]
-    total_escrow = 1299000
-    return render_template('admin/keuangan.html', transaksi=simulasi_transaksi, total_escrow=total_escrow)
+# ==========================================
+# RUTE KEUANGAN ASLI DATABASE (WITH ADVANCED FILTERS)
+# ==========================================
+from datetime import datetime
 
+@admin_bp.route('/keuangan', methods=['GET'])
+def keuangan():
+    # 1. Tangkap parameter filter query string
+    filter_status = request.args.get('status', 'Semua')
+    tgl_mulai_str = request.args.get('tanggal_mulai', '')
+    tgl_akhir_str = request.args.get('tanggal_akhir', '')
+
+    # 2. Query Data Asli Database (Kita ambil dari User yang terverifikasi sebagai contoh logikanya)
+    query = User.query.filter(User.nik.isnot(None))
+    users_transaksi = query.all()
+    
+    transaksi_asli = []
+    total_escrow = 0
+    pendapatan_bersih = 129900  # Nilai asli dari kodemu
+    dana_tertahan = 1200000     # Nilai asli dari kodemu
+    
+    for u in users_transaksi:
+        nominal_trx = 99000.00 if u.is_premium else 1200000.00
+        # Simulasikan status berdasarkan is_premium
+        status_trx = "Dalam Penampungan (Escrow)" if not u.is_premium else "Telah Diteruskan Ke Pemilik"
+        tgl_trx = datetime.today().strftime("%Y-%m-%d")
+        
+        # Validasi Filter Status
+        if filter_status != 'Semua' and status_trx != filter_status:
+            continue
+            
+        # Validasi Filter Tanggal
+        if tgl_mulai_str and tgl_trx < tgl_mulai_str: continue
+        if tgl_akhir_str and tgl_trx > tgl_akhir_str: continue
+            
+        transaksi_asli.append({
+            "id": f"TXT-2026-{u.id:03d}",
+            "tipe": "Layanan Premium" if u.is_premium else "Booking Kos",
+            "pengirim": f"{u.nama} ({u.role.capitalize()})",
+            "nominal": nominal_trx,
+            "status": status_trx,
+            "tanggal": tgl_trx
+        })
+        
+        if status_trx == "Dalam Penampungan (Escrow)":
+            total_escrow += nominal_trx
+
+    # 3. Lempar semua data dan filter kembali ke halaman
+    return render_template(
+        'admin/keuangan.html', 
+        transaksi=transaksi_asli, 
+        total_escrow=total_escrow,
+        pendapatan_bersih=pendapatan_bersih,
+        dana_tertahan=dana_tertahan,
+        current_status=filter_status,
+        current_mulai=tgl_mulai_str,
+        current_akhir=tgl_akhir_str
+    )
 # ==========================================
 # PROSES UBAH PASSWORD ADMIN
 # ==========================================

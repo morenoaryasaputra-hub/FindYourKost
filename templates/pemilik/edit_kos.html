@@ -15,6 +15,19 @@
         </a>
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <input type="hidden" id="geoapify_key_holder" value="{{ geoapify_key }}">
+
     <form action="{{ url_for('pemilik.edit_kos', kost_id=kos.id) }}" method="POST" enctype="multipart/form-data">
         <div class="row g-4">
             
@@ -22,10 +35,9 @@
                 <div class="card border-0 shadow-sm rounded-4 p-3 bg-white sticky-top" style="top: 20px;">
                     <div class="list-group list-group-flush border-0 flex-column gap-1" id="form-navigation">
                         <a href="#section-dasar" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium active-premium"><i class="fas fa-info-circle me-2 text-primary"></i> Informasi Dasar</a>
+                        <a href="#section-fasilitas-sekitar" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-building me-2"></i> Lokasi & Peta</a>
                         <a href="#section-harga" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-money-bill-wave me-2"></i> Informasi Harga</a>
                         <a href="#section-fasilitas-kamar" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-bed me-2"></i> Fasilitas Kamar</a>
-                        <a href="#section-fasilitas-sekitar" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-building me-2"></i> Lokasi & Peta</a>
-                        <a href="#section-galeri" class="list-group-item list-group-item-action border-0 rounded-3 py-2.5 px-3 fw-medium text-secondary"><i class="fas fa-images me-2"></i> Galeri Foto</a>
                     </div>
                 </div>
             </div>
@@ -35,80 +47,84 @@
                     <h5 class="fw-bold text-dark mb-4"><i class="fas fa-info-circle text-primary me-2"></i>Informasi Dasar</h5>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-secondary">Nama Kos <span class="text-danger">*</span></label>
-                        <input type="text" name="nama_kost" class="form-control rounded-3" value="{{ kos.nama_kost }}" required>
+                        <input type="text" name="nama_kost" class="form-control rounded-3" value="{{ form_data.nama_kost if form_data else kos.nama_kost }}" required>
                     </div>
+
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-secondary">Wilayah / Daerah <span class="text-danger">*</span></label>
                             <select name="wilayah" id="wilayahSelect" class="form-select rounded-3" required>
-                                <option value="Salatiga" {% if wilayah_current == 'Salatiga' %}selected{% endif %}>Salatiga (Kota)</option>
-                                <option value="Tuntang" {% if wilayah_current == 'Tuntang' %}selected{% endif %}>Tuntang</option>
-                                <option value="Bawen" {% if wilayah_current == 'Bawen' %}selected{% endif %}>Bawen</option>
-                                <option value="Ambarawa" {% if wilayah_current == 'Ambarawa' %}selected{% endif %}>Ambarawa</option>
-                                <option value="Tengaran" {% if wilayah_current == 'Tengaran' %}selected{% endif %}>Tengaran</option>
-                                <option value="Suruh" {% if wilayah_current == 'Suruh' %}selected{% endif %}>Suruh</option>
-                                <option value="Pabelan" {% if wilayah_current == 'Pabelan' %}selected{% endif %}>Pabelan</option>
-                                <option value="Beringin" {% if wilayah_current == 'Beringin' %}selected{% endif %}>Beringin</option>
-                                <option value="Banyubiru" {% if wilayah_current == 'Banyubiru' %}selected{% endif %}>Banyubiru</option>
+                                {% set active_w = form_data.wilayah if form_data else wilayah_current %}
+                                <option value="Salatiga" {% if active_w == 'Salatiga' %}selected{% endif %}>Salatiga (Kota)</option>
+                                <option value="Tuntang" {% if active_w == 'Tuntang' %}selected{% endif %}>Tuntang</option>
+                                <option value="Bawen" {% if active_w == 'Bawen' %}selected{% endif %}>Bawen</option>
+                                <option value="Ambarawa" {% if active_w == 'Ambarawa' %}selected{% endif %}>Ambarawa</option>
+                                <option value="Tengaran" {% if active_w == 'Tengaran' %}selected{% endif %}>Tengaran</option>
+                                <option value="Suruh" {% if active_w == 'Suruh' %}selected{% endif %}>Suruh</option>
+                                <option value="Pabelan" {% if active_w == 'Pabelan' %}selected{% endif %}>Pabelan</option>
+                                <option value="Banyubiru" {% if active_w == 'Banyubiru' %}selected{% endif %}>Banyubiru</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-secondary">Gender Penghuni <span class="text-danger">*</span></label>
+                            {% set active_g = form_data.tipe_penghuni if form_data else kos.tipe_penghuni %}
                             <select name="tipe_penghuni" class="form-select rounded-3" required>
-                                <option value="Campur" {% if kos.tipe_penghuni == 'Campur' %}selected{% endif %}>Campur</option>
-                                <option value="Putra" {% if kos.tipe_penghuni == 'Putra' %}selected{% endif %}>Putra</option>
-                                <option value="Putri" {% if kos.tipe_penghuni == 'Putri' %}selected{% endif %}>Putri</option>
+                                <option value="Campur" {% if active_g == 'Campur' %}selected{% endif %}>Campur</option>
+                                <option value="Putra" {% if active_g == 'Putra' %}selected{% endif %}>Putra</option>
+                                <option value="Putri" {% if active_g == 'Putri' %}selected{% endif %}>Putri</option>
                             </select>
                         </div>
                     </div>
+
                     <div class="mb-0">
                         <label class="form-label small fw-semibold text-secondary">Deskripsi Properti</label>
-                        <textarea name="deskripsi" class="form-control rounded-3" rows="3">{{ kos.deskripsi if kos.deskripsi else '' }}</textarea>
+                        <textarea name="deskripsi" class="form-control rounded-3" rows="3">{{ form_data.deskripsi if form_data else kos.deskripsi }}</textarea>
                     </div>
                 </div>
 
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-fasilitas-sekitar">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="fw-bold text-dark mb-0"><i class="fas fa-map-marked-alt text-info me-2"></i>Titik Lokasi Peta</h5>
-                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-2 border fw-medium" style="font-size: 10px;">Geoapify Aktif</span>
-                    </div>
-                    <p class="text-muted small mb-3">Jika alamat berubah, cukup geser pin pada peta. Alamat akan dikoreksi otomatis.</p>
+                    <h5 class="fw-bold text-dark mb-3"><i class="fas fa-map-marked-alt text-info me-2"></i>Titik Lokasi Peta & Fasilitas</h5>
                     
-                    <div class="row g-3 mb-3">
+                    <div class="row g-4 mb-4">
                         <div class="col-md-7">
-                            <div id="mapPicker" style="height: 350px; width: 100%; border-radius: 12px; z-index: 1; border: 2px solid #e2e8f0;"></div>
+                            <div id="mapPicker" style="height: 350px; width: 100%; border-radius: 12px; border: 2px solid #e2e8f0; z-index: 1;"></div>
                         </div>
                         <div class="col-md-5">
                             <div class="border rounded-3 p-3 bg-light h-100" id="wrapperFasilitas" style="max-height: 350px; overflow-y: auto;"></div>
                         </div>
                     </div>
 
-                    <div class="mb-0">
-                        <label class="form-label small fw-semibold text-secondary">Alamat Lengkap <span class="text-primary">(Update Otomatis via Peta)</span></label>
-                        <textarea name="alamat" id="alamatInput" class="form-control rounded-3 bg-light border-primary" rows="3" required readonly>{{ alamat_display }}</textarea>
+                    <div class="mb-3 position-relative">
+                        <label class="form-label small fw-semibold text-secondary">Cari / Sesuaikan Alamat Utama <span class="text-primary">(Bisa Diketik Manual)</span></label>
+                        <textarea name="alamat" id="alamatInput" class="form-control rounded-3 bg-white" rows="2" required>{{ form_data.alamat if form_data else alamat_display }}</textarea>
                     </div>
 
-                    <input type="hidden" name="latitude" id="latInput" value="{{ kos.latitude if kos.latitude else '-7.3305' }}">
-                    <input type="hidden" name="longitude" id="lngInput" value="{{ kos.longitude if kos.longitude else '110.5084' }}">
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold text-secondary">Alamat Detail Spesifik <span class="text-danger">*</span></label>
+                        <textarea name="alamat_spesifik" class="form-control rounded-3 border-info" rows="2" placeholder="Contoh: RT 02/RW 04, Belakang Gedung Perpustakaan UKSW..." required>{{ form_data.alamat_spesifik if form_data else alamat_spesifik_current }}</textarea>
+                    </div>
+
+                    <input type="hidden" name="latitude" id="latInput" value="{{ form_data.latitude if form_data else (kos.latitude if kos.latitude else '-7.3305') }}">
+                    <input type="hidden" name="longitude" id="lngInput" value="{{ form_data.longitude if form_data else (kos.longitude if kos.longitude else '110.5084') }}">
                 </div>
 
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-harga">
-                    <h5 class="fw-bold text-dark mb-4"><i class="fas fa-money-bill-wave text-success me-2"></i>Informasi Harga</h5>
+                    <h5 class="fw-bold text-dark mb-4"><i class="fas fa-money-bill-wave text-success me-2"></i>Informasi Harga & Kamar</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-secondary">Harga Bulanan (Rp) <span class="text-danger">*</span></label>
-                            <input type="text" id="hargaDisplay" class="form-control rounded-3" value="{{ '{:,.0f}'.format(kos.harga).replace(',', '.') }}" required>
-                            <input type="hidden" name="harga" id="hargaAsli" value="{{ kos.harga }}">
+                            <input type="text" id="hargaDisplay" class="form-control rounded-3" value="{{ form_data.harga if form_data else kos.harga }}" required>
+                            <input type="hidden" name="harga" id="hargaAsli" value="{{ form_data.harga if form_data else kos.harga }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-secondary">Uang Muka / DP (Rp)</label>
-                            <input type="text" id="dpDisplay" class="form-control rounded-3" value="{{ '{:,.0f}'.format(kos.uang_muka).replace(',', '.') if kos.uang_muka else '0' }}">
-                            <input type="hidden" name="uang_muka" id="dpAsli" value="{{ kos.uang_muka if kos.uang_muka else 0 }}">
-                            <small id="dpError" class="text-danger d-none fw-bold" style="font-size: 11px;">DP dibatasi maksimal 50%!</small>
+                            <input type="text" id="dpDisplay" class="form-control rounded-3" value="{{ form_data.uang_muka if form_data else (kos.uang_muka if kos.uang_muka else 0) }}">
+                            <input type="hidden" name="uang_muka" id="dpAsli" value="{{ form_data.uang_muka if form_data else (kos.uang_muka if kos.uang_muka else 0) }}">
+                            <small id="dpError" class="text-danger d-none fw-bold" style="font-size: 11px;"><i class="fas fa-exclamation-triangle"></i> Nilai Uang Muka dipotong maksimal 50% dari harga sewa!</small>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-semibold text-secondary">Total Seluruh Kamar <span class="text-danger">*</span></label>
-                            <input type="number" name="total_kamar" class="form-control rounded-3" value="{{ kos.total_kamar }}" required min="1">
+                            <input type="number" name="total_kamar" class="form-control rounded-3" value="{{ form_data.total_kamar if form_data else kos.total_kamar }}" required min="1">
                         </div>
                     </div>
                 </div>
@@ -129,14 +145,14 @@
                             <img src="{{ url_for('static', filename='uploads/' + kos.foto) }}" class="rounded-3 border shadow-sm" style="width: 160px; height: 110px; object-fit: cover;">
                         {% endif %}
                     </div>
-                    <div class="p-4 border border-2 border-dashed border-secondary-subtle rounded-3 text-center bg-light bg-opacity-50" style="cursor: pointer;">
+                    <div class="p-4 border border-2 border-dashed border-secondary-subtle rounded-3 text-center bg-light bg-opacity-50">
                         <input type="file" name="galeri_foto" class="form-control form-control-sm mx-auto" multiple accept="image/*" style="max-width: 300px;">
                     </div>
                 </div>
 
                 <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-end">
                     <button type="submit" class="btn btn-success px-4 py-2.5 fw-bold rounded-3 shadow-sm" style="border: none;">
-                        <i class="fas fa-check-circle me-1"></i> Simpan Perubahan Kos
+                        <i class="fas fa-check-circle me-1"></i> Simpan Perubahan Properti Kos
                     </button>
                 </div>
             </div>
@@ -149,19 +165,19 @@
     #form-navigation .list-group-item:hover:not(.active-premium) { background-color: #f8fafc; color: #0b57d0 !important; }
     .fasilitas-item { padding: 10px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: start; }
     .fasilitas-item:last-child { border-bottom: none; }
+    #geo-autocomplete-dropdown div:hover { background-color: #eff6ff !important; }
 </style>
 
+<!-- JAVASCRIPT DETEKTOR ERROR API -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-
-    // FORMAT RUPIAH & VALIDASI 50% DP
+    
+    // 1. FORMAT MASKING RUPIAH (Tetap Aman)
     function formatRupiah(angka) {
-        let number_string = angka.replace(/[^,\d]/g, '').toString(),
-            split = number_string.split(','),
-            sisa = split[0].length % 3,
-            rupiah = split[0].substr(0, sisa),
-            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+        let number_string = angka.toString().replace(/[^,\d]/g, ''),
+            split = number_string.split(','), sisa = split[0].length % 3,
+            rupiah = split[0].substr(0, sisa), ribuan = split[0].substr(sisa).match(/\d{3}/gi);
         if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
         return rupiah;
     }
@@ -169,114 +185,181 @@ document.addEventListener("DOMContentLoaded", function() {
     const hargaDisp = document.getElementById('hargaDisplay'), hargaAsli = document.getElementById('hargaAsli');
     const dpDisp = document.getElementById('dpDisplay'), dpAsli = document.getElementById('dpAsli'), dpError = document.getElementById('dpError');
 
-    function applyFormatAndValidate(inputDisp, inputAsli) {
-        inputDisp.addEventListener('keyup', function() {
-            this.value = formatRupiah(this.value);
-            inputAsli.value = this.value.replace(/\./g, '');
-            let harga = parseInt(hargaAsli.value) || 0, dp = parseInt(dpAsli.value) || 0, maxDp = harga * 0.5;
-            if (dp > maxDp && harga > 0) {
-                dpError.classList.remove('d-none'); dpAsli.value = maxDp; dpDisp.value = formatRupiah(maxDp.toString()); 
-            } else { dpError.classList.add('d-none'); }
-        });
+    function bindFormatter(disp, asli) {
+        if(disp && disp.value) { disp.value = formatRupiah(disp.value); }
+        if(disp) {
+            disp.addEventListener('keyup', function() {
+                this.value = formatRupiah(this.value);
+                asli.value = this.value.replace(/\./g, '');
+                let hVal = parseInt(hargaAsli.value) || 0, dVal = parseInt(dpAsli.value) || 0, limit = hVal * 0.5;
+                if(dVal > limit && hVal > 0) {
+                    dpError.classList.remove('d-none'); dpAsli.value = Math.floor(limit); dpDisp.value = formatRupiah(Math.floor(limit).toString());
+                } else { dpError.classList.add('d-none'); }
+            });
+        }
     }
-    applyFormatAndValidate(hargaDisp, hargaAsli); applyFormatAndValidate(dpDisp, dpAsli);
+    bindFormatter(hargaDisp, hargaAsli); bindFormatter(dpDisp, dpAsli);
 
-    // ==========================================
-    // LOGIKA MAPS: DROPDOWN WILAYAH & ALAMAT OTOMATIS
-    // ==========================================
-    const API_KEY = "{{ geoapify_key }}" || "b5ebf0b5ae1047cc8ea72c255a6c3b1a"; // Fallback Aman
+    // ========================================================
+    // 2. HARDCODE API KEY (Bypass .env sementara untuk testing)
+    // ========================================================
+    // Kita paksakan pakai API Key aslimu secara langsung di sini
+    const GEO_KEY = "b5ebf0b5ae1047cc8ea72c255a6c3b1a"; 
 
     const regionCoords = {
         "Salatiga": [-7.3305, 110.5084], "Tuntang": [-7.2700, 110.4550], "Bawen": [-7.2400, 110.4250],
         "Ambarawa": [-7.2600, 110.3950], "Tengaran": [-7.3850, 110.5350], "Suruh": [-7.3600, 110.5850],
-        "Pabelan": [-7.2900, 110.5650], "Beringin": [-7.2450, 110.5500], "Banyubiru": [-7.2950, 110.4000]
+        "Pabelan": [-7.2900, 110.5650], "Banyubiru": [-7.2950, 110.4000]
     };
 
-    let savedLat = parseFloat(document.getElementById("latInput").value);
-    let savedLng = parseFloat(document.getElementById("lngInput").value);
+    let curLat = parseFloat(document.getElementById("latInput").value) || -7.3305;
+    let curLng = parseFloat(document.getElementById("lngInput").value) || 110.5084;
 
-    const map = L.map('mapPicker').setView([savedLat, savedLng], 15);
-    L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${API_KEY}`, {
-        attribution: "© Geoapify", maxZoom: 19
-    }).addTo(map);
+    const map = L.map('mapPicker').setView([curLat, curLng], 15);
+    L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${GEO_KEY}`, { maxZoom: 19 }).addTo(map);
+    let marker = L.marker([curLat, curLng], { draggable: true }).addTo(map);
 
-    let marker = L.marker([savedLat, savedLng], { draggable: true }).addTo(map);
+    window.terbangKeFasilitas = function(lat, lng, nama) {
+        map.flyTo([lat, lng], 17, { animate: true, duration: 1.5 });
+        L.popup().setLatLng([lat, lng]).setContent(`<div class="text-center p-1"><strong>${nama}</strong><br><small class="text-muted">Fasilitas Umum</small></div>`).openOn(map);
+    };
 
-    // Event Listener Dropdown Wilayah Pindah Map
+    window.kembaliKeKos = function() {
+        let lat = parseFloat(document.getElementById("latInput").value);
+        let lng = parseFloat(document.getElementById("lngInput").value);
+        map.flyTo([lat, lng], 15); map.closePopup();
+    };
+
     document.getElementById("wilayahSelect").addEventListener("change", function() {
-        let selectedWilayah = this.value;
-        if(regionCoords[selectedWilayah]) {
-            let coords = regionCoords[selectedWilayah];
-            map.flyTo(coords, 14);
-            marker.setLatLng(coords);
-            loadFasilitasDanAlamat(coords[0], coords[1], false);
+        if(regionCoords[this.value]) {
+            let coords = regionCoords[this.value];
+            map.flyTo(coords, 15); marker.setLatLng(coords);
+            syncSatelitData(coords[0], coords[1], false);
         }
     });
 
-    async function loadFasilitasDanAlamat(lat, lng, isInitLoad=false) {
+    // ========================================================
+    // 3. FUNGSI PELACAK DENGAN DETEKTOR ERROR VISUAL
+    // ========================================================
+    async function syncSatelitData(lat, lng, isInit=false) {
         document.getElementById("latInput").value = lat;
         document.getElementById("lngInput").value = lng;
-        document.getElementById("wrapperFasilitas").innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br><small>Menyesuaikan koordinat satelit...</small></div>';
+        const wrapper = document.getElementById("wrapperFasilitas");
+
+        let baseHtml = `<div class="mb-3 sticky-top bg-light pb-2 pt-1"><button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold shadow-sm" onclick="kembaliKeKos()"><i class="fas fa-crosshairs me-2"></i> Fokus ke Lokasi Kos</button></div>`;
+        wrapper.innerHTML = baseHtml + '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-primary"></i> Memutakhirkan objek...</div>';
 
         try {
-            // REVERSE GEOCODING
-            if(!isInitLoad) {
-                let geoUrl = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${API_KEY}`;
-                let geoResp = await fetch(geoUrl);
-                let geoData = await geoResp.json();
-                if(geoData.features && geoData.features.length > 0) {
-                    document.getElementById("alamatInput").value = geoData.features[0].properties.formatted;
+            // TARIK ALAMAT
+            if(!isInit || !document.getElementById("alamatInput").value.trim()) {
+                let resGeo = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${GEO_KEY}`);
+                
+                // JIKA GEOAPIFY MENOLAK KONEKSI, CETAK ERRORNYA KE LAYAR!
+                if(!resGeo.ok) {
+                    let errMsg = await resGeo.text();
+                    wrapper.innerHTML = `<div class="p-3 bg-danger text-white rounded small"><b>ERROR API ALAMAT:</b> ${resGeo.status} - ${errMsg}<br>Cek token Geoapify kamu.</div>`;
+                    return;
+                }
+
+                let dataGeo = await resGeo.json();
+                if(dataGeo.features && dataGeo.features.length > 0) {
+                    document.getElementById("alamatInput").value = dataGeo.features[0].properties.formatted;
                 }
             }
 
-            // PLACES API (Diperluas kategorinya)
-            let categories = "commercial,education,catering";
-            let placeUrl = `https://api.geoapify.com/v2/places?categories=${categories}&filter=circle:${lng},${lat},2000&bias=proximity:${lng},${lat}&limit=12&apiKey=${API_KEY}`;
-            let placeResp = await fetch(placeUrl);
-            let placeData = await placeResp.json();
+            // TARIK FASILITAS
+            let subCat = "service.financial.atm,commercial.supermarket,commercial.convenience,education.university,healthcare.hospital,catering.restaurant";
+            let resPlace = await fetch(`https://api.geoapify.com/v2/places?categories=${subCat}&filter=circle:${lng},${lat},2000&bias=proximity:${lng},${lat}&limit=15&apiKey=${GEO_KEY}`);
+            
+            // JIKA GEOAPIFY MENOLAK KONEKSI, CETAK ERRORNYA KE LAYAR!
+            if(!resPlace.ok) {
+                let errMsg = await resPlace.text();
+                wrapper.innerHTML = `<div class="p-3 bg-danger text-white rounded small"><b>ERROR API FASILITAS:</b> ${resPlace.status} - ${errMsg}<br>Token Geoapify limit/invalid.</div>`;
+                return;
+            }
 
-            let listHtml = "";
-            if(placeData.features && placeData.features.length > 0) {
-                placeData.features.forEach(item => {
-                    let p = item.properties;
-                    if(p.name) {
-                        let icon = "fa-map-pin text-secondary";
-                        if(p.categories.includes("education")) icon = "fa-graduation-cap text-primary";
-                        else if(p.categories.includes("commercial")) icon = "fa-shopping-cart text-success";
-                        else if(p.categories.includes("catering")) icon = "fa-utensils text-danger";
+            let dataPlace = await resPlace.json();
+
+            let listContainer = "";
+            if(dataPlace.features && dataPlace.features.length > 0) {
+                dataPlace.features.forEach(node => {
+                    let item = node.properties;
+                    if(item.name && item.lat && item.lon) {
+                        let iconClass = "fa-map-marker-alt text-secondary";
+                        let cats = item.categories || [];
                         
-                        listHtml += `
-                        <div class="fasilitas-item">
-                            <i class="fas ${icon} mt-1 me-2 fs-6"></i>
-                            <div class="w-100">
-                                <div class="d-flex justify-content-between">
-                                    <strong class="text-dark d-block" style="font-size: 13px;">${p.name}</strong>
-                                    <span class="badge bg-secondary bg-opacity-10 text-dark border text-xs">${Math.round(p.distance)} m</span>
-                                </div>
+                        if(cats.some(c => c.includes("education"))) iconClass = "fa-graduation-cap text-primary";
+                        else if(cats.some(c => c.includes("commercial"))) iconClass = "fa-shopping-cart text-success";
+                        else if(cats.some(c => c.includes("catering"))) iconClass = "fa-utensils text-danger";
+                        else if(cats.some(c => c.includes("financial"))) iconClass = "fa-money-bill-wave text-info";
+
+                        let namaAman = item.name.replace(/'/g, "\\'");
+                        listContainer += `
+                        <div class="fasilitas-item d-flex align-items-center py-2 px-2 border-bottom bg-white rounded-3 mb-2 shadow-sm" 
+                             style="cursor:pointer;" onclick="terbangKeFasilitas(${item.lat}, ${item.lon}, '${namaAman}')">
+                            <i class="fas ${iconClass} me-2 fs-6" style="width:20px; text-align:center;"></i>
+                            <div class="w-100 d-flex justify-content-between align-items-center">
+                                <span class="fw-medium text-dark" style="font-size: 12.5px;">${item.name}</span>
+                                <span class="badge bg-secondary bg-opacity-10 text-dark border text-xs px-2 py-1 rounded-pill">${Math.round(item.distance)} m</span>
                             </div>
                         </div>`;
                     }
                 });
+                wrapper.innerHTML = baseHtml + listContainer;
             } else {
-                listHtml = '<div class="text-muted text-center py-4 small">Fasilitas umum tidak terdeteksi.</div>';
+                wrapper.innerHTML = baseHtml + '<div class="text-muted text-center py-4 small">Fasilitas tidak terdeteksi.</div>';
             }
-            document.getElementById("wrapperFasilitas").innerHTML = listHtml;
-        } catch (e) {
-            document.getElementById("wrapperFasilitas").innerHTML = '<div class="text-danger text-center py-4 small">Gagal memuat API Geoapify.</div>';
+        } catch(e) {
+            // JIKA JAVASCRIPT CRASH (TYPO DLL), CETAK KE LAYAR
+            wrapper.innerHTML = `<div class="p-3 bg-warning text-dark rounded small"><b>CRASH JAVASCRIPT:</b> ${e.message}</div>`;
         }
     }
 
-    loadFasilitasDanAlamat(savedLat, savedLng, true);
+    // 4. AUTOCOMPLETE MANUAL
+    const alamatInput = document.getElementById("alamatInput");
+    if(alamatInput) {
+        alamatInput.removeAttribute("readonly");
+        const sugBox = document.createElement("div");
+        sugBox.id = "geo-autocomplete-dropdown";
+        sugBox.style.cssText = "position:absolute; background:#fff; border:1px solid #d1d5db; width:100%; z-index:9999; max-height:200px; overflow-y:auto; border-radius:8px; display:none; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);";
+        alamatInput.parentNode.style.position = "relative";
+        alamatInput.parentNode.appendChild(sugBox);
 
-    marker.on('dragend', function() {
-        let pos = marker.getLatLng();
-        loadFasilitasDanAlamat(pos.lat, pos.lng, false);
-    });
+        alamatInput.addEventListener("input", async function() {
+            let val = this.value;
+            if(val.length < 3) { sugBox.style.display = "none"; return; }
+            try {
+                let autoUrl = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(val)}&filter=circle:110.5084,-7.3305,40000&apiKey=${GEO_KEY}`;
+                let resp = await fetch(autoUrl);
+                let data = await resp.json();
+                
+                sugBox.innerHTML = "";
+                if(data.features && data.features.length > 0) {
+                    sugBox.style.display = "block";
+                    data.features.forEach(place => {
+                        let info = place.properties;
+                        let row = document.createElement("div");
+                        row.style.cssText = "padding:10px; cursor:pointer; border-bottom:1px solid #f3f4f6; font-size:13px; text-align:left;";
+                        row.innerHTML = `<i class="fas fa-map-marker-alt text-muted me-2"></i> ${info.formatted}`;
+                        
+                        row.addEventListener("click", function() {
+                            alamatInput.value = info.formatted; sugBox.style.display = "none";
+                            let tLat = info.lat, tLon = info.lon;
+                            map.flyTo([tLat, tLon], 16); marker.setLatLng([tLat, tLon]);
+                            syncSatelitData(tLat, tLon, true);
+                        });
+                        sugBox.appendChild(row);
+                    });
+                } else { sugBox.style.display = "none"; }
+            } catch(e) {}
+        });
+        document.addEventListener("click", function(e) { if(e.target !== alamatInput) { sugBox.style.display = "none"; } });
+    }
 
-    map.on('click', function(e) {
-        marker.setLatLng(e.latlng);
-        loadFasilitasDanAlamat(e.latlng.lat, e.latlng.lng, false);
-    });
+    marker.on('dragend', () => syncSatelitData(marker.getLatLng().lat, marker.getLatLng().lng, false));
+    map.on('click', (e) => { marker.setLatLng(e.latlng); syncSatelitData(e.latlng.lat, e.latlng.lng, false); });
+    
+    syncSatelitData(curLat, curLng, true);
 });
 </script>
 {% endblock %}

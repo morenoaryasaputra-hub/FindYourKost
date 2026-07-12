@@ -32,7 +32,16 @@
                             <span class="badge bg-primary px-2.5 py-1.5 rounded-pill text-xs fw-semibold" style="font-size: 11px; background-color: #0b57d0 !important;">Administrator Sistem</span>
                             <span class="badge bg-success bg-opacity-10 text-success px-2.5 py-1.5 rounded-pill text-xs fw-semibold" style="font-size: 11px;"><i class="fas fa-circle me-1 small" style="font-size: 8px;"></i> Aktif</span>
                         </div>
-                        <p class="text-muted small mb-0 mt-1.5">Bergabung sejak: 12 Januari 2023</p>
+                       <p class="text-muted mb-1 small">
+    <i class="fas fa-calendar-alt me-1"></i> Bergabung Sejak: 
+    <strong>
+        {% if user.created_at %}
+            {{ user.created_at.strftime('%d %B %Y') }}
+        {% else %}
+            Data Belum Tersedia
+        {% endif %}
+    </strong>
+</p>
                         <small class="text-secondary d-block mt-1" style="font-size: 12px;"><i class="fas fa-envelope me-1"></i> {{ admin.email }} &nbsp;•&nbsp; <i class="fas fa-phone me-1"></i> {{ admin.no_hp or '+62 812-3456-7890' }}</small>
                     </div>
                 </div>
@@ -184,24 +193,25 @@
 
             </div>
 
-            <div class="col-lg-4">
+<div class="col-lg-4">
                 
+                <!-- CARD 1: KEAMANAN AKUN (DATA DARI DATABASE) -->
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
                     <h5 class="fw-bold text-dark mb-3" style="font-size: 16px;"><i class="fas fa-lock text-primary me-2"></i>Keamanan Akun</h5>
                     
                     <div class="p-3 rounded-3 mb-3" style="background-color: #f8fafc; font-size: 13px;">
                         <span class="text-secondary d-block">Password terakhir diubah</span>
-                        <span class="fw-bold text-dark">24 Mei 2026</span>
+                        <span class="fw-bold text-dark">{{ user.created_at.strftime('%d %B %Y') if user.created_at else 'Belum pernah diubah' }}</span>
                     </div>
 
                     <div class="p-3 rounded-3 mb-3" style="background-color: #f8fafc; font-size: 13px;">
                         <span class="text-secondary d-block">Sesi login terakhir</span>
-                        <span class="fw-bold text-dark">Hari ini, 08:12 WIB • Salatiga, ID</span>
+                        <span class="fw-bold text-dark">Hari ini, 23:56 WIB • Salatiga, ID</span>
                     </div>
 
-                    <button type="button" class="btn btn-outline-primary btn-sm w-100 py-2 rounded-3 fw-medium mb-3 border-secondary-subtle text-dark" style="font-size: 13px;" data-bs-toggle="modal" data-bs-target="#modalUbahPassword">
-    <i class="fas fa-key me-1 text-primary"></i> Ubah Password
-</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100 py-2 rounded-3 fw-medium mb-3 border-secondary-subtle text-dark" style="font-size: 13px;" data-bs-toggle="modal" data-bs-target="#ubahPasswordModal">
+                        <i class="fas fa-key me-1 text-primary"></i> Ubah Password
+                    </button>
 
                     <div class="d-flex align-items-center justify-content-between border-top pt-3" style="font-size: 13.5px;">
                         <div>
@@ -214,6 +224,38 @@
                     </div>
                 </div>
 
+                <!-- CARD BARU: RIWAYAT TINDAKAN ADMIN (ANTI-ERROR LINTER VS CODE) -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <h5 class="fw-bold text-dark mb-3" style="font-size: 16px;"><i class="fa-solid fa-list-check text-primary me-2"></i>Riwayat Tindakan</h5>
+                    
+                    <div class="d-flex flex-column gap-3 overflow-auto" style="max-height: 280px;">
+                        {% if aktivitas %}
+                            {% for act in aktivitas %}
+                            
+                            <!-- BUNGKAM ERROR VS CODE DENGAN JINJA VARIABLE -->
+                            {% set border_color = '#dc3545' if act.status_akun == 'diblokir' else '#ffc107' %}
+                            {% set icon_class = 'fa-ban text-danger' if act.status_akun == 'diblokir' else 'fa-pause text-warning' %}
+                            
+                            <div class="d-flex align-items-center gap-3 p-2.5 rounded-3" {% if act.status_akun == 'diblokir' %}style="background-color: #f8fafc; border-left: 4px solid #dc3545;"{% else %}style="background-color: #f8fafc; border-left: 4px solid #ffc107;"{% endif %}></div>
+                                <div class="bg-white rounded-circle p-2 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" style="width: 35px; height: 35px;">
+                                    <i class="fa-solid {{ icon_class }}" style="font-size: 13px;"></i>
+                                </div>
+                                <div style="font-size: 12.5px;">
+                                    <h6 class="mb-0 fw-bold text-dark" style="font-size: 13px;">{% if act.status_akun == 'diblokir' %}Blokir{% else %}Suspend{% endif %}: {{ act.nama }}</h6>
+                                    <small class="text-muted text-truncate d-block" style="max-width: 180px;">Alasan: {{ act.alasan_status if act.alasan_status else '-' }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4 text-muted small">
+                                <i class="fa-solid fa-clock-rotate-left fs-3 opacity-25 mb-2 d-block"></i>
+                                Belum ada riwayat aktivitas penindakan terbaru.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- CARD 2: NOTIFIKASI ADMIN -->
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
                     <h5 class="fw-bold text-dark mb-3" style="font-size: 16px;"><i class="fas fa-bell text-primary me-2"></i>Notifikasi Admin</h5>
                     
@@ -249,6 +291,7 @@
                     </div>
                 </div>
 
+                <!-- CARD 3: BUTUH BANTUAN -->
                 <div class="card border-0 text-white rounded-4 p-4 shadow-sm" style="background: linear-gradient(135deg, #0d6efd, #0b57d0);">
                     <h5 class="fw-bold mb-2" style="font-size: 15px;">Butuh Bantuan Teknis?</h5>
                     <p class="small opacity-75 mb-4 lh-base" style="font-size: 12.5px;">Tim IT Support siap membantu 24/7 untuk masalah akses server.</p>

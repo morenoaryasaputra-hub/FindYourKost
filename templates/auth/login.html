@@ -60,24 +60,14 @@
                 untuk melanjutkan.
             </p>
 
-            {% with messages =
-            get_flashed_messages(with_categories=true) %}
-
-            {% if messages %}
-
-            {% for category, message in messages %}
-
-            <div class="alert">
-
-                {{ message }}
-
-            </div>
-
-            {% endfor %}
-
-            {% endif %}
-
-            {% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message | safe }} </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
             <form method="POST">
 

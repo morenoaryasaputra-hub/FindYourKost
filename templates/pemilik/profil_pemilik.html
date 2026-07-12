@@ -13,6 +13,16 @@
         {% endif %}
     {% endwith %}
 
+    {% if not profil_lengkap %}
+    <div class="alert alert-warning border-warning shadow-sm rounded-4 mb-4 d-flex align-items-center p-4">
+        <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+        <div>
+            <h5 class="fw-bold mb-1 text-dark">Lengkapi Profil Anda Terlebih Dahulu!</h5>
+            <p class="mb-0 text-dark small">Halo <b>{{ user_info.nama }}</b>, untuk dapat menambahkan properti kos, Anda diwajibkan melengkapi <b>Nomor Handphone</b>, <b>Rekening Bank</b>, dan mengunggah <b>KTP</b> untuk verifikasi keamanan (KYC).</p>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row g-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white position-relative">
@@ -20,208 +30,223 @@
                     <div class="d-flex align-items-center flex-wrap g-4">
                         <div class="position-relative me-4 mb-3 mb-md-0">
                             <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 100px; height: 100px; font-size: 36px;">
-                                {{ user.nama[0] | upper }}
+                                {{ user_info.nama[0] | upper }}
                             </div>
+                            <span class="position-absolute bottom-0 end-0 p-2 bg-success border border-white border-2 rounded-circle" title="Online Aktif"></span>
                         </div>
                         <div>
-                            <div class="row g-3">
-                                <div class="col-sm-6 col-md-3">
-                                    <small class="text-muted d-block fw-medium">Nama Lengkap</small>
-                                    <span class="text-dark fw-bold" style="font-size: 16px;">{{ user.nama }}</span>
-                                </div>
-                                <div class="col-sm-6 col-md-3">
-                                    <small class="text-muted d-block fw-medium">Alamat Email</small>
-                                    <span class="text-dark fw-semibold" style="font-size: 15px;">{{ user.email }}</span>
-                                </div>
-                                <div class="col-sm-6 col-md-3">
-                                    <small class="text-muted d-block fw-medium">Nomor Telepon</small>
-                                    <span class="text-dark fw-semibold" style="font-size: 15px;">{{ user.no_hp }}</span>
-                                </div>
-                                <div class="col-sm-6 col-md-3">
-                                    <small class="text-muted d-block fw-medium">Status Akun</small>
-                                    {% if user.is_premium %}
-                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold" style="font-size: 12px;"><i class="fas fa-crown me-1"></i> PREMIUM</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary text-white px-3 py-2 rounded-pill fw-medium" style="font-size: 12px;"><i class="fas fa-user me-1"></i> REGULER</span>
-                                    {% endif %}
-                                </div>
-                            </div>
+                            <h3 class="fw-bold text-dark mb-1 d-flex align-items-center">
+                                {{ user_info.nama }}
+                                {% if user_info.is_ktp_verified %}
+                                    <i class="fas fa-check-circle text-primary ms-2 fs-5" title="Akun Terverifikasi"></i>
+                                {% endif %}
+                            </h3>
+                            <p class="text-muted mb-2"><i class="fas fa-envelope me-2"></i>{{ user_info.email }}</p>
+                            {% if user_info.is_premium %}
+                                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill shadow-sm"><i class="fas fa-crown me-1"></i> Pemilik Premium</span>
+                            {% else %}
+                                <span class="badge bg-secondary px-3 py-1.5 rounded-pill"><i class="fas fa-user me-1"></i> Akun Reguler</span>
+                            {% endif %}
                         </div>
                     </div>
-                    <button class="btn btn-primary fw-medium rounded-3 px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProfil">
-                        <i class="fas fa-edit me-2"></i> Ubah Profil
-                    </button>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm rounded-3 shadow-sm px-3 fw-medium mt-2" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                            <i class="fas fa-key me-1"></i> Ganti Password
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <h5 class="fw-bold text-dark mb-4 d-flex align-items-center">
-                    <i class="fas fa-university text-primary me-2"></i> Informasi Rekening
-                </h5>
-                
-                <div class="p-3 rounded-4 bg-light border mb-4 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary text-white rounded-3 p-3 fw-bold shadow-sm me-3" style="font-size: 14px; letter-spacing: 1px;">
-                            {{ user.nama_bank[:4] | upper }}
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold text-dark" style="font-size: 15px;">{{ user.nama_bank }}</h6>
-                            <small class="text-muted" style="letter-spacing: 1.5px;">**** **** {{ user.no_rekening[-4:] }}</small>
-                        </div>
-                    </div>
-                    <i class="fas fa-check-circle text-success fs-5"></i>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-user-circle text-primary me-2"></i>Informasi Pribadi</h5>
+                    <button class="btn btn-light btn-sm rounded-circle shadow-sm" data-bs-toggle="modal" data-bs-target="#profilModal"><i class="fas fa-edit text-primary"></i></button>
                 </div>
-
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between border-bottom py-2">
-                        <span class="text-muted small">Nama Pemilik</span>
-                        <span class="fw-semibold text-dark small">{{ user.atas_nama_rekening }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between border-bottom py-2 mt-2">
-                        <span class="text-muted small">Nomor Rekening</span>
-                        <span class="fw-semibold text-dark small">{{ user.no_rekening }}</span>
-                    </div>
+                <div class="mb-3 p-3 bg-light rounded-3 bg-hover">
+                    <small class="text-muted d-block fw-semibold mb-1">Nama Lengkap</small>
+                    <span class="text-dark fw-medium">{{ user_info.nama }}</span>
                 </div>
-
-                <button class="btn btn-outline-primary fw-medium rounded-3 w-100 py-2.5" data-bs-toggle="modal" data-bs-target="#modalRekening">
-                    Ganti Rekening Utama
-                </button>
+                <div class="mb-3 p-3 bg-light rounded-3 bg-hover">
+                    <small class="text-muted d-block fw-semibold mb-1">Email</small>
+                    <span class="text-dark fw-medium">{{ user_info.email }}</span>
+                </div>
+                <div class="mb-0 p-3 bg-light rounded-3 bg-hover border-start border-4 {% if user_info.no_hp == '-' %}border-danger{% else %}border-success{% endif %}">
+                    <small class="text-muted d-block fw-semibold mb-1">Nomor Handphone (WhatsApp)</small>
+                    <span class="text-dark fw-medium">{{ user_info.no_hp }}</span>
+                </div>
             </div>
         </div>
 
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <h5 class="fw-bold text-dark mb-4 d-flex align-items-center">
-                        <i class="fas fa-shield-alt text-primary me-2"></i> Keamanan Akun
-                    </h5>
-                    
-                    <div class="p-3 rounded-4 border mb-3 d-flex align-items-center justify-content-between bg-hover shadow-xs" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#modalPassword">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-light text-primary rounded-3 p-2.5 me-3">
-                                <i class="fas fa-key"></i>
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-wallet text-success me-2"></i>Rekening Pencairan</h5>
+                    <button class="btn btn-light btn-sm rounded-circle shadow-sm" data-bs-toggle="modal" data-bs-target="#bankModal"><i class="fas fa-edit text-success"></i></button>
+                </div>
+                <div class="mb-3 p-3 bg-light rounded-3 bg-hover border-start border-4 {% if user_info.nama_bank == 'Belum diatur' %}border-warning{% else %}border-success{% endif %}">
+                    <small class="text-muted d-block fw-semibold mb-1">Nama Bank</small>
+                    <span class="text-dark fw-medium">{{ user_info.nama_bank }}</span>
+                </div>
+                <div class="mb-3 p-3 bg-light rounded-3 bg-hover">
+                    <small class="text-muted d-block fw-semibold mb-1">Nomor Rekening</small>
+                    <span class="text-dark fw-medium">{{ user_info.no_rekening }}</span>
+                </div>
+                <div class="mb-0 p-3 bg-light rounded-3 bg-hover">
+                    <small class="text-muted d-block fw-semibold mb-1">Atas Nama Rekening</small>
+                    <span class="text-dark fw-medium">{{ user_info.atas_nama_rekening }}</span>
+                </div>
+            </div>
+        </div>
+
+<!-- KOLOM VERIFIKASI KTP (FULL OTOMATIS) -->
+        <div class="col-lg-12 mb-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 class="fw-bold text-dark mb-3"><i class="fas fa-id-card text-info me-2"></i>Verifikasi Identitas (KTP) OCR</h5>
+                
+{% if user_info.is_ktp_verified %}
+                    <div class="alert alert-success rounded-4 mb-0 p-4 border border-success border-opacity-25 bg-success bg-opacity-10">
+                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-success border-opacity-25">
+                            <i class="fas fa-check-circle fa-2x me-3 text-success"></i>
+                            <h5 class="mb-0 fw-bold text-success">KTP Telah Terverifikasi!</h5>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block fw-semibold mb-1">Nomor Induk Kependudukan (NIK)</small>
+                                <span class="text-dark fw-bold fs-5">{{ user_info.nik }}</span>
                             </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold text-dark" style="font-size: 14px;">Ubah Password Akun</h6>
-                                <small class="text-muted">Ganti password secara berkala agar akun tetap aman.</small>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block fw-semibold mb-1">Nama Sesuai KTP</small>
+                                <span class="text-dark fw-bold fs-5">{{ user_info.nama_ktp }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block fw-semibold mb-1">Tempat Lahir</small>
+                                <span class="text-dark fw-medium">{{ user_info.tempat_lahir }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block fw-semibold mb-1">Tanggal Lahir</small>
+                                <span class="text-dark fw-medium">{{ user_info.tanggal_lahir }}</span>
+                            </div>
+                            <div class="col-12 mt-3 p-3 bg-white rounded-3 shadow-sm">
+                                <small class="text-muted d-block fw-semibold mb-1"><i class="fas fa-map-marker-alt me-1 text-danger"></i> Alamat Lengkap KTP</small>
+                                <span class="text-dark fw-medium">{{ user_info.alamat_ktp }}</span>
                             </div>
                         </div>
-                        <i class="fas fa-chevron-right text-muted small"></i>
                     </div>
-                </div>
-                
-                <div class="text-center text-muted small pt-3 border-top">
-                    <i class="fas fa-info-circle me-1"></i> Data profil terhubung langsung dengan enkripsi server aman.
-                </div>
+                {% else %}
+                    <!-- JIKA BELUM VERIFIKASI / GAGAL (Langsung muncul form lagi) -->
+                    <div class="alert alert-secondary rounded-3 mb-0 p-4 bg-light border">
+                        <p class="text-muted small mb-3"><i class="fas fa-info-circle me-1"></i> Sistem cerdas OCR kami akan memverifikasi KTP Anda secara otomatis. Harap unggah foto KTP asli dengan pencahayaan yang terang (Sistem dibatasi 3x percobaan per hari).</p>
+                        
+                        <form action="{{ url_for('pemilik.profil_pemilik') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center flex-wrap gap-2">
+                            <!-- Input hidden penting untuk Trigger Aksi Backend -->
+                            <input type="hidden" name="aksi" value="verifikasi_ktp"> 
+                            
+                            <input type="file" name="ktp_file" class="form-control" accept="image/*" style="max-width: 350px;" required>
+                            <button type="submit" class="btn btn-primary fw-bold shadow-sm px-4">
+                                <i class="fas fa-expand me-1"></i> Scan KTP Sekarang
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalProfil" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="profilModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow">
-            <div class="modal-header border-0 px-4 pt-4">
-                <h5 class="modal-title fw-bold text-dark">Ubah Informasi Pribadi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <h5 class="fw-bold text-dark"><i class="fas fa-user-edit text-primary me-2"></i>Edit Profil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ url_for('pemilik.profil_pemilik') }}" method="POST">
-                <input type="hidden" name="aksi" value="update_profil">
-                <div class="modal-body px-4">
+            <form action="{{ url_for('pemilik.profil_pemilik') }}" method=\"POST\">
+                <div class="modal-body px-4 py-4">
+                    <input type="hidden" name="aksi" value="update_profil">
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-muted">Nama Lengkap</label>
-                        <input type="text" name="nama" class="form-control rounded-3" value="{{ user.nama }}" required>
+                        <input type="text" name="nama" class="form-control rounded-3" value="{{ user_info.nama }}" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-muted">Nomor Telepon / WA</label>
-                        <input type="text" name="no_hp" class="form-control rounded-3" value="{{ user.no_hp }}" required>
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold text-muted">Nomor WhatsApp Aktif</label>
+                        <input type="text" name="no_hp" class="form-control rounded-3" value="{{ user_info.no_hp if user_info.no_hp != '-' else '' }}" required placeholder="Contoh: 08123456789">
                     </div>
                 </div>
                 <div class="modal-footer border-0 px-4 pb-4">
                     <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4">Simpan Perubahan</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">Simpan Profil</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalRekening" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="bankModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow">
-            <div class="modal-header border-0 px-4 pt-4">
-                <h5 class="modal-title fw-bold text-dark">Ganti Rekening Utama</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <h5 class="fw-bold text-dark"><i class="fas fa-wallet text-success me-2"></i>Atur Rekening</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ url_for('pemilik.profil_pemilik') }}" method="POST">
-                <input type="hidden" name="aksi" value="update_rekening">
-                <div class="modal-body px-4">
+                <div class="modal-body px-4 py-4">
+                    <input type="hidden" name="aksi" value="update_rekening">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-muted">Nama Bank Utama</label>
+                        <label class="form-label small fw-semibold text-muted">Bank Tersedia</label>
                         <select name="nama_bank" class="form-select rounded-3" required>
-                            <option value="Bank Central Asia (BCA)" {% if user.nama_bank == "Bank Central Asia (BCA)" %}selected{% endif %}>Bank Central Asia (BCA)</option>
-                            <option value="Bank Mandiri" {% if user.nama_bank == "Bank Mandiri" %}selected{% endif %}>Bank Mandiri</option>
-                            <option value="Bank Negara Indonesia (BNI)" {% if user.nama_bank == "Bank Negara Indonesia (BNI)" %}selected{% endif %}>Bank Negara Indonesia (BNI)</option>
-                            <option value="Bank Rakyat Indonesia (BRI)" {% if user.nama_bank == "Bank Rakyat Indonesia (BRI)" %}selected{% endif %}>Bank Rakyat Indonesia (BRI)</option>
-                            <option value="Bank Syariah Indonesia (BSI)" {% if user.nama_bank == "Bank Syariah Indonesia (BSI)" %}selected{% endif %}>Bank Syariah Indonesia (BSI)</option>
-                            <option value="Bank Tabungan Negara (BTN)" {% if user.nama_bank == "Bank Tabungan Negara (BTN)" %}selected{% endif %}>Bank Tabungan Negara (BTN)</option>
-                            <option value="Jenius / BTPN" {% if user.nama_bank == "Jenius / BTPN" %}selected{% endif %}>Jenius / BTPN</option>
+                            <option value="BCA" {% if user_info.nama_bank == 'BCA' %}selected{% endif %}>BCA (Bank Central Asia)</option>
+                            <option value="Mandiri" {% if user_info.nama_bank == 'Mandiri' %}selected{% endif %}>Bank Mandiri</option>
+                            <option value="BNI" {% if user_info.nama_bank == 'BNI' %}selected{% endif %}>BNI (Bank Negara Indonesia)</option>
+                            <option value="BRI" {% if user_info.nama_bank == 'BRI' %}selected{% endif %}>BRI (Bank Rakyat Indonesia)</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-muted">Nomor Rekening</label>
-                        <input type="text" name="no_rekening" class="form-control rounded-3" value="{{ user.no_rekening }}" required>
+                        <input type="text" name="no_rekening" class="form-control rounded-3" value="{{ user_info.no_rekening if user_info.no_rekening != 'Belum diatur' else '' }}" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-muted">Atas Nama Rekening</label>
-                        <input type="text" name="atas_nama_rekening" class="form-control rounded-3" value="{{ user.atas_nama_rekening }}" required>
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold text-muted">Atas Nama</label>
+                        <input type="text" name="atas_nama_rekening" class="form-control rounded-3" value="{{ user_info.atas_nama_rekening if user_info.atas_nama_rekening != 'Belum diatur' else '' }}" required>
                     </div>
                 </div>
                 <div class="modal-footer border-0 px-4 pb-4">
                     <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4">Simpan Rekening</button>
+                    <button type="submit" class="btn btn-success rounded-3 px-4">Simpan Rekening</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalPassword" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="passwordModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow">
-            <div class="modal-header border-0 px-4 pt-4">
-                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-key text-warning me-2"></i> Pengaturan Kata Sandi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <h5 class="fw-bold text-dark"><i class="fas fa-lock text-primary me-2"></i>Keamanan Akun</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ url_for('pemilik.profil_pemilik') }}" method="POST">
-                <div class="modal-body px-4">
+                <div class="modal-body px-4 py-4">
+                    <input type="hidden" name="aksi" value="update_password">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-muted">Password Sekarang</label>
-                        <input type="password" name="password_sekarang" class="form-control rounded-3" required placeholder="Masukkan kata sandi lama">
+                        <label class="form-label small fw-semibold text-muted">Password Saat Ini</label>
+                        <input type="password" name="password_lama" class="form-control rounded-3" required placeholder="Masukkan kata sandi lama">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-muted">Password Baru</label>
-                        <input type="password" name="password_baru" class="form-control rounded-3" required placeholder="Minimal 6 karakter">
+                        <input type="password" name="password_baru" class="form-control rounded-3" required minlength="6" placeholder="Minimal 6 karakter">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-muted">Konfirmasi Password Baru</label>
                         <input type="password" name="konfirmasi_password" class="form-control rounded-3" required placeholder="Ulangi kata sandi baru">
                     </div>
-                    
-                    <hr class="text-muted opacity-20">
-                    
-                    <div class="text-center">
-                        <small class="text-muted">Lupa dengan kata sandi lama Anda?</small>
-                        <button type="submit" name="aksi" value="lupa_password" formnovalidate class="btn btn-link btn-sm text-primary fw-medium p-0 ms-1" style="text-decoration: none;">
-                            Kirim kode reset ke Email
-                        </button>
-                    </div>
                 </div>
                 <div class="modal-footer border-0 px-4 pb-4">
                     <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" name="aksi" value="update_password" class="btn btn-primary rounded-3 px-4">Ganti Password</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">Ganti Password</button>
                 </div>
             </form>
         </div>
@@ -229,9 +254,6 @@
 </div>
 
 <style>
-    .bg-hover:hover {
-        background-color: #f8fafc !important;
-        transition: all 0.2s ease-in-out;
-    }
+    .bg-hover:hover { background-color: #f8fafc !important; transition: all 0.2s ease-in-out; }
 </style>
 {% endblock %}

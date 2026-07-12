@@ -30,6 +30,13 @@ class User(db.Model):
     no_rekening = db.Column(db.String(50), nullable=True)
     atas_nama_rekening = db.Column(db.String(100), nullable=True)
     is_premium = db.Column(db.Boolean, default=False)
+    nik = db.Column(db.String(20), nullable=True)
+    nama_ktp = db.Column(db.String(100), nullable=True)
+    foto_ktp = db.Column(db.String(200), nullable=True)
+    is_ktp_verified = db.Column(db.Boolean, default=False)
+    status_akun = db.Column(db.String(20), default='aktif')
+    alasan_status = db.Column(db.Text, nullable=True)
+    
  
 
     # Hubungan Relasi (Relationship) balik untuk mempermudah pemanggilan data

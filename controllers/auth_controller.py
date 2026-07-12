@@ -9,6 +9,7 @@ from flask import session
 from datetime import datetime
 from datetime import timedelta
 
+import pymysql
 from resend import Emails
 import os
 import secrets
@@ -157,60 +158,143 @@ def register():
 # ==========================================
 # LOGIN PENYEWA & PEMILIK
 # ==========================================
-@auth_bp.route("/login", methods=["GET","POST"])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # 1. Jika sudah login, teruskan ke dashboard masing-masing
     if "user_id" in session:
         if session.get("role") == "admin":
             return redirect("/admin/dashboard")
         elif session.get("role") == "pemilik":
             return redirect("/pemilik/dashboard")
-        return redirect("/")
+        else:
+            return redirect("/penyewa/dashboard")
 
-    if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+    # 2. Proses POST
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
 
         conn = get_db()
         cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            SELECT
-                id, nama, email, password_hash,
-                role, is_profile_complete, foto_profil
-            FROM users
-            WHERE email=%s
-            """,
-            (email,)
-        )
+        cursor.execute("""
+            SELECT id, nama, email, password_hash, role, foto_profil, status_akun, alasan_status, suspend_until
+            FROM users WHERE email = %s
+        """, (email,))
+        
         user = cursor.fetchone()
         cursor.close()
         conn.close()
-
-        # JIKA USER TIDAK ADA ATAU DIA ADALAH ADMIN (Admin dilarang lewat sini)
-        if not user or user[4] == "admin":
-            flash("Email tidak ditemukan atau akses ditolak", "danger")
-            return redirect("/login")
-
-        if not bcrypt.check_password_hash(user[3], password):
-            flash("Password salah", "danger")
-            return redirect("/login")
-
-        # Set Session
-        session["user_id"] = user[0]
-        session["nama"] = user[1]
-        session["email"] = user[2]
-        session["role"] = user[4]
-        session["is_profile_complete"] = bool(user[5])
-        session["foto_profil"] = user[6]
-
-        flash("Login berhasil!", "success")
-        if user[4] == "pemilik":
-            return redirect("/pemilik/dashboard")
         
-        return redirect("/") # Penyewa diarahkan ke home/profil
+        if user:
+            # =======================================================
+            # 🚧 GERBANG ADMIN: BLOKIR ADMIN DI PORTAL USER 🚧
+            # =======================================================
+            if user[4] == 'admin': # user[4] adalah kolom 'role'
+                flash("Akses ditolak! Akun Admin hanya dapat masuk melalui portal khusus Admin.", "danger")
+                return redirect('/login')
 
-    return render_template("auth/login.html")
+            # =======================================================
+            # 3. VERIFIKASI PASSWORD
+            # =======================================================
+            if bcrypt.check_password_hash(user[3], password):
+                
+                status_akun = user[6] if len(user) > 6 and user[6] else 'aktif'
+                alasan_status = user[7] if len(user) > 7 and user[7] else ''
+                suspend_until = user[8] if len(user) > 8 else None
+
+                # 🚧 GERBANG BANNED & SUSPEND 🚧
+                if status_akun == 'diblokir':
+                    pesan = alasan_status if alasan_status else "Pelanggaran berat terhadap kebijakan platform."
+                    flash(f"AKSES DITOLAK: Akun Anda diblokir permanen! Alasan: {pesan}", "danger")
+                    return redirect('/login')
+                
+                elif status_akun == 'suspended':
+                    from datetime import datetime
+                    if suspend_until and datetime.now() >= suspend_until:
+                        # Hukuman selesai, aktifkan otomatis
+                        conn = get_db()
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE users SET status_akun='aktif', alasan_status=NULL, suspend_until=NULL WHERE id=%s", (user[0],))
+                        conn.commit()
+                        cursor.close()
+                        conn.close()
+                        status_akun = 'aktif'
+                    else:
+                        tgl_pulih = suspend_until.strftime('%d-%m-%Y %H:%M') if suspend_until else "1 Minggu"
+                        # PASTIKAN BAGIAN INI BENAR: {email} harus ada di sini
+                        pesan_flash = f"AKUN DIBEKUKAN HINGGA {tgl_pulih}. Alasan: {alasan_status}. <a href='/ajukan-banding?email={email}' class='alert-link text-decoration-underline'>Klik di sini untuk Ajukan Banding</a>"
+                        flash(pesan_flash, "warning")
+                        return redirect('/login')
+
+                # JIKA LOLOS, BUAT SESSION
+                session['user_id'] = user[0]
+                session['role'] = user[4]
+                session['nama'] = user[1]
+                session['foto_profil'] = user[5]
+
+                if user[4] == 'admin':
+                    return redirect('/admin/dashboard')
+                elif user[4] == 'pemilik':
+                    return redirect('/pemilik/dashboard')
+                else:
+                    return redirect('/penyewa/dashboard')
+            else:
+                flash("Password yang Anda masukkan salah!", "danger")
+                return redirect('/login')
+        else:
+            flash("Alamat email tidak ditemukan di sistem!", "danger")
+            return redirect('/login')
+
+    return render_template('auth/login.html')
+
+@auth_bp.route('/ajukan-banding', methods=['GET', 'POST'])
+def ajukan_banding():
+    # --- LOGIKA POST (Saat Tombol Kirim Ditekan) ---
+    if request.method == 'POST':
+        # AMBIL DATA DARI FORM, BUKAN URL
+        email_form = request.form.get('email', '').strip()
+        alasan = request.form.get('alasan_banding', '').strip()
+        
+        print(f"DEBUG: Email diterima dari FORM: '{email_form}'") # Cek ini di terminal!
+
+        conn = get_db()
+        cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+        
+        # 1. Cari user berdasarkan email form
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(%s)", (email_form,))
+        user = cursor.fetchone()
+        
+        if not user:
+            cursor.close()
+            conn.close()
+            flash("Email tidak terdaftar di sistem.", "danger")
+            return redirect('/login')
+
+        user_id = user['id']
+        
+        # 2. Cek apakah sudah ada banding pending
+        cursor.execute("SELECT id FROM banding WHERE user_id = %s AND LOWER(status) = 'pending'", (user_id,))
+        cek_banding = cursor.fetchone()
+        
+        if cek_banding:
+            flash("Anda sudah memiliki pengajuan banding yang sedang diproses. Mohon tunggu.", "warning")
+            cursor.close()
+            conn.close()
+            return redirect('/login')
+            
+        # 3. Simpan banding baru
+        cursor.execute("INSERT INTO banding (user_id, email, alasan, status) VALUES (%s, %s, %s, 'pending')", 
+                       (user_id, email_form, alasan))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        flash("Pengajuan banding berhasil dikirim. Harap menunggu proses peninjauan.", "success")
+        return redirect('/login')
+
+    # --- LOGIKA GET (Saat Halaman Dibuka) ---
+    email_url = request.args.get('email', '').strip()
+    return render_template('auth/banding.html', email_params=email_url)
 
 
 # ==========================================

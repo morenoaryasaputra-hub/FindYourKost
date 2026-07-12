@@ -3,29 +3,54 @@
 <div class="container mt-4">
     <h3 class="mb-4">💰 Sistem Finansial & Escrow Gateway</h3>
 
-    <!-- Kotak Ringkasan Finansial -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card bg-primary text-white p-3 border-0 shadow-sm">
                 <small>Total Saldo Escrow (Midtrans)</small>
-                <h3 class="fw-bold mb-0">Rp {{ "{:,.0f}".format(total_escrow) }}</h3>
+                <h3 class="fw-bold mb-0">Rp {{ "{:,.0f}".format(total_escrow).replace(',', '.') }}</h3>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-success text-white p-3 border-0 shadow-sm">
                 <small>Pendapatan Bersih Aplikasi (Fee 10%)</small>
-                <h3 class="fw-bold mb-0">Rp 129.900</h3>
+                <h3 class="fw-bold mb-0">Rp {{ "{:,.0f}".format(pendapatan_bersih).replace(',', '.') }}</h3>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-warning text-dark p-3 border-0 shadow-sm">
                 <small>Dana Tertahan (Belum Check-in)</small>
-                <h3 class="fw-bold mb-0">Rp 1.200.000</h3>
+                <h3 class="fw-bold mb-0">Rp {{ "{:,.0f}".format(dana_tertahan).replace(',', '.') }}</h3>
             </div>
         </div>
     </div>
 
-    <!-- Riwayat Transaksi -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+        <div class="card-body p-4">
+            <form action="{{ url_for('admin.keuangan') }}" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Status Transaksi</label>
+                    <select name="status" class="form-select">
+                        <option value="Semua" {% if current_status == 'Semua' %}selected{% endif %}>Semua Status</option>
+                        <option value="Dalam Penampungan (Escrow)" {% if current_status == 'Dalam Penampungan (Escrow)' %}selected{% endif %}>Dalam Penampungan (Escrow)</option>
+                        <option value="Telah Diteruskan Ke Pemilik" {% if current_status == 'Telah Diteruskan Ke Pemilik' %}selected{% endif %}>Telah Diteruskan Ke Pemilik</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Dari Tanggal</label>
+                    <input type="date" name="tanggal_mulai" value="{{ current_mulai }}" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Sampai Tanggal</label>
+                    <input type="date" name="tanggal_akhir" value="{{ current_akhir }}" class="form-control">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
+                    <a href="{{ url_for('admin.keuangan') }}" class="btn btn-light border"><i class="fa-solid fa-rotate-right"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white fw-bold">Log Mutasi Rekening Midtrans API</div>
         <div class="card-body p-0">
@@ -46,13 +71,17 @@
                         <td class="ps-3 fw-semibold">{{ t.id }}</td>
                         <td>{{ t.tipe }}</td>
                         <td>{{ t.pengirim }}</td>
-                        <td class="text-success fw-bold">Rp {{ "{:,.0f}".format(t.nominal) }}</td>
+                        <td class="text-success fw-bold">Rp {{ "{:,.0f}".format(t.nominal).replace(',', '.') }}</td>
                         <td>
-                            <span class="badge {% if t.status == 'Sukses' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            <span class="badge {% if t.status == 'Telah Diteruskan Ke Pemilik' %}bg-success{% else %}bg-warning text-dark{% endif %}">
                                 {{ t.status }}
                             </span>
                         </td>
                         <td>{{ t.tanggal }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat transaksi dengan filter tersebut.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

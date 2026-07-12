@@ -10,68 +10,74 @@
 </head>
 <body>
 
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <h2>FindYourKost</h2>
-            <span>Sistem Pusat Admin</span>
-        </div>
-        <ul class="sidebar-menu">
-            <li>
-                <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-                    <i class="fa-solid fa-chart-pie"></i> Dashboard
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('admin.kelola_pengguna') }}" class="{% if request.endpoint == 'admin.kelola_pengguna' %}active{% endif %}">
-                    <i class="fa-solid fa-users"></i> Manajemen Pengguna
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('admin.approval_kos') }}" class="{% if request.endpoint == 'admin.approval_kos' %}active{% endif %}">
-                    <i class="fa-solid fa-clipboard-check"></i> Approval Kos
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('admin.keuangan') }}" class="{% if request.endpoint == 'admin.keuangan' %}active{% endif %}">
-                    <i class="fa-solid fa-wallet"></i> Sistem Keuangan/Escrow
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('admin.layanan_premium') }}" class="{% if request.endpoint == 'admin.layanan_premium' %}active{% endif %}">
-                    <i class="fa-solid fa-rectangle-ad"></i> Pengaturan Harga Iklan
-                </a>
-            </li>
-            
-            <hr style="border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 15px 20px;">
-            
-            <li>
-                <a href="{{ url_for('admin.profil') }}" class="{% if request.endpoint == 'admin.profil' %}active{% endif %}">
-                    <i class="fa-solid fa-user-shield"></i> Profil Saya
-                </a>
-            </li>
-        </ul>
-        <div class="sidebar-footer">
-            <a href="{{ url_for('auth.logout') }}" class="logout-btn">
-                <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Keluar Sistem
-            </a>
-        </div>
-    </aside>
-
-    <main class="main-content">
-        <header class="topbar">
-            <div class="page-title">
-                <h1>{% block page_header %}Dashboard{% endblock %}</h1>
+    <div class="d-flex" style="min-height: 100vh; width: 100vw; overflow-x: hidden;">
+        
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h2>FindYourKost</h2>
+                <span>Sistem Pusat Admin</span>
             </div>
-            <div class="user-profile-top">
-                <div class="avatar-admin">A</div>
-                <span class="fw-semibold text-secondary">Super Admin</span>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-pie"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.kelola_pengguna') }}" class="{% if request.endpoint == 'admin.kelola_pengguna' %}active{% endif %}">
+                        <i class="fa-solid fa-users"></i> Manajemen Pengguna
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.layanan_premium') }}" class="{% if request.endpoint == 'admin.pengaturan_iklan' %}active{% endif %}">
+                        <i class="fa-solid fa-rectangle-ad"></i> Pengaturan Harga Iklan
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.approval_kos') }}" class="{% if request.endpoint == 'admin.approval_kos' %}active{% endif %}">
+                        <i class="fa-solid fa-house-medical-circle-check"></i> Approval Properti Kos
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.keuangan') }}" class="{% if request.endpoint == 'admin.keuangan' %}active{% endif %}">
+                        <i class="fa-solid fa-wallet"></i> Manajemen Keuangan
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="{% if request.endpoint == 'admin.layanan_premium' %}active{% endif %}">
+                        <i class="fa-solid fa-rectangle-ad"></i> Pengaturan Harga Iklan
+                    </a>
+                </li>
+                <hr style="border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 15px 20px;">
+                <li>
+                    <a href="{{ url_for('admin.profil') }}" class="{% if request.endpoint == 'admin.profil' %}active{% endif %}">
+                        <i class="fa-solid fa-user-shield"></i> Profil Saya
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="{{ url_for('auth.logout') }}" class="logout-btn">
+                    <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Keluar Sistem
+                </a>
             </div>
-        </header>
+        </aside>
 
-        <div class="content-area">
-            {% block content %}{% endblock %}
-        </div>
-    </main>
+        <main class="main-content flex-grow-1">
+            <header class="topbar">
+                <div class="page-title">
+                    <h1>{% block page_header %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="user-profile-top">
+                    <div class="avatar-admin">A</div>
+                    <span class="fw-semibold text-secondary">Super Admin</span>
+                </div>
+            </header>
+
+            <div class="content-area">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

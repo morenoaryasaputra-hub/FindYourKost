@@ -55,11 +55,11 @@ oauth.register(
 # 8. IMPORT ALL BLUEPRINTS (Gabungan Fitur Kamu & Temanmu)
 # Import controller dilakukan DI SINI agar .env ke-load duluan
 from controllers.auth_controller import auth_bp
-from controllers.penyewa_controller import penyewa_bp
 from controllers.pemilik_controller import pemilik_bp
 from controllers.admin_controller import admin_bp 
 from controllers.chat_controller import chat_bp
 from controllers.payment_controller import payment_bp
+from controllers.penyewa_controller import penyewa_bp
 
 # 9. REGISTER ALL BLUEPRINTS TO FLASK
 app.register_blueprint(admin_bp)
