@@ -864,7 +864,7 @@ def profil():
         cursor.close()
         conn.close()
 
-        return redirect("/profil")
+        return redirect("/akun")
 
     cursor.execute(
         """
