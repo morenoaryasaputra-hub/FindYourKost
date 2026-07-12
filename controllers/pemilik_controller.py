@@ -6,7 +6,6 @@ from flask import request
 from flask import url_for
 from flask import flash
 import os
-from resend import response
 from werkzeug.utils import secure_filename
 from extensions import get_db
 import requests
@@ -40,7 +39,7 @@ def cek_pemilik():
         return redirect("/login")
     
     if session.get("role") != "pemilik":
-        return redirect("/")
+        return redirect("/penyewa/dashboard")
 
     # === TAMBAHAN BARU: OTOMATIS TARIK DATA PREMIUM DARI DATABASE ===
     try:

@@ -15,7 +15,7 @@ from extensions import get_db
 
 penyewa_bp = Blueprint(
     "penyewa",
-    __name__
+    __name__,
 )
 
 # ====================================

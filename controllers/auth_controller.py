@@ -167,7 +167,7 @@ def login():
         elif session.get("role") == "pemilik":
             return redirect("/pemilik/dashboard")
         else:
-            return redirect("/penyewa/dashboard")
+            return redirect("/")
 
     # 2. Proses POST
     if request.method == 'POST':
@@ -237,7 +237,7 @@ def login():
                 elif user[4] == 'pemilik':
                     return redirect('/pemilik/dashboard')
                 else:
-                    return redirect('/penyewa/dashboard')
+                    return redirect('/')
             else:
                 flash("Password yang Anda masukkan salah!", "danger")
                 return redirect('/login')
