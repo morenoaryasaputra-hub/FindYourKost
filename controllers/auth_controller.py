@@ -1035,6 +1035,7 @@ def akun():
     cursor.execute(
         """
         SELECT
+
             nama,
             email,
             no_hp,
@@ -1044,8 +1045,11 @@ def akun():
             instansi,
             alamat,
             is_profile_complete,
-            foto_profil
+            foto_profil,
+            google_id
+
         FROM users
+
         WHERE id=%s
         """,
         (
@@ -1061,6 +1065,162 @@ def akun():
     return render_template(
         "auth/akun.html",
         user=user
+    )
+
+@auth_bp.route(
+    "/ganti-password",
+    methods=["GET", "POST"]
+)
+def ganti_password():
+
+    if "user_id" not in session:
+
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+
+            password_hash,
+            google_id
+
+        FROM users
+
+        WHERE id=%s
+        """,
+        (
+            session["user_id"],
+        )
+    )
+
+    user = cursor.fetchone()
+
+    if not user:
+
+        cursor.close()
+        conn.close()
+
+        session.clear()
+
+        return redirect("/login")
+
+    password_hash_db = user[0]
+    google_id = user[1]
+
+    if google_id:
+
+        cursor.close()
+        conn.close()
+
+        flash(
+            "Password akun Google dikelola oleh Google.",
+            "warning"
+        )
+
+        return redirect("/akun")
+
+    if request.method == "POST":
+
+        old_password = request.form["old_password"]
+
+        new_password = request.form["new_password"]
+
+        confirm_password = request.form["confirm_password"]
+
+        if not bcrypt.check_password_hash(
+            password_hash_db,
+            old_password
+        ):
+
+            flash(
+                "Password lama salah.",
+                "danger"
+            )
+
+            cursor.close()
+            conn.close()
+
+            return redirect("/ganti-password")
+
+        if len(new_password) < 8:
+
+            flash(
+                "Password baru minimal 8 karakter.",
+                "warning"
+            )
+
+            cursor.close()
+            conn.close()
+
+            return redirect("/ganti-password")
+
+        if new_password != confirm_password:
+
+            flash(
+                "Konfirmasi password tidak cocok.",
+                "warning"
+            )
+
+            cursor.close()
+            conn.close()
+
+            return redirect("/ganti-password")
+
+        if bcrypt.check_password_hash(
+            password_hash_db,
+            new_password
+        ):
+
+            flash(
+                "Password baru tidak boleh sama dengan password lama.",
+                "warning"
+            )
+
+            cursor.close()
+            conn.close()
+
+            return redirect("/ganti-password")
+
+        new_password_hash = bcrypt.generate_password_hash(
+            new_password
+        ).decode("utf-8")
+
+        cursor.execute(
+            """
+            UPDATE users
+
+            SET
+
+                password_hash=%s
+
+            WHERE id=%s
+            """,
+            (
+                new_password_hash,
+                session["user_id"]
+            )
+        )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        flash(
+            "Password berhasil diubah.",
+            "success"
+        )
+
+        return redirect("/akun")
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "auth/ganti_password.html"
     )
 
 @auth_bp.route("/test-resend")

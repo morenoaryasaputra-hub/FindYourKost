@@ -346,3 +346,103 @@ input[type="date"]{
         height:110px;
     }
 }
+
+/* =======================================
+   MENU AKUN
+======================================= */
+
+.akun-menu{
+
+    margin-top:24px;
+
+    padding:0;
+
+    overflow:hidden;
+
+}
+
+.akun-menu .akun-menu-item{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    width:100%;
+
+    padding:24px 30px;
+
+    text-decoration:none;
+
+    color:#111827;
+
+    border-bottom:1px solid #e5e7eb;
+
+    transition:.2s;
+
+    box-sizing:border-box;
+
+}
+
+.akun-menu .akun-menu-item:last-child{
+
+    border-bottom:none;
+
+}
+
+.akun-menu .akun-menu-item:hover{
+
+    background:#f8fafc;
+
+}
+
+.akun-menu-item .menu-left{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.akun-menu-item h3{
+
+    margin:0;
+
+    font-size:18px;
+
+    font-weight:600;
+
+    color:#111827;
+
+}
+
+.akun-menu-item p{
+
+    margin-top:5px;
+
+    font-size:14px;
+
+    color:#6b7280;
+
+}
+
+.menu-arrow{
+
+    font-size:24px;
+
+    color:#9ca3af;
+
+}
+
+.logout-item h3{
+
+    color:#dc2626;
+
+}
+
+.logout-item:hover{
+
+    background:#fef2f2;
+
+}

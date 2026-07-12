@@ -649,3 +649,215 @@ textarea{
     background-color: #d4edda;
     border-color: #c3e6cb;
 }
+
+/* =======================================
+   MENU AKUN
+======================================= */
+
+.akun-menu{
+
+    margin-top:24px;
+
+    padding:0;
+
+    overflow:hidden;
+
+}
+
+.akun-menu .akun-menu-item{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    width:100%;
+
+    padding:24px 30px;
+
+    text-decoration:none;
+
+    color:#111827;
+
+    border-bottom:1px solid #e5e7eb;
+
+    transition:.2s;
+
+    box-sizing:border-box;
+
+}
+
+.akun-menu .akun-menu-item:last-child{
+
+    border-bottom:none;
+
+}
+
+.akun-menu .akun-menu-item:hover{
+
+    background:#f8fafc;
+
+}
+
+.akun-menu-item .menu-left{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.akun-menu-item h3{
+
+    margin:0;
+
+    font-size:18px;
+
+    font-weight:600;
+
+    color:#111827;
+
+}
+
+.akun-menu-item p{
+
+    margin-top:5px;
+
+    font-size:14px;
+
+    color:#6b7280;
+
+}
+
+.menu-arrow{
+
+    font-size:24px;
+
+    color:#9ca3af;
+
+}
+
+.logout-item h3{
+
+    color:#dc2626;
+
+}
+
+.logout-item:hover{
+
+    background:#fef2f2;
+
+}
+
+/* =====================================
+GANTI PASSWORD
+===================================== */
+
+.password-card{
+
+    max-width:720px;
+
+    margin:auto;
+
+}
+
+.password-body{
+
+    padding:35px;
+
+}
+
+.password-body form{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+.password-body label{
+
+    font-weight:600;
+
+    color:#374151;
+
+}
+
+.password-body input{
+
+    padding:14px 16px;
+
+    border:1px solid #d1d5db;
+
+    border-radius:10px;
+
+    font-size:15px;
+
+    transition:.2s;
+
+}
+
+.password-body input:focus{
+
+    outline:none;
+
+    border-color:#2563eb;
+
+    box-shadow:0 0 0 3px rgba(37,99,235,.15);
+
+}
+
+.password-action{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:15px;
+
+    margin-top:15px;
+
+}
+
+.btn-cancel{
+
+    padding:12px 22px;
+
+    border-radius:10px;
+
+    text-decoration:none;
+
+    background:#e5e7eb;
+
+    color:#111827;
+
+    font-weight:600;
+
+}
+
+.btn-save{
+
+    padding:12px 26px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#2563eb;
+
+    color:#fff;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+}
+
+.btn-save:hover{
+
+    background:#1d4ed8;
+
+}

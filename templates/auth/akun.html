@@ -19,6 +19,8 @@ href="{{ url_for(
 
 <div class="akun-container">
 
+    <!-- INFORMASI PRIBADI -->
+
     <div class="akun-card">
 
         <div class="akun-header">
@@ -46,8 +48,8 @@ href="{{ url_for(
                 {% if user[9] %}
 
                     <img
-                        src="{{ user[9] }}"
-                        alt="Avatar">
+                    src="{{ user[9] }}"
+                    alt="Avatar">
 
                 {% else %}
 
@@ -105,7 +107,7 @@ href="{{ url_for(
 
                     <h3>
 
-                        {{ user[5] or '-' }}
+                        {{ user[5] or "-" }}
 
                     </h3>
 
@@ -117,7 +119,7 @@ href="{{ url_for(
 
                     <h3>
 
-                        {{ user[6] or '-' }}
+                        {{ user[6] or "-" }}
 
                     </h3>
 
@@ -154,6 +156,74 @@ href="{{ url_for(
             </div>
 
         </div>
+
+    </div>
+
+
+    <!-- MENU AKUN -->
+
+    <div class="akun-card akun-menu">
+
+        {% if not user[10] %}
+
+        <a
+        href="/ganti-password"
+        class="akun-menu-item">
+
+            <div>
+
+                <h3>
+
+                    Ganti Password
+
+                </h3>
+
+                <p>
+
+                    Ubah password akun Anda.
+
+                </p>
+
+            </div>
+
+            <span>
+
+                >
+
+            </span>
+
+        </a>
+
+        {% endif %}
+
+        <a
+        href="/logout"
+        class="akun-menu-item logout-item"
+        onclick="return confirm('Yakin ingin logout?')">
+
+            <div>
+
+                <h3>
+
+                    Logout
+
+                </h3>
+
+                <p>
+
+                    Keluar dari akun ini.
+
+                </p>
+
+            </div>
+
+            <span>
+
+                >
+
+            </span>
+
+        </a>
 
     </div>
 
