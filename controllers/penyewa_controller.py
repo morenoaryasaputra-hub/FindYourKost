@@ -456,13 +456,50 @@ def detail_kost(kost_id):
 # KONFIRMASI BOOKING
 # ====================================
 
-@penyewa_bp.route(
-    "/konfirmasi-booking"
-)
-def konfirmasi_booking():
+@penyewa_bp.route("/konfirmasi-booking/<int:kost_id>")
+def konfirmasi_booking(kost_id):
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+
+        SELECT
+
+            id,
+            nama_kost,
+            alamat,
+            harga,
+            foto_thumbnail,
+            tipe_penghuni
+
+        FROM kost
+
+        WHERE
+
+            id=%s
+
+        AND
+
+            status_verifikasi=1
+
+    """,(kost_id,))
+
+    kost = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not kost:
+
+        return redirect("/cari-kos")
 
     return render_template(
-        "penyewa/konfirmasi_booking.html"
+
+        "penyewa/konfirmasi_booking.html",
+
+        kost=kost
+
     )
 
 # ====================================
