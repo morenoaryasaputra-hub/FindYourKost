@@ -1,775 +1,227 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}
-Konfirmasi Booking
-{% endblock %}
+{% block title %}Konfirmasi Booking{% endblock %}
 
 {% block css %}
-
-<link
-rel="stylesheet"
-href="{{ url_for(
-    'static',
-    filename='css/konfirmasi_booking.css'
-) }}">
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/konfirmasi_booking.css') }}">
 {% endblock %}
 
 {% block content %}
-
 <div class="booking-container">
-
     <div class="breadcrumb">
-
-        <a href="/cari-kos">
-
-            Cari Kos
-
-        </a>
-
-        >
-
-        <a href="/detail-kost/{{ kost.id }}">
-
-            Detail Kos
-
-        </a>
-
-        >
-
-        <span>
-
-            Konfirmasi Booking
-
-        </span>
-
+        <a href="/cari-kos">Cari Kos</a> >
+        <a href="/detail-kost/{{ kost.id }}">Detail Kos</a> >
+        <span>Konfirmasi Booking</span>
     </div>
 
-    <h1>
-
-        Konfirmasi Booking
-
-    </h1>
+    <h1>Konfirmasi Booking</h1>
 
     <div class="booking-layout">
-
         <div class="booking-left">
 
-            <!-- INFORMASI PENYEWA -->
-
             <div class="card">
-
-                <h2>
-
-                    👤 Informasi Penyewa
-
-                </h2>
-
+                <h2>👤 Informasi Penyewa</h2>
                 <div class="form-row">
-
                     <div class="form-group">
-
-                        <label>
-
-                            Nama Lengkap
-
-                        </label>
-
-                        <input
-                        type="text"
-                        value="{{ user.nama }}"
-                        readonly>
-
+                        <label>Nama Lengkap</label>
+                        <input type="text" value="{{ user.nama }}" readonly>
                     </div>
-
                     <div class="form-group">
-
-                        <label>
-
-                            Nomor Telepon
-
-                        </label>
-
-                        <input
-                        type="text"
-                        value="{{ user.no_hp or '-' }}"
-                        readonly>
-
+                        <label>Nomor Telepon</label>
+                        <input type="text" value="{{ user.no_hp or '-' }}" readonly>
                     </div>
-
                 </div>
-
                 <div class="form-group">
-
-                    <label>
-
-                        Email
-
-                    </label>
-
-                    <input
-                    type="email"
-                    value="{{ user.email }}"
-                    readonly>
-
+                    <label>Email</label>
+                    <input type="email" value="{{ user.email }}" readonly>
                 </div>
-
             </div>
-
-            <!-- VERIFIKASI KTP -->
 
             <div class="card">
-
                 <div class="section-header">
-
-                    <h2>
-
-                        🛡️ Verifikasi Identitas
-
-                    </h2>
-
+                    <h2>🛡️ Verifikasi Identitas</h2>
                     {% if user.foto_ktp %}
-
-                    <span
-                    id="badgeStatus"
-                    class="status-upload"
-                    style="padding:4px 10px;border-radius:20px;background:#dcfce7;color:#166534;">
-
-                        Sudah Terverifikasi
-
-                    </span>
-
-                    {% else %}
-
-                    <span
-                    id="badgeStatus"
-                    class="status-upload"
-                    style="padding:4px 10px;border-radius:20px;background:#f1f5f9;color:#64748b;">
-
-                        Belum Diunggah
-
-                    </span>
-
-                    {% endif %}
-
-                </div>
-
-                <div class="ktp-layout">
-
-                    {% if not user.foto_ktp %}
-
-                    <div class="upload-box">
-
-                        <div class="upload-icon">
-
-                            ☁️
-
-                        </div>
-
-                        <h3>
-
-                            Upload Foto KTP
-
-                        </h3>
-
-                        <p>
-
-                            JPG, PNG maksimal 5MB
-
-                        </p>
-
-                        <input
-                        type="file"
-                        id="ktpFile"
-                        accept="image/png,image/jpeg,image/jpg,image/webp"
-                        hidden>
-
-                        <label
-                        for="ktpFile"
-                        class="upload-btn">
-
-                            Pilih File
-
-                        </label>
-
-                        <small id="fileName">
-
-                            Belum ada file dipilih
-
-                        </small>
-
-                    </div>
-
-                    <div class="preview-box">
-
-                        <img
-                        id="previewImage"
-                        src=""
-                        style="display:none;max-width:100%;border-radius:8px;">
-
-                        <span id="previewText">
-
-                            Preview KTP
-
+                        <span class="status-upload" id="badgeStatus" style="padding: 4px 10px; border-radius: 20px; font-size: 12px; background-color: #dcfce7; color: #166534;">
+                            Sudah Terverifikasi
                         </span>
-
-                    </div>
-
                     {% else %}
-
-                    <div
-                    class="preview-box"
-                    style="width:100%;text-align:center;">
-
-                        <img
-                        src="{{ user.foto_ktp }}"
-                        style="max-width:300px;border-radius:8px;border:2px solid #e2e8f0;">
-
-                        <p
-                        class="text-muted mt-2 small">
-
-                            KTP Anda sudah tersimpan dengan aman.
-
-                        </p>
-
-                    </div>
-
+                        <span class="status-upload" id="badgeStatus" style="padding: 4px 10px; border-radius: 20px; font-size: 12px; background-color: #f1f5f9; color: #64748b;">
+                            Belum Diunggah
+                        </span>
                     {% endif %}
-
                 </div>
-
+                
+                <div class="ktp-layout">
+                    {% if not user.foto_ktp %}
+                        <div class="upload-box">
+                            <div class="upload-icon">☁️</div>
+                            <h3>Upload Foto KTP</h3>
+                            <p>JPG, PNG maks 5MB</p>
+                            
+                            <input type="file" id="ktpFile" accept="image/png, image/jpeg, image/jpg, image/webp" hidden>
+                            <label for="ktpFile" class="upload-btn">Pilih File</label>
+                            <small id="fileName">Belum ada file dipilih</small>
+                        </div>
+                        <div class="preview-box">
+                            <img id="previewImage" src="" style="display:none; max-width: 100%; border-radius: 8px;">
+                            <span id="previewText">Preview KTP</span>
+                        </div>
+                    {% else %}
+                        <div class="preview-box" style="width: 100%; text-align: center;">
+                            <img src="{{ user.foto_ktp }}" style="max-width: 300px; border-radius: 8px; border: 2px solid #e2e8f0;">
+                            <p class="text-muted mt-2 small">KTP Anda sudah tersimpan dengan aman.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
                 <div class="note">
-
-                    Foto KTP hanya digunakan
-                    untuk verifikasi identitas penyewa
-                    dan hanya dapat diakses oleh
-                    administrator serta pemilik kos.
-
+                    Foto KTP digunakan untuk verifikasi identitas penyewa dan hanya dapat diakses administrator serta pemilik kos.
                 </div>
-
             </div>
-
         </div>
 
-        <!-- RINGKASAN -->
-
         <div class="booking-right">
-
             <div class="summary-card">
-
-                <img
-                src="{{ kost.foto_thumbnail or 'https://placehold.co/500x250' }}"
-                style="width:100%;height:180px;object-fit:cover;border-radius:8px;">
-
+                <img src="{{ kost.foto_thumbnail or 'https://placehold.co/500x250' }}" style="width: 100%; border-radius: 8px; margin-bottom: 15px; object-fit: cover; height: 180px;">
                 <div class="summary-content">
-
-                    {% if kost.tier_listing=="premium" %}
-
-                    <span
-                    class="premium">
-
-                        Premium
-
-                    </span>
-
+                    {% if kost.tier_listing == 'premium' %}
+                        <span class="premium" style="background-color: gold; padding: 3px 8px; border-radius: 5px; font-weight: bold; font-size: 12px; color: black;">Premium</span>
                     {% endif %}
-
-                    <h3>
-
-                        {{ kost.nama_kost }}
-
-                    </h3>
-
-                    <p>
-
-                        👤 {{ kost.nama_pemilik }}
-
-                    </p>
-
+                    <h3 class="mt-2 fw-bold">{{ kost.nama_kost }}</h3>
+                    <p class="text-muted small">👤 {{ kost.nama_pemilik }}</p>
                     <hr>
-
                     <div class="row">
-
-                        <span>
-
-                            Durasi
-
-                        </span>
-
-                        <strong>
-
-                            1 Bulan
-
-                        </strong>
-
+                        <span>Durasi</span>
+                        <strong>1 Bulan</strong>
                     </div>
-
                 </div>
-
             </div>
 
             <div class="payment-card">
-
-                <h2>
-
-                    Ringkasan Pembayaran
-
-                </h2>
-
+                <h2 class="fw-bold mb-3">Ringkasan Pembayaran</h2>
                 <div class="row">
-
-                    <span>
-
-                        Harga Kos
-
-                    </span>
-
-                    <strong>
-
-                        Rp {{ "{:,.0f}".format(kost.harga).replace(",", ".") }}
-
-                    </strong>
-
+                    <span>Harga Kos</span>
+                    <strong>Rp {{ "{:,.0f}".format(kost.harga).replace(',', '.') }}</strong>
                 </div>
-
                 <hr>
-
                 <div class="row total">
-
-                    <span>
-
-                        Total Biaya
-
-                    </span>
-
-                    <strong>
-
-                        Rp {{ "{:,.0f}".format(kost.harga).replace(",", ".") }}
-
-                    </strong>
-
+                    <span>Total Biaya</span>
+                    <strong>Rp {{ "{:,.0f}".format(kost.harga).replace(',', '.') }}</strong>
                 </div>
-
+                
                 <div class="dp-box">
-
                     <div>
-
                         <div class="fw-bold">
-
-                            {% if dp > 0 %}
-
-                                Uang Muka (DP)
-
-                            {% else %}
-
-                                Bayar Penuh
-
-                            {% endif %}
-
-                        </div>
-
-                        <small>
-
-                            Sisa Pembayaran
-                            Rp {{ "{:,.0f}".format(sisa).replace(",", ".") }}
-
-                        </small>
-
+    {% if dp > 0 %}
+        Uang Muka (DP)
+    {% else %}
+        Bayar Penuh
+    {% endif %}
+</div>
+                        <small>Sisa Pembayaran Rp {{ "{:,.0f}".format(sisa).replace(',', '.') }}</small>
                     </div>
-
-                    <strong
-                    style="color:#0b57d0;font-size:18px;">
-
-                        Rp {{ "{:,.0f}".format(dp).replace(",", ".") }}
-
-                    </strong>
-
+                    <strong style="color: #0b57d0; font-size: 18px;">Rp {{ "{:,.0f}".format(dp).replace(',', '.') }}</strong>
                 </div>
 
-                <button
-                type="button"
-                id="btn-lanjut-pembayaran"
-                class="payment-btn"
-                data-kost="{{ kost.id }}"
-                data-has-ktp="{{ 'true' if user.foto_ktp else 'false' }}">
-
+                <a href="javascript:void(0);" id="btn-lanjut-pembayaran" class="payment-btn" style="text-align: center; display: block;" data-has-ktp="{{ 'true' if user.foto_ktp else 'false' }}">
                     Lanjut ke Pembayaran →
-
-                </button>
-
+                </a>
             </div>
-
         </div>
-
     </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script
-src="https://app.sandbox.midtrans.com/snap/snap.js"
-data-client-key="{{ client_key }}">
-</script>
-
 <script>
+    const ktpFile = document.getElementById("ktpFile");
+    if (ktpFile) {
+        const fileName = document.getElementById("fileName");
+        const previewImage = document.getElementById("previewImage");
+        const previewText = document.getElementById("previewText");
+        const badgeStatus = document.getElementById("badgeStatus");
 
-const ktpFile =
-document.getElementById(
-    "ktpFile"
-);
-
-if(ktpFile){
-
-    const fileName =
-    document.getElementById(
-        "fileName"
-    );
-
-    const previewImage =
-    document.getElementById(
-        "previewImage"
-    );
-
-    const previewText =
-    document.getElementById(
-        "previewText"
-    );
-
-    const badgeStatus =
-    document.getElementById(
-        "badgeStatus"
-    );
-
-    ktpFile.addEventListener(
-
-        "change",
-
-        function(){
-
+        ktpFile.addEventListener("change", function(){
             if(this.files.length){
+                const file = this.files[0];
+                fileName.textContent = file.name;
 
-                const file =
-                this.files[0];
-
-                fileName.textContent =
-                file.name;
-
-                const reader =
-                new FileReader();
-
-                reader.onload=function(e){
-
-                    previewImage.src =
-                    e.target.result;
-
-                    previewImage.style.display =
-                    "block";
-
-                    previewText.style.display =
-                    "none";
-
-                    badgeStatus.textContent =
-                    "Siap Diunggah";
-
-                    badgeStatus.style.background =
-                    "#dcfce7";
-
-                    badgeStatus.style.color =
-                    "#166534";
-
+                const reader = new FileReader();
+                reader.onload = function(e){
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = "block";
+                    previewText.style.display = "none";
+                    badgeStatus.textContent = "Siap Diunggah";
+                    badgeStatus.style.backgroundColor = "#dcfce7"; 
+                    badgeStatus.style.color = "#166534";
                 };
-
                 reader.readAsDataURL(file);
-
             }
-
-        }
-
-    );
-
-}
-
-async function buatBooking(){
-
-    const kostId =
-    document
-    .getElementById(
-        "btn-lanjut-pembayaran"
-    )
-    .dataset.kost;
-
-    try{
-
-        const response =
-        await fetch(
-
-            "/booking/buat/"+kostId,
-
-            {
-
-                method:"POST"
-
-            }
-
-        );
-
-        const data =
-        await response.json();
-
-        if(!data.success){
-
-            Swal.fire(
-
-                "Gagal",
-
-                data.message,
-
-                "error"
-
-            );
-
-            return;
-
-        }
-
-        snap.pay(
-
-            data.snap_token,
-
-            {
-
-                onSuccess:function(){
-
-                    Swal.fire({
-
-                        icon:"success",
-
-                        title:"Pembayaran Berhasil",
-
-                        timer:1500,
-
-                        showConfirmButton:false
-
-                    }).then(()=>{
-
-                        window.location=
-                        "/booking-saya";
-
-                    });
-
-                },
-
-                onPending:function(){
-
-                    Swal.fire({
-
-                        icon:"info",
-
-                        title:"Menunggu Pembayaran",
-
-                        timer:1500,
-
-                        showConfirmButton:false
-
-                    }).then(()=>{
-
-                        window.location=
-                        "/booking-saya";
-
-                    });
-
-                },
-
-                onError:function(){
-
-                    Swal.fire(
-
-                        "Gagal",
-
-                        "Pembayaran gagal.",
-
-                        "error"
-
-                    );
-
-                },
-
-                onClose:function(){
-
-                    Swal.fire(
-
-                        "Informasi",
-
-                        "Popup pembayaran ditutup.",
-
-                        "info"
-
-                    );
-
-                }
-
-            }
-
-        );
-
-    }
-
-    catch(err){
-
-        console.error(err);
-
-        Swal.fire(
-
-            "Error",
-
-            "Gagal terhubung ke server.",
-
-            "error"
-
-        );
-
-    }
-
-}
-
-document
-.getElementById(
-    "btn-lanjut-pembayaran"
-)
-.addEventListener(
-
-    "click",
-
-    function(e){
-
-        e.preventDefault();
-
-        const hasKtp =
-        this.dataset.hasKtp==="true";
-
-        const file =
-        ktpFile
-        ?
-        ktpFile.files[0]
-        :
-        null;
-
-        if(!hasKtp && !file){
-
-            Swal.fire({
-
-                icon:"warning",
-
-                title:"Upload KTP",
-
-                text:"Silakan upload KTP terlebih dahulu.",
-
-                confirmButtonColor:"#2563eb"
-
-            });
-
-            return;
-
-        }
-
-        if(hasKtp){
-
-            buatBooking();
-
-            return;
-
-        }
-
-        const formData =
-        new FormData();
-
-        formData.append(
-
-            "ktp_file",
-
-            file
-
-        );
-
-        const btn=this;
-
-        const oldText=
-        btn.innerHTML;
-
-        btn.disabled=true;
-
-        btn.innerHTML=
-        "Memproses...";
-
-        fetch(
-
-            "{{ url_for('penyewa.upload_ktp_booking') }}",
-
-            {
-
-                method:"POST",
-
-                body:formData
-
-            }
-
-        )
-
-        .then(res=>res.json())
-
-        .then(data=>{
-
-            if(data.success){
-
-                buatBooking();
-
-            }
-
-            else{
-
-                Swal.fire(
-
-                    "Upload Gagal",
-
-                    data.error,
-
-                    "error"
-
-                );
-
-                btn.disabled=false;
-
-                btn.innerHTML=
-                oldText;
-
-            }
-
-        })
-
-        .catch(()=>{
-
-            Swal.fire(
-
-                "Error",
-
-                "Terjadi kesalahan.",
-
-                "error"
-
-            );
-
-            btn.disabled=false;
-
-            btn.innerHTML=
-            oldText;
-
         });
-
     }
 
-);
+    document.getElementById('btn-lanjut-pembayaran').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const hasKtp = this.getAttribute('data-has-ktp') === 'true';
+        const file = ktpFile ? ktpFile.files[0] : null;
+        
+        // Cek kalau belum pernah upload KTP dan tidak ada file terpilih
+        if (!hasKtp && !file) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'KTP Diperlukan',
+                text: 'Harap unggah foto KTP Anda untuk keamanan identitas sebelum melanjutkan.',
+                confirmButtonColor: '#0b57d0'
+            });
+            return;
+        }
 
+        // Jika SUDAH punya KTP di DB, langsung loncat ke pembayaran
+        if (hasKtp) {
+            window.location.href = "/pembayaran"; // <--- Ganti dengan route pembayaranmu yang asli
+            return;
+        }
+
+        // Jika BELUM punya KTP, lakukan proses upload
+        const formData = new FormData();
+        formData.append("ktp_file", file);
+
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Memproses...';
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.7';
+
+        fetch("{{ url_for('penyewa.upload_ktp_booking') }}", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Verifikasi Berhasil!',
+                    text: 'KTP Anda telah aman tersimpan. Mengalihkan ke pembayaran...',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/pembayaran"; // <--- Ganti dengan route pembayaranmu yang asli
+                });
+            } else {
+                Swal.fire('Upload Gagal', data.error || 'Terjadi kesalahan', 'error');
+                btn.innerHTML = originalText;
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            }
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            Swal.fire('Error', 'Gagal terhubung ke server', 'error');
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        });
+    });
 </script>
-
 {% endblock %}
