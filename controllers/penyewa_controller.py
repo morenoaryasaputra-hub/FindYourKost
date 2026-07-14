@@ -7,6 +7,7 @@ from flask import jsonify
 from decimal import Decimal
 from flask import current_app
 import hashlib
+import os
 
 from utils.midtrans import snap
 import uuid
@@ -387,47 +388,248 @@ def detail_kost(kost_id):
 from flask import render_template, redirect, request, jsonify, session, flash
 from extensions import get_db
 from decimal import Decimal
+
 @penyewa_bp.route("/konfirmasi-booking/<int:kost_id>")
 def konfirmasi_booking(kost_id):
-    print("DEBUG: Masuk ke fungsi konfirmasi_booking") # <--- Cek terminal
-    
-    if "user_id" not in session or session.get("role") != "penyewa":
+
+    if "user_id" not in session:
         return redirect("/login")
+
+    if session.get("role") != "penyewa":
+        return redirect("/")
 
     conn = get_db()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-    # 1. Ambil Data Penyewa
-    cursor.execute("SELECT id, nama, email, no_hp, foto_ktp FROM users WHERE id = %s", (session["user_id"],))
-    user = cursor.fetchone()
-    print(f"DEBUG: Data User: {user}")
-
-    # 2. Ambil Data Kos
-# 2. Ambil Data Kos (TAMBAHKAN k.uang_muka di dalam SELECT)
     cursor.execute("""
-        SELECT k.id, k.nama_kost, k.harga, k.uang_muka, k.tier_listing, k.foto_thumbnail, u.nama as nama_pemilik
+        SELECT
+            id,
+            nama,
+            email,
+            no_hp,
+            foto_ktp
+        FROM users
+        WHERE id=%s
+    """, (session["user_id"],))
+
+    user = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT
+            k.id,
+            k.nama_kost,
+            k.harga,
+            k.uang_muka,
+            k.tier_listing,
+            k.foto_thumbnail,
+            u.nama AS nama_pemilik
+
         FROM kost k
-        JOIN users u ON k.pemilik_id = u.id
-        WHERE k.id = %s
+
+        JOIN users u
+        ON u.id=k.pemilik_id
+
+        WHERE k.id=%s
     """, (kost_id,))
+
     kost = cursor.fetchone()
-    
+
     cursor.close()
     conn.close()
 
     if not kost:
         return redirect("/cari-kos")
 
-    # 3. Hitung Matematika (GUNAKAN DP DARI PEMILIK)
-    harga_float = float(kost['harga'] or 0)
-    
-    # Ambil nilai uang_muka dari database. Kalau kosong/None, anggap 0.
-    dp = int(float(kost['uang_muka'] or 0)) 
-    
-    # Jika pemilik tidak set DP (DP = 0), maka sisa = harga full
-    sisa = int(harga_float - dp)
+    harga = float(kost["harga"])
 
-    return render_template("penyewa/konfirmasi_booking.html", user=user, kost=kost, dp=dp, sisa=sisa)
+    dp = float(kost["uang_muka"] or 0)
+
+    sisa = harga - dp
+
+    return render_template(
+        "penyewa/konfirmasi_booking.html",
+        user=user,
+        kost=kost,
+        dp=dp,
+        sisa=sisa,
+        client_key=os.getenv("MIDTRANS_CLIENT_KEY")
+    )
+
+# ====================================
+# BUAT BOOKING + MIDTRANS
+# ====================================
+
+import uuid
+from datetime import date
+from flask import jsonify
+
+@penyewa_bp.route(
+    "/booking/buat/<int:kost_id>",
+    methods=["POST"]
+)
+def buat_booking(kost_id):
+
+    if "user_id" not in session:
+
+        return jsonify({
+
+            "success":False,
+
+            "message":"Silakan login."
+
+        })
+
+    conn = get_db()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+    cursor.execute("""
+
+        SELECT
+            id,
+            nama_kost,
+            harga,
+            uang_muka
+
+        FROM kost
+
+        WHERE id=%s
+
+    """,(kost_id,))
+
+    kost = cursor.fetchone()
+
+    if not kost:
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+
+            "success":False,
+
+            "message":"Kos tidak ditemukan."
+
+        })
+
+    total = int(kost["harga"])
+
+    dp = int(kost["uang_muka"] or 0)
+
+    jumlah_bayar = dp if dp > 0 else total
+
+    tanggal_masuk = date.today()
+
+    cursor.execute("""
+
+        INSERT INTO booking
+        (
+
+            penyewa_id,
+            kost_id,
+            tanggal_masuk,
+            durasi_bulan,
+            total_harga
+
+        )
+
+        VALUES
+        (
+
+            %s,
+            %s,
+            %s,
+            %s,
+            %s
+
+        )
+
+    """,(
+
+        session["user_id"],
+        kost_id,
+        tanggal_masuk,
+        1,
+        total
+
+    ))
+
+    booking_id = cursor.lastrowid
+
+    order_id = f"BOOK-{booking_id}-{uuid.uuid4().hex[:8]}"
+
+    transaction = {
+
+        "transaction_details":{
+
+            "order_id":order_id,
+
+            "gross_amount":jumlah_bayar
+
+        },
+
+        "customer_details":{
+
+            "first_name":session.get("nama","User"),
+
+            "email":session.get("email",""),
+
+            "phone":session.get("no_hp","")
+
+        }
+
+    }
+
+    snap_response = snap.create_transaction(transaction)
+
+    snap_token = snap_response["token"]
+
+    cursor.execute("""
+
+        INSERT INTO pembayaran
+        (
+
+            booking_id,
+            midtrans_order_id,
+            jumlah,
+            snap_token,
+            jenis_pembayaran
+
+        )
+
+        VALUES
+        (
+
+            %s,
+            %s,
+            %s,
+            %s,
+            %s
+
+        )
+
+    """,(
+
+        booking_id,
+        order_id,
+        jumlah_bayar,
+        snap_token,
+        "dp" if dp > 0 else "pelunasan"
+
+    ))
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+
+        "success":True,
+
+        "snap_token":snap_token
+
+    })
+
 # ====================================
 # WISHLIST
 # ====================================

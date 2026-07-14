@@ -7,7 +7,6 @@ from flask import url_for
 from flask import flash
 import os
 import pymysql
-from resend import response
 from werkzeug.utils import secure_filename
 from extensions import get_db
 import requests
