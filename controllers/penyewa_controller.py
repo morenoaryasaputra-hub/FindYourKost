@@ -380,6 +380,7 @@ def detail_kost(kost_id):
         foto_list=foto_list, 
         geoapify_key=geoapify_key
     )
+
 # ====================================
 # KONFIRMASI BOOKING
 # ====================================
@@ -393,44 +394,83 @@ from decimal import Decimal
 def konfirmasi_booking(kost_id):
 
     if "user_id" not in session:
+
         return redirect("/login")
 
     if session.get("role") != "penyewa":
+
         return redirect("/")
 
     conn = get_db()
-    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+    cursor = conn.cursor(
+        pymysql.cursors.DictCursor
+    )
+
+    # ============================
+    # DATA USER
+    # ============================
 
     cursor.execute("""
+
         SELECT
+
             id,
             nama,
             email,
             no_hp,
             foto_ktp
+
         FROM users
+
         WHERE id=%s
-    """, (session["user_id"],))
+
+    """,(
+
+        session["user_id"],
+
+    ))
 
     user = cursor.fetchone()
 
+    # ============================
+    # DATA KOST
+    # ============================
+
     cursor.execute("""
+
         SELECT
+
             k.id,
             k.nama_kost,
             k.harga,
             k.uang_muka,
             k.tier_listing,
             k.foto_thumbnail,
-            u.nama AS nama_pemilik
+
+            u.nama
+            AS nama_pemilik
 
         FROM kost k
 
         JOIN users u
-        ON u.id=k.pemilik_id
 
-        WHERE k.id=%s
-    """, (kost_id,))
+        ON
+        u.id=k.pemilik_id
+
+        WHERE
+
+            k.id=%s
+
+        AND
+
+            k.status_verifikasi=1
+
+    """,(
+
+        kost_id,
+
+    ))
 
     kost = cursor.fetchone()
 
@@ -438,30 +478,52 @@ def konfirmasi_booking(kost_id):
     conn.close()
 
     if not kost:
+
         return redirect("/cari-kos")
 
-    harga = float(kost["harga"])
+    harga = int(
 
-    dp = float(kost["uang_muka"] or 0)
+        kost["harga"] or 0
+
+    )
+
+    dp = int(
+
+        kost["uang_muka"] or 0
+
+    )
+
+    if dp <= 0:
+
+        dp = harga
 
     sisa = harga - dp
 
     return render_template(
+
         "penyewa/konfirmasi_booking.html",
+
         user=user,
+
         kost=kost,
+
         dp=dp,
+
         sisa=sisa,
-        client_key=os.getenv("MIDTRANS_CLIENT_KEY")
+
+        client_key=current_app.config[
+            "MIDTRANS_CLIENT_KEY"
+        ]
+
     )
 
 # ====================================
-# BUAT BOOKING + MIDTRANS
+# BUAT BOOKING
 # ====================================
 
-import uuid
-from datetime import date
-from flask import jsonify
+# ====================================
+# BUAT BOOKING
+# ====================================
 
 @penyewa_bp.route(
     "/booking/buat/<int:kost_id>",
@@ -475,160 +537,247 @@ def buat_booking(kost_id):
 
             "success":False,
 
-            "message":"Silakan login."
+            "message":"Unauthorized"
+
+        }),401
+
+    conn=get_db()
+
+    cursor=conn.cursor(
+        pymysql.cursors.DictCursor
+    )
+
+    try:
+
+        # ============================
+        # CEK DATA KOST
+        # ============================
+
+        cursor.execute("""
+
+            SELECT
+
+                id,
+                harga,
+                sisa_kamar
+
+            FROM kost
+
+            WHERE
+
+                id=%s
+
+            AND
+
+                status_verifikasi=1
+
+        """,(
+
+            kost_id,
+
+        ))
+
+        kost=cursor.fetchone()
+
+        if not kost:
+
+            return jsonify({
+
+                "success":False,
+
+                "message":"Kos tidak ditemukan."
+
+            }),404
+
+        if kost["sisa_kamar"]<=0:
+
+            return jsonify({
+
+                "success":False,
+
+                "message":"Kamar sudah penuh."
+
+            }),400
+
+        # ============================
+        # CEK BOOKING AKTIF
+        # ============================
+
+        cursor.execute("""
+
+            SELECT
+
+                id
+
+            FROM booking
+
+            WHERE
+
+                penyewa_id=%s
+
+            AND
+
+                kost_id=%s
+
+            AND
+
+                status_booking
+                IN
+                (
+
+                    'menunggu_dp',
+
+                    'dp_dibayar',
+
+                    'menunggu_konfirmasi',
+
+                    'menunggu_pelunasan',
+
+                    'aktif'
+
+                )
+
+            LIMIT 1
+
+        """,(
+
+            session["user_id"],
+
+            kost_id
+
+        ))
+
+        if cursor.fetchone():
+
+            return jsonify({
+
+                "success":False,
+
+                "message":"Booking sudah pernah dibuat."
+
+            }),400
+
+        total=int(
+
+            float(
+
+                kost["harga"]
+
+            )
+
+        )
+
+        cursor.execute("""
+
+            INSERT INTO booking
+            (
+
+                penyewa_id,
+                kost_id,
+                tanggal_booking,
+                tanggal_masuk,
+                durasi_bulan,
+                total_harga,
+                status_booking,
+                status_pembayaran
+
+            )
+
+            VALUES
+            (
+
+                %s,
+                %s,
+                NOW(),
+                CURDATE(),
+                1,
+                %s,
+                'menunggu_dp',
+                'Belum Bayar'
+
+            )
+
+        """,(
+
+            session["user_id"],
+
+            kost_id,
+
+            total
+
+        ))
+
+        booking_id=cursor.lastrowid
+
+        # ============================
+        # INSERT PEMBAYARAN DP
+        # ============================
+
+        cursor.execute("""
+
+            INSERT INTO pembayaran
+            (
+
+                booking_id,
+                jenis_pembayaran,
+                jumlah,
+                metode_pembayaran,
+                status_pembayaran,
+                midtrans_order_id,
+                snap_token
+
+            )
+
+            VALUES
+            (
+
+                %s,
+                'dp',
+                0,
+                'Midtrans',
+                'pending',
+                NULL,
+                NULL
+
+            )
+
+        """,(
+
+            booking_id,
+
+        ))
+
+        conn.commit()
+
+        cursor.close()
+
+        conn.close()
+
+        return jsonify({
+
+            "success":True,
+
+            "booking_id":booking_id
 
         })
 
-    conn = get_db()
-    cursor = conn.cursor(pymysql.cursors.DictCursor)
+    except Exception as e:
 
-    cursor.execute("""
+        conn.rollback()
 
-        SELECT
-            id,
-            nama_kost,
-            harga,
-            uang_muka
-
-        FROM kost
-
-        WHERE id=%s
-
-    """,(kost_id,))
-
-    kost = cursor.fetchone()
-
-    if not kost:
+        print("ERROR BUAT BOOKING :",e)
 
         cursor.close()
+
         conn.close()
 
         return jsonify({
 
             "success":False,
 
-            "message":"Kos tidak ditemukan."
+            "message":str(e)
 
-        })
-
-    total = int(kost["harga"])
-
-    dp = int(kost["uang_muka"] or 0)
-
-    jumlah_bayar = dp if dp > 0 else total
-
-    tanggal_masuk = date.today()
-
-    cursor.execute("""
-
-        INSERT INTO booking
-        (
-
-            penyewa_id,
-            kost_id,
-            tanggal_masuk,
-            durasi_bulan,
-            total_harga
-
-        )
-
-        VALUES
-        (
-
-            %s,
-            %s,
-            %s,
-            %s,
-            %s
-
-        )
-
-    """,(
-
-        session["user_id"],
-        kost_id,
-        tanggal_masuk,
-        1,
-        total
-
-    ))
-
-    booking_id = cursor.lastrowid
-
-    order_id = f"BOOK-{booking_id}-{uuid.uuid4().hex[:8]}"
-
-    transaction = {
-
-        "transaction_details":{
-
-            "order_id":order_id,
-
-            "gross_amount":jumlah_bayar
-
-        },
-
-        "customer_details":{
-
-            "first_name":session.get("nama","User"),
-
-            "email":session.get("email",""),
-
-            "phone":session.get("no_hp","")
-
-        }
-
-    }
-
-    snap_response = snap.create_transaction(transaction)
-
-    snap_token = snap_response["token"]
-
-    cursor.execute("""
-
-        INSERT INTO pembayaran
-        (
-
-            booking_id,
-            midtrans_order_id,
-            jumlah,
-            snap_token,
-            jenis_pembayaran
-
-        )
-
-        VALUES
-        (
-
-            %s,
-            %s,
-            %s,
-            %s,
-            %s
-
-        )
-
-    """,(
-
-        booking_id,
-        order_id,
-        jumlah_bayar,
-        snap_token,
-        "dp" if dp > 0 else "pelunasan"
-
-    ))
-
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-
-    return jsonify({
-
-        "success":True,
-
-        "snap_token":snap_token
-
-    })
+        }),500
 
 # ====================================
 # WISHLIST
