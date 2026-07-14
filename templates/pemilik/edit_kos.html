@@ -174,31 +174,85 @@
 document.addEventListener("DOMContentLoaded", function() {
     
     // 1. FORMAT MASKING RUPIAH (Tetap Aman)
-    function formatRupiah(angka) {
-        let number_string = angka.toString().replace(/[^,\d]/g, ''),
-            split = number_string.split(','), sisa = split[0].length % 3,
-            rupiah = split[0].substr(0, sisa), ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-        if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
-        return rupiah;
+// 1. FORMAT MASKING RUPIAH (Tetap Aman)
+const hargaDisp = document.getElementById("hargaDisplay");
+const hargaAsli = document.getElementById("hargaAsli");
+const dpDisp = document.getElementById("dpDisplay");
+const dpAsli = document.getElementById("dpAsli");
+const dpError = document.getElementById("dpError");
+
+function formatRupiah(angka) {
+    angka = angka.toString();
+
+    let number_string = angka.replace(/[^,\d]/g, '');
+    let split = number_string.split(',');
+    let sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+    if (ribuan) {
+        let separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
     }
 
-    const hargaDisp = document.getElementById('hargaDisplay'), hargaAsli = document.getElementById('hargaAsli');
-    const dpDisp = document.getElementById('dpDisplay'), dpAsli = document.getElementById('dpAsli'), dpError = document.getElementById('dpError');
+    return rupiah;
+}
 
-    function bindFormatter(disp, asli) {
-        if(disp && disp.value) { disp.value = formatRupiah(disp.value); }
-        if(disp) {
-            disp.addEventListener('keyup', function() {
-                this.value = formatRupiah(this.value);
-                asli.value = this.value.replace(/\./g, '');
-                let hVal = parseInt(hargaAsli.value) || 0, dVal = parseInt(dpAsli.value) || 0, limit = hVal * 0.5;
-                if(dVal > limit && hVal > 0) {
-                    dpError.classList.remove('d-none'); dpAsli.value = Math.floor(limit); dpDisp.value = formatRupiah(Math.floor(limit).toString());
-                } else { dpError.classList.add('d-none'); }
-            });
+function bindFormatter(displayInput, hiddenInput) {
+
+    if (!displayInput || !hiddenInput) return;
+
+    // tampilkan nilai awal
+    let awal = hiddenInput.value || displayInput.value || "0";
+    
+    // PERBAIKAN: Buang ".00" bawaan dari database sebelum di-replace
+    awal = awal.toString().split('.')[0]; 
+    
+    // Bersihkan karakter selain angka
+    let rawAwal = awal.replace(/\D/g,'');
+    if (rawAwal === "") rawAwal = "0";
+
+    // Set nilai awal ke input secara akurat
+    hiddenInput.value = rawAwal;
+    displayInput.value = formatRupiah(rawAwal);
+
+    displayInput.addEventListener("input", function () {
+
+        let raw = this.value.replace(/\D/g,'');
+
+        if(raw === "") raw = "0";
+
+        if(this.id === "dpDisplay"){
+
+            let harga = parseInt(hargaAsli.value) || 0;
+            let dp = parseInt(raw) || 0;
+
+            let batas = harga * 0.5;
+
+            if(dp > batas){
+
+                dp = Math.floor(batas);
+                raw = dp.toString();
+
+                dpError.classList.remove("d-none");
+
+            }else{
+
+                dpError.classList.add("d-none");
+
+            }
+
         }
-    }
-    bindFormatter(hargaDisp, hargaAsli); bindFormatter(dpDisp, dpAsli);
+
+        hiddenInput.value = raw;
+        this.value = formatRupiah(raw);
+
+    });
+
+}
+
+bindFormatter(hargaDisp,hargaAsli);
+bindFormatter(dpDisp,dpAsli);
 
     // ========================================================
     // 2. HARDCODE API KEY (Bypass .env sementara untuk testing)

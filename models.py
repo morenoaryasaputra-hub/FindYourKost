@@ -67,6 +67,7 @@ class Kost(db.Model):
     tier_listing = db.Column(db.Enum('silver', 'gold', 'premium'), default='silver')
     foto_thumbnail = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    uang_muka = db.Column(db.Integer, default=0)
 
     # Relasi anak tabel
     galeri_foto = db.relationship('FotoKost', backref='kost', lazy=True, cascade="all, delete-orphan")
@@ -152,6 +153,17 @@ class PremiumSubscription(db.Model):
     tanggal_mulai = db.Column(db.Date, nullable=True)
     tanggal_akhir = db.Column(db.Date, nullable=True)
     status = db.Column(db.Enum('aktif', 'expired'), default='aktif')
+    
+# =================================------------------------
+# 8. TABEL PREMIUM SUBSCRIPTION NEW
+# =================================------------------------
+class PaketPremium(db.Model):
+    __tablename__ = 'paket_premium'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nama_paket = db.Column(db.String(50), nullable=False, default='Premium')
+    harga = db.Column(db.Numeric(12, 2), nullable=False, default=99000.00)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 # =================================------------------------

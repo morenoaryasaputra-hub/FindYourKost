@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, flash
 from flask import render_template
 from flask import session
 from flask import redirect
@@ -331,177 +331,103 @@ def cari_kos():
 
     )
 
-# ====================================
-# DETAIL KOS
-# ====================================
+import os
+import pymysql
 
+# ====================================
+# HALAMAN DETAIL KOS (PENYEWA)
+# ====================================
 @penyewa_bp.route("/detail-kost/<int:kost_id>")
 def detail_kost(kost_id):
-
-    if "user_id" not in session:
-
+    if "user_id" not in session or session.get("role") != "penyewa":
         return redirect("/login")
-
+        
     conn = get_db()
-    cursor = conn.cursor()
-
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+    
+    # 1. Ambil Data Kos Lengkap (Termasuk Latitude & Longitude)
     cursor.execute("""
-
-        SELECT
-
-            k.id,
-            k.nama_kost,
-            k.alamat,
-            k.harga,
-            k.tipe_penghuni,
-            k.deskripsi,
-            k.foto_thumbnail,
-            k.sisa_kamar,
-            k.status_verifikasi,
-            k.tier_listing,
-
-            u.id,
-            u.nama,
-            u.foto_profil,
-            u.no_hp,
-
-            (
-                SELECT COUNT(*)
-                FROM review r
-                WHERE r.kost_id=k.id
-            ) AS total_review,
-
-            (
-                SELECT ROUND(AVG(r.rating),1)
-                FROM review r
-                WHERE r.kost_id=k.id
-            ) AS rating,
-
-            CASE
-
-                WHEN w.id IS NULL THEN 0
-                ELSE 1
-
-            END AS is_wishlist
-
+        SELECT k.*, u.nama as nama_pemilik, u.foto_profil as foto_pemilik
         FROM kost k
-
-        JOIN users u
-
-        ON
-            u.id=k.pemilik_id
-
-        LEFT JOIN wishlist w
-
-        ON
-            w.kost_id=k.id
-
-        AND
-            w.user_id=%s
-
-        WHERE
-
-            k.id=%s
-
-        AND
-
-            k.status_verifikasi=1
-
-    """,(
-
-        session["user_id"],
-        kost_id
-
-    ))
-
+        JOIN users u ON k.pemilik_id = u.id
+        WHERE k.id = %s
+    """, (kost_id,))
     kost = cursor.fetchone()
-
-    cursor.execute("""
-
-        SELECT
-
-            url_foto
-
-        FROM foto_kost
-
-        WHERE
-
-            kost_id=%s
-
-        ORDER BY
-
-            created_at ASC
-
-    """,(kost_id,))
-
-    foto_list = cursor.fetchall()
-
+    
+    if not kost:
+        cursor.close()
+        conn.close()
+        flash("Kos tidak ditemukan.", "danger")
+        return redirect("/cari-kos")
+        
+    # 2. Ambil Galeri Foto (Jika tabelnya ada, jika tidak abaikan/sesuaikan)
+    try:
+        cursor.execute("SELECT foto_path FROM galeri_kost WHERE kost_id = %s", (kost_id,))
+        foto_list = cursor.fetchall()
+    except:
+        foto_list = [] # Fallback jika tabel belum siap
+        
     cursor.close()
     conn.close()
-
-    if not kost:
-
-        return redirect("/cari-kos")
-
+    
+    # 3. Kirim Kunci API Geoapify untuk Peta
+    geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
+    
     return render_template(
-
-        "penyewa/detail_kost.html",
-
-        kost=kost,
-        foto_list=foto_list
-
+        "penyewa/detail_kost.html", 
+        kost=kost, 
+        foto_list=foto_list, 
+        geoapify_key=geoapify_key
     )
-
 # ====================================
 # KONFIRMASI BOOKING
 # ====================================
 
+# PASTIKAN IMPORT INI ADA DI ATAS FILE
+from flask import render_template, redirect, request, jsonify, session, flash
+from extensions import get_db
+from decimal import Decimal
 @penyewa_bp.route("/konfirmasi-booking/<int:kost_id>")
 def konfirmasi_booking(kost_id):
+    print("DEBUG: Masuk ke fungsi konfirmasi_booking") # <--- Cek terminal
+    
+    if "user_id" not in session or session.get("role") != "penyewa":
+        return redirect("/login")
 
     conn = get_db()
-    cursor = conn.cursor()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
+    # 1. Ambil Data Penyewa
+    cursor.execute("SELECT id, nama, email, no_hp, foto_ktp FROM users WHERE id = %s", (session["user_id"],))
+    user = cursor.fetchone()
+    print(f"DEBUG: Data User: {user}")
+
+    # 2. Ambil Data Kos
+# 2. Ambil Data Kos (TAMBAHKAN k.uang_muka di dalam SELECT)
     cursor.execute("""
-
-        SELECT
-
-            id,
-            nama_kost,
-            alamat,
-            harga,
-            foto_thumbnail,
-            tipe_penghuni
-
-        FROM kost
-
-        WHERE
-
-            id=%s
-
-        AND
-
-            status_verifikasi=1
-
-    """,(kost_id,))
-
+        SELECT k.id, k.nama_kost, k.harga, k.uang_muka, k.tier_listing, k.foto_thumbnail, u.nama as nama_pemilik
+        FROM kost k
+        JOIN users u ON k.pemilik_id = u.id
+        WHERE k.id = %s
+    """, (kost_id,))
     kost = cursor.fetchone()
-
+    
     cursor.close()
     conn.close()
 
     if not kost:
-
         return redirect("/cari-kos")
 
-    return render_template(
+    # 3. Hitung Matematika (GUNAKAN DP DARI PEMILIK)
+    harga_float = float(kost['harga'] or 0)
+    
+    # Ambil nilai uang_muka dari database. Kalau kosong/None, anggap 0.
+    dp = int(float(kost['uang_muka'] or 0)) 
+    
+    # Jika pemilik tidak set DP (DP = 0), maka sisa = harga full
+    sisa = int(harga_float - dp)
 
-        "penyewa/konfirmasi_booking.html",
-
-        kost=kost
-
-    )
-
+    return render_template("penyewa/konfirmasi_booking.html", user=user, kost=kost, dp=dp, sisa=sisa)
 # ====================================
 # WISHLIST
 # ====================================
@@ -1377,3 +1303,43 @@ def get_pelunasan_token(booking_id):
         "token":snap_token
 
     })
+    
+import cloudinary.uploader
+
+# ====================================
+# API UPLOAD KTP (KYC) PENYEWA
+# ====================================
+@penyewa_bp.route("/upload-ktp-booking", methods=["POST"])
+def upload_ktp_booking():
+    if "user_id" not in session or session.get("role") != "penyewa":
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    file = request.files.get("ktp_file")
+    if not file: return jsonify({"error": "File KTP tidak ditemukan"}), 400
+        
+    ext = file.filename.rsplit('.', 1)[-1].lower()
+    if ext not in ['jpg', 'jpeg', 'png', 'webp']:
+        return jsonify({"error": "Hanya format JPG, PNG, atau WEBP yang diperbolehkan"}), 400
+        
+    file.seek(0, 2)
+    if file.tell() > 5 * 1024 * 1024:
+        return jsonify({"error": "Ukuran KTP maksimal 5MB"}), 400
+    file.seek(0)
+    
+    try:
+        # Upload ke Cloudinary
+        upload_result = cloudinary.uploader.upload(file, folder="findyourkost_ktp", resource_type="image")
+        ktp_url = upload_result.get('secure_url')
+        
+        # Simpan ke DB (Hanya update foto_ktp, hindari error status_verifikasi)
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET foto_ktp = %s WHERE id = %s", (ktp_url, session["user_id"]))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"success": True, "ktp_url": ktp_url})
+    except Exception as e:
+        print(f"Error Upload KTP Cloudinary: {e}")
+        return jsonify({"error": str(e)}), 500

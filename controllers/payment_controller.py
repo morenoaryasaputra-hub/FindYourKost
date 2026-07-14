@@ -44,16 +44,43 @@ def payment_success():
         return jsonify({"error": "Unauthorized"}), 401
     
     user_id = session["user_id"]
+    data = request.json
     
-    # Update status user menjadi premium di database
-    conn = get_db() # Pastikan fungsi get_db() sudah di-import di atas
+    # Ambil tipe pembayaran dari frontend (misal: dikirim via fetch JS saat sukses)
+    tipe_pembayaran = data.get("tipe", "premium") # Default ke premium jika kosong
+    
+    conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET is_premium = 1 WHERE id = %s", (user_id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
     
-    # Update session agar sistem langsung mengenali tanpa perlu login ulang
-    session['is_premium'] = True
-    
-    return jsonify({"success": True, "message": "Akun berhasil di-upgrade ke Premium!"})
+    try:
+        if tipe_pembayaran == "premium":
+            # LOGIKA LAMA: Update status premium
+            cursor.execute("UPDATE users SET is_premium = 1 WHERE id = %s", (user_id,))
+            session['is_premium'] = True
+            pesan = "Berhasil berlangganan Premium!"
+            
+        elif tipe_pembayaran == "sewa":
+            # LOGIKA BARU: Bayar sewa kos, uang masuk ke Escrow
+            booking_id = data.get("booking_id") 
+            jumlah_bayar = data.get("amount")
+            
+            # Masukkan data ke tabel escrow dengan status 'tertahan'
+            cursor.execute("""
+                INSERT INTO escrow (booking_id, jumlah_bersih, status_pencairan, created_at)
+                VALUES (%s, %s, 'tertahan', NOW())
+            """, (booking_id, jumlah_bayar))
+            
+            # Update status booking menjadi 'dibayar' (asumsi kolomnya status_booking)
+            cursor.execute("UPDATE booking SET status_booking = 'dibayar' WHERE id = %s", (booking_id,))
+            pesan = "Pembayaran sewa berhasil dan masuk ke Penampungan Aman (Escrow)."
+
+        conn.commit()
+        return jsonify({"message": pesan, "status": "success"})
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+        
+    finally:
+        cursor.close()
+        conn.close()

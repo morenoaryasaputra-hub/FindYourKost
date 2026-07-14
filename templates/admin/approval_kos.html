@@ -71,17 +71,30 @@
                             <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=80&q=80" class="rounded-3 border" style="object-fit: cover; width: 65px; height: 45px;">
                         </td>
                         <td class="fw-bold text-dark">{{ kos.nama_kost }}</td>
-                        <td class="text-secondary">{{ kos.pemilik.nama if kos.pemilik else 'Mitra Owner' }}</td>
+                        
+                        <td class="text-secondary">{{ kos.get('nama_pemilik') or 'Mitra Owner' }}</td>
                         <td class="text-muted">{{ kos.alamat | truncate(30) }}</td>
+                        
                         <td>
-                            {% if kos.status_verifikasi %}
-                                <span class="badge rounded-pill px-2.5 py-1.5 fw-medium text-success" style="background-color: #e0f2fe; color: #0369a1 !important;">Disetujui</span>
+                            {% if kos.status_verifikasi == 1 %}
+                                <span class="badge rounded-pill px-2.5 py-1.5 fw-medium text-success" style="background-color: #e0f2fe; color: #0369a1 !important;">
+                                    <i class="fas fa-check me-1"></i> Disetujui
+                                </span>
+                            {% elif kos.alasan_penolakan %}
+                                <span class="badge rounded-pill px-2.5 py-1.5 fw-medium text-danger" style="background-color: #ffe4e6; color: #b91c1c !important;" title="{{ kos.alasan_penolakan }}">
+                                    <i class="fas fa-times me-1"></i> Ditolak
+                                </span>
                             {% else %}
-                                <span class="badge rounded-pill px-2.5 py-1.5 fw-medium text-warning" style="background-color: #ffedd5; color: #c2410c !important;">Menunggu Verifikasi</span>
+                                <span class="badge rounded-pill px-2.5 py-1.5 fw-medium text-warning" style="background-color: #ffedd5; color: #c2410c !important;">
+                                    <i class="fas fa-clock me-1"></i> Menunggu Verifikasi
+                                </span>
                             {% endif %}
                         </td>
+                        
                         <td class="text-center">
-                            <a href="{{ url_for('admin.detail_kos', kost_id=kos.id) }}" class="btn btn-sm px-3 rounded-3 fw-medium btn-light border-secondary-subtle" style="font-size: 12px;">Tinjau</a>
+                            <a href="{{ url_for('admin.detail_kos', kost_id=kos.id) }}" class="btn btn-sm px-3 rounded-3 fw-bold text-white shadow-sm" style="font-size: 12px; background-color: #3b82f6;">
+                                <i class="fas fa-search me-1"></i> Tinjau
+                            </a>
                         </td>
                     </tr>
                     {% else %}

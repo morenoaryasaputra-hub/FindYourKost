@@ -43,11 +43,6 @@
                         <i class="fa-solid fa-wallet"></i> Manajemen Keuangan
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="{% if request.endpoint == 'admin.layanan_premium' %}active{% endif %}">
-                        <i class="fa-solid fa-rectangle-ad"></i> Pengaturan Harga Iklan
-                    </a>
-                </li>
                 <hr style="border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 15px 20px;">
                 <li>
                     <a href="{{ url_for('admin.profil') }}" class="{% if request.endpoint == 'admin.profil' %}active{% endif %}">

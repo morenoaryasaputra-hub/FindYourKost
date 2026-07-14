@@ -1,41 +1,111 @@
 {% extends 'pemilik/base.html' %}
 {% block content %}
-<div class="mb-4 text-center mt-3">
-    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-2"><i class="fas fa-crown me-1"></i> FindYourKost VIP</span>
-    <h2 class="fw-bold">Tingkatkan Visibilitas Properti Anda</h2>
-    <p class="text-muted">Dapatkan penyewa lebih cepat dengan fitur Premium Listing.</p>
-</div>
 
-<div class="row g-4 justify-content-center">
-    <div class="col-md-4">
-        <div class="card card-metric border-0 shadow-sm p-4 h-100">
-            <h5 class="text-secondary fw-bold text-center">Basic</h5>
-            <h2 class="fw-bold text-center my-3">Gratis</h2>
-            <ul class="list-unstyled mt-4 mb-5">
-                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Listing properti standar</li>
-                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Maksimal 5 foto per kos</li>
-                <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Posisi pencarian di bawah</li>
-                <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Tanpa lencana "Rekomendasi"</li>
-            </ul>
-            <button class="btn btn-light w-100 mt-auto" disabled>Paket Saat Ini</button>
-        </div>
+<!-- Script Midtrans Snap -->
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config.get('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-XXXXX') }}"></script>
+
+<div class="container py-4" style="font-family: 'Inter', sans-serif;">
+    <div class="mb-5 text-center mt-3">
+        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-2 fw-bold"><i class="fas fa-crown me-1"></i> FindYourKost VIP</span>
+        <h2 class="fw-bold text-dark">Tingkatkan Visibilitas Properti Anda</h2>
+        <p class="text-muted small">Dapatkan penyewa lebih cepat dan buka akses eksklusif fitur manajemen finansial.</p>
     </div>
 
-    <div class="col-md-4">
-        <div class="card card-metric border-2 border-primary shadow p-4 h-100 position-relative">
-            <div class="position-absolute top-0 start-50 translate-middle badge bg-primary rounded-pill px-3 py-2">Paling Laris</div>
-            <h5 class="text-primary fw-bold text-center mt-2">Premium Listing</h5>
-            <h2 class="fw-bold text-center my-3">Rp 99.000<span class="fs-6 text-muted fw-normal">/bln</span></h2>
-            <ul class="list-unstyled mt-4 mb-5">
-                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Tampil di halaman pencarian paling atas</li>
-                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Lencana <span class="badge bg-warning text-dark">Rekomendasi</span></li>
-                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Upload hingga 20 foto & video</li>
-                <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Dukungan prioritas (CS 24/7)</li>
-            </ul>
-            <a href="{{ url_for('pemilik.pembayaran') }}" class="btn btn-primary w-100 mt-auto">
-    <i class="fas fa-rocket me-2"></i>Upgrade Sekarang
-</a>
+    <div class="row g-4 justify-content-center">
+        <!-- Paket Biasa -->
+        <div class="col-md-5 col-lg-4">
+            <div class="card border-0 shadow-sm p-4 h-100 rounded-4 bg-white d-flex flex-column">
+                <h5 class="text-secondary fw-bold text-center mb-1">Akun Biasa</h5>
+                <p class="text-muted text-center small mb-3">Fitur standard kelola kos</p>
+                <hr class="text-muted opacity-25">
+                <h2 class="fw-bold text-center my-3 text-dark">Gratis</h2>
+                <ul class="list-unstyled mt-3 mb-5 small text-secondary flex-grow-1">
+                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Listing properti standard</li>
+                    <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Urutan pencarian standard (Bawah)</li>
+                    <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Fitur Laporan Keuangan terkunci</li>
+                    <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Tidak bisa kirim tagihan via chat</li>
+                </ul>
+                <button class="btn btn-light w-100 mt-auto rounded-3 fw-medium py-2.5" disabled>Paket Aktif Saat Ini</button>
+            </div>
+        </div>
+
+        <!-- Paket Premium -->
+        <div class="col-md-5 col-lg-4">
+            <div class="card border-2 border-primary shadow p-4 h-100 rounded-4 bg-white d-flex flex-column position-relative" style="border-color: #0b57d0 !important;">
+                <div class="position-absolute start-50 translate-middle badge bg-primary rounded-pill px-3 py-2 fw-bold shadow-sm" style="top: 0px; background-color: #0b57d0 !important;">
+                    REKOMENDASI UTAMA
+                </div>
+                <h5 class="text-primary fw-bold text-center mt-2 mb-1" style="color: #0b57d0 !important;">Premium Listing</h5>
+                <p class="text-muted text-center small mb-3">Akses performa bisnis penuh</p>
+                <hr class="text-muted opacity-25">
+                <h2 class="fw-bold text-center my-3 text-dark">
+                    Rp {{ "{:,.0f}".format(harga_premium).replace(',', '.') }}<span class="fs-6 text-muted fw-normal">/bln</span>
+                </h2>
+                <ul class="list-unstyled mt-3 mb-5 small text-secondary flex-grow-1">
+                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> <strong>Prioritas Atas</strong> di halaman pencarian</li>
+                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Dapatkan lencana <span class="badge bg-warning text-dark rounded-pill">Premium</span> pada properti</li>
+                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Membuka penuh modul <strong>Manajemen Keuangan</strong></li>
+                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Fitur <strong>Tagih Otomatis via Chat</strong> Internal</li>
+                </ul>
+                
+                {% if session.get('is_premium') %}
+                    <button class="btn btn-success w-100 mt-auto rounded-3 fw-bold py-2.5" disabled>
+                        <i class="fas fa-check-double me-1"></i> Layanan Aktif
+                    </button>
+                {% else %}
+                    <!-- ID ini dipanggil oleh script di bawah -->
+                    <button id="pay-premium-button" class="btn btn-primary w-100 mt-auto rounded-3 fw-bold py-2.5 shadow-sm" 
+                            style="background-color: #0b57d0; border: none;" data-harga="{{ harga_premium|int }}">
+                        <i class="fas fa-crown me-1"></i> Upgrade ke Premium
+                    </button>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('pay-premium-button').onclick = function() {
+        const harga = this.getAttribute('data-harga');
+        
+        fetch('/create-transaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: harga }) 
+        })
+        .then(res => res.json())
+        .then(data => {
+            window.snap.pay(data.token, {
+                onSuccess: function(result) {
+                    fetch('/payment-success', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tipe: 'premium', amount: harga })
+                    }).then(() => {
+                        // SWEETALERT2 BERHASIL
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: 'Pembayaran Berhasil! Akun Anda kini Premium.',
+                            confirmButtonColor: '#0b57d0',
+                            confirmButtonText: 'Lanjut'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    });
+                },
+                onPending: function(result){ 
+                    Swal.fire('Menunggu', 'Silakan selesaikan pembayaran Anda.', 'info'); 
+                },
+                onError: function(result){ 
+                    Swal.fire('Gagal', 'Pembayaran tidak dapat diproses.', 'error'); 
+                },
+                onClose: function(){ 
+                    console.log("User membatalkan pembayaran");
+                }
+            });
+        });
+    };
+</script>
+
 {% endblock %}

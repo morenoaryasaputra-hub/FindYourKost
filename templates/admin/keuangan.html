@@ -3,6 +3,17 @@
 <div class="container mt-4">
     <h3 class="mb-4">💰 Sistem Finansial & Escrow Gateway</h3>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+                    <i class="fas fa-info-circle me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card bg-primary text-white p-3 border-0 shadow-sm">
@@ -24,36 +35,18 @@
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4 bg-white">
-        <div class="card-body p-4">
-            <form action="{{ url_for('admin.keuangan') }}" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label small fw-bold text-muted">Status Transaksi</label>
-                    <select name="status" class="form-select">
-                        <option value="Semua" {% if current_status == 'Semua' %}selected{% endif %}>Semua Status</option>
-                        <option value="Dalam Penampungan (Escrow)" {% if current_status == 'Dalam Penampungan (Escrow)' %}selected{% endif %}>Dalam Penampungan (Escrow)</option>
-                        <option value="Telah Diteruskan Ke Pemilik" {% if current_status == 'Telah Diteruskan Ke Pemilik' %}selected{% endif %}>Telah Diteruskan Ke Pemilik</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted">Dari Tanggal</label>
-                    <input type="date" name="tanggal_mulai" value="{{ current_mulai }}" class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted">Sampai Tanggal</label>
-                    <input type="date" name="tanggal_akhir" value="{{ current_akhir }}" class="form-control">
-                </div>
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
-                    <a href="{{ url_for('admin.keuangan') }}" class="btn btn-light border"><i class="fa-solid fa-rotate-right"></i></a>
-                </div>
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Riwayat Transaksi</h5>
+            <form action="{{ url_for('admin.keuangan') }}" method="GET" class="d-flex gap-2">
+                <select name="filter_status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="semua">Semua Status</option>
+                    <option value="tertahan" {% if request.args.get('filter_status') == 'tertahan' %}selected{% endif %}>Dana Tertahan</option>
+                    <option value="diteruskan" {% if request.args.get('filter_status') == 'diteruskan' %}selected{% endif %}>Telah Diteruskan</option>
+                </select>
             </form>
         </div>
-    </div>
-
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white fw-bold">Log Mutasi Rekening Midtrans API</div>
-        <div class="card-body p-0">
+        <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
@@ -63,6 +56,7 @@
                         <th>Nominal</th>
                         <th>Status</th>
                         <th>Tanggal</th>
+                        <th class="text-center pe-3">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,10 +72,24 @@
                             </span>
                         </td>
                         <td>{{ t.tanggal }}</td>
+                        
+                        <td class="text-center pe-3">
+                            {% if t.status != 'Telah Diteruskan Ke Pemilik' %}
+                                <form action="{{ url_for('admin.cairkan_dana', transaksi_id=t.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold rounded-3 shadow-sm" onclick="return confirm('Yakin ingin meneruskan dana ini ke pemilik properti? Tindakan ini tidak dapat dibatalkan.');">
+                                        <i class="fas fa-hand-holding-usd me-1"></i> Cairkan
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="badge bg-light border border-secondary text-secondary rounded-pill px-3 py-2">
+                                    <i class="fas fa-check-double me-1"></i> Selesai
+                                </span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat transaksi dengan filter tersebut.</td>
+                        <td colspan="7" class="text-center py-4 text-muted">Belum ada riwayat transaksi dengan filter tersebut.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

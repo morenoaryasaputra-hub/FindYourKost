@@ -4,19 +4,25 @@
 <div class="container-fluid px-4 mt-3" style="background-color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 95vh;">
     
     <!-- HEADER & TOMBOL DOWNLOAD -->
-    <div class="d-flex justify-content-between align-items-center mb-4 pt-2">
-        <div>
-            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-2"><i class="fas fa-crown me-1"></i> Fitur Premium Terbuka</span>
-            <h2 class="fw-bold text-dark mb-1" style="font-size: 26px;">Manajemen Keuangan</h2>
-            <p class="text-muted small">Pantau pendapatan bulanan dan tagih penyewa dengan mudah.</p>
+<div class="d-flex justify-content-between align-items-center mb-4 pt-2">
         </div>
-        <div>
-            <!-- Tombol Print PDF Sederhana pakai JS bawaan -->
-            <button onclick="window.print()" class="btn btn-primary fw-medium rounded-3 shadow-sm">
-                <i class="fas fa-file-pdf me-2"></i> Download Laporan
-            </button>
-        </div>
-    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-4 shadow-sm mb-4 border-0 border-start border-4 border-{{ category }}" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-circle-check fs-4 me-3 text-{{ category }}"></i>
+                        <div>
+                            <strong>Berhasil!</strong><br>
+                            <span class="small">{{ message }}</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close mt-1" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
     <!-- KARTU RINGKASAN -->
     <div class="row g-3 mb-4">
@@ -43,7 +49,7 @@
     <!-- AREA GRAFIK & DATA TAGIHAN -->
     <div class="row g-4 mb-5">
         
-        <!-- BAGIAN GRAFIK (Ukurannya dikecilkan) -->
+        <!-- BAGIAN GRAFIK -->
         <div class="col-lg-7">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
                 <h5 class="fw-bold text-dark mb-4" style="font-size: 16px;">Grafik Tren Pendapatan 2026</h5>
@@ -77,6 +83,7 @@
                                     <h6 class="mb-0 fw-bold" style="font-size: 14px;">{{ item.nama }}</h6>
                                     <small class="text-muted">{{ item.kamar }} - Rp {{ (item.total/1000000)|round(1) }}Jt</small>
                                 </td>
+
                                 <td class="py-3 text-center">
                                     {% if item.status == 'Lunas' %}
                                         <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Lunas</span>
@@ -86,11 +93,64 @@
                                         <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">Tertunda</span>
                                     {% endif %}
                                 </td>
+
                                 <td class="py-3 text-end">
                                     {% if item.status == 'Belum Bayar' or item.status == 'Tertunda' %}
-                                        <button class="btn btn-sm btn-outline-danger rounded-3" onclick="alert('Pesan pengingat WhatsApp berhasil dikirim ke {{ item.nama }}!')">Tagih</button>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger rounded-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalTagih{{ item.booking_id }}">
+                                            <i class="fa-regular fa-paper-plane me-1"></i> Tagih
+                                        </button>
+
+                                        <div class="modal fade" id="modalTagih{{ item.booking_id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border-0 shadow-lg rounded-4">
+                                                    <div class="modal-body text-center p-4">
+
+                                                        <div class="mb-3">
+                                                            <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle"
+                                                                 style="width:70px;height:70px;">
+                                                                <i class="fa-regular fa-paper-plane fs-1"></i>
+                                                            </div>
+                                                        </div>
+
+                                                        <h5 class="fw-bold mb-2">
+                                                            Kirim Tagihan ke {{ item.nama }}?
+                                                        </h5>
+
+                                                        <p class="text-muted small mb-4">
+                                                            Sistem akan otomatis mengirimkan pesan pengingat tagihan ke ruang obrolan (chat) penyewa ini.
+                                                        </p>
+
+                                                        <div class="d-flex justify-content-center gap-2">
+
+                                                            <button type="button"
+                                                                    class="btn btn-light border fw-medium rounded-3 px-4 py-2"
+                                                                    data-bs-dismiss="modal">
+                                                                Batal
+                                                            </button>
+
+                                                            <form action="{{ url_for('pemilik.kirim_tagihan', booking_id=item.booking_id) }}"
+                                                                  method="POST">
+                                                                <button type="submit"
+                                                                        class="btn btn-danger fw-bold rounded-3 shadow-sm px-4 py-2">
+                                                                    Ya, Kirim Sekarang
+                                                                </button>
+                                                            </form>
+
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     {% else %}
-                                        <button class="btn btn-sm btn-light text-muted rounded-3" disabled><i class="fas fa-check"></i></button>
+                                        <button class="btn btn-sm btn-light text-muted rounded-3" disabled>
+                                            <i class="fas fa-check"></i>
+                                        </button>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -104,44 +164,59 @@
     </div>
 </div>
 
-<!-- SCRIPT CHART TETAP SAMA, HANYA WADAHNYA YANG DIKECILKAN DI ATAS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const chartElement = document.getElementById('incomeAnalyticsChart');
-        const ctx = chartElement.getContext('2d');
-        const dummyData = [1200000, 1800000, 2400000, 3100000, 4500000, 6200000];
+document.addEventListener("DOMContentLoaded", function () {
+    const chartElement = document.getElementById('incomeAnalyticsChart');
+    const ctx = chartElement.getContext('2d');
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                datasets: [{
-                    label: 'Pendapatan (Rp)',
-                    data: dummyData,
-                    borderColor: '#0b57d0',
-                    backgroundColor: 'rgba(11, 87, 208, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#0b57d0',
-                    pointHoverRadius: 6
-                }]
+    const dummyData = [1200000, 1800000, 2400000, 3100000, 4500000, 6200000];
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+            datasets: [{
+                label: 'Pendapatan (Rp)',
+                data: dummyData,
+                borderColor: '#0b57d0',
+                backgroundColor: 'rgba(11,87,208,0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#0b57d0',
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false } },
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { borderDash: [5, 5] },
-                        ticks: { callback: function(value) { return 'Rp ' + (value / 1000000) + ' Jt'; } }
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        borderDash: [5, 5]
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + (value / 1000000) + ' Jt';
+                        }
                     }
                 }
             }
-        });
+        }
     });
+});
 </script>
+
 {% endblock %}

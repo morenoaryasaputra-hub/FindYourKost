@@ -1,304 +1,240 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}
-Detail Kos
-{% endblock %}
+{% block title %}Detail Kos - {{ kost.nama_kost | default('Properti', true) }}{% endblock %}
 
 {% block css %}
-
-<link
-rel="stylesheet"
-href="{{ url_for(
-    'static',
-    filename='css/detail_kost.css'
-) }}">
-
+<!-- Tetap gunakan CSS asli milikmu yang sudah rapi -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/detail_kost.css') }}">
+<!-- LEAFLET MAP CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 {% endblock %}
 
 {% block content %}
-
 <div class="detail-container">
-
     <div class="breadcrumb">
-
-        Jakarta Selatan
-
-        >
-
-        Tebet
-
-        >
-
-        <span>
-
-            {{ kost[1] }}
-
-        </span>
-
+        <a href="/cari-kos">Cari Kos</a> >
+        <span>{{ kost.nama_kost | default('Detail Properti', true) }}</span>
     </div>
 
     <div class="detail-top">
-
-        <!-- GALERI -->
-
+        <!-- GALERI FOTO (Sesuai Struktur CSS Kamu) -->
         <div class="gallery-section">
-
             <div class="main-photo">
-
-                {% if foto_list %}
-
-                <img 
-                src="{{ foto_list[0][0] }}"
-                alt="{{ kost[1] }}">
-
+                {% if foto_list and foto_list|length > 0 %}
+                    <img src="{{ foto_list[0].foto_path | default(foto_list[0].foto | default('https://placehold.co/800x600'), true) }}" alt="Foto Kos Utama">
                 {% else %}
-
-                <img 
-                src="{{ kost[6] }}"
-                alt="{{ kost[1] }}">
-
+                    <img src="{{ kost.foto_thumbnail | default('https://placehold.co/800x600', true) }}" alt="Foto Kos">
                 {% endif %}
-
             </div>
-
-            {% if foto_list|length > 1 %}
-
+            
+            {% if foto_list and foto_list|length > 1 %}
             <div class="side-photos">
-
                 {% for foto in foto_list[1:4] %}
-
-                <img
-                src="{{ foto[0] }}"
-                alt="Foto Kos">
-
+                    <img src="{{ foto.foto_path | default(foto.foto | default('https://placehold.co/800x600'), true) }}" alt="Foto Kos">
                 {% endfor %}
-
+                
                 {% if foto_list|length >= 4 %}
-
                 <div class="more-photo">
-
-                    <img
-                    src="{{ foto_list[3][0] }}"
-                    alt="Foto Kos">
-
+                    <img src="{{ foto_list[3].foto_path | default(foto_list[3].foto | default('https://placehold.co/800x600'), true) }}" alt="Foto Kos">
                     {% if foto_list|length > 4 %}
-
                     <div class="overlay">
-
                         +{{ foto_list|length - 4 }} Foto
-
+                    </div>
+                    {% endif %}
                 </div>
-
                 {% endif %}
-
             </div>
-
             {% endif %}
-
         </div>
 
-        {% endif %}
-
-    </div>
-
-        <!-- BOOKING CARD -->
-
+        <!-- PANEL PEMBAYARAN KANAN (Sesuai Struktur CSS Kamu) -->
         <div class="booking-card">
-
-            <div class="price-title">
-
-                Mulai dari
-
-            </div>
-
+            <div class="price-title">Mulai dari</div>
             <div class="price">
-
-                Rp {{ "{:,.0f}".format(kost[3]) }}
-
-                <span>
-
-                    / bulan
-
-                </span>
-
+                Rp {{ "{:,.0f}".format(kost.harga|default(0, true)|int).replace(',', '.') }} 
+                <span>/ bulan</span>
             </div>
-
             <hr>
-
+            
             <div class="owner-box">
-
-                <img 
-                src="{{ kost[12] if kost[12] else url_for('static', 
-                filename='images/default-profile.png') }}">
-
+                <img src="{{ kost.foto_pemilik | default('https://ui-avatars.com/api/?name=' ~ kost.nama_pemilik, true) }}">
                 <div>
-
-                    <strong>
-
-                        {{ kost[11] }}
-
-                    </strong>
-
-                    <p>
-
-                        Pemilik Terverifikasi
-
-                    </p>
-
+                    <strong>{{ kost.nama_pemilik | default('Pemilik', true) }}</strong>
+                    <p>Pemilik Terverifikasi</p>
                 </div>
-
             </div>
 
-            <a
-            href="/konfirmasi-booking/{{ kost[0] }}"
-            class="booking-btn">
-
-                Booking Sekarang
-
-            </a>
-
-            <a
-            href="/chat/create/{{ kost[0] }}"
-            class="chat-btn">
-
-                Chat Pemilik
-
-            </a>
-
-            <a
-            href="/wishlist/toggle/{{ kost[0] }}"
-            class="wishlist-btn-detail">
-
-            {% if kost[16] %}
-
-                <i class="fa-solid fa-heart"></i>
-
-                Hapus dari Wishlist
-
-            {% else %}
-
-                <i class="fa-regular fa-heart"></i>
-
-                Simpan ke Wishlist
-
-            {% endif %}
-
+            <a href="/konfirmasi-booking/{{ kost.id | default(0, true) }}" class="booking-btn">Booking Sekarang</a>
+            <a href="/chat/create/{{ kost.id | default(0, true) }}" class="chat-btn">Chat Pemilik</a>
+            
+            <a href="/wishlist/toggle/{{ kost.id | default(0, true) }}" class="wishlist-btn-detail">
+                <i class="fa-regular fa-heart"></i> Simpan ke Wishlist
             </a>
 
             <ul class="benefit-list">
-
-                <li>
-
-                    Konfirmasi instan
-
-                </li>
-
-                <li>
-
-                    Jaminan uang kembali
-
-                </li>
-
-                <li>
-
-                    Pembayaran aman
-
-                </li>
-
+                <li>Konfirmasi instan</li>
+                <li>Jaminan uang kembali</li>
+                <li>Pembayaran aman Escrow</li>
             </ul>
-
         </div>
-
     </div>
 
-    <!-- INFO -->
-
+    <!-- INFO KOS UTAMA (Sesuai Struktur CSS Kamu) -->
     <div class="info-section">
-
         <div class="tags">
-
-            {% if kost[9] == "premium" %}
-
-            <span class="premium premium-badge">
-
-                Premium
-
-            </span>
-
-            {% elif kost[9] == "gold" %}
-
-            <span class="premium gold-badge">
-
-                GOLD
-
-            </span>
-
-            {% elif kost[9] == "silver" %}
-
-            <span class="premium silver-badge">
-
-                SILVER
-
-            </span>
-
+            {% if kost.tier_listing == "premium" %}
+                <span class="premium premium-badge">Premium</span>
+            {% elif kost.tier_listing == "gold" %}
+                <span class="premium gold-badge">GOLD</span>
+            {% elif kost.tier_listing == "silver" %}
+                <span class="premium silver-badge">SILVER</span>
             {% endif %}
-
-            {% if kost[7] > 0 %}
-
-            <span class="available">
-
-                Tersedia
-
-            </span>
-
+            
+            {% if (kost.sisa_kamar|default(0, true)|int) > 0 %}
+                <span class="available">Tersedia {{ kost.sisa_kamar }} Kamar</span>
             {% else %}
-
-            <span class="not-available">
-
-                Penuh
-
-            </span>
-
+                <span class="not-available">Penuh</span>
             {% endif %}
-
-            <span class="rating">
-
-                ⭐
-
-                {{ kost[15] or 0 }}
-
-                ({{ kost[14] }} Review)
-
-            </span>
-
+            
+            <span class="rating">⭐ {{ kost.rating | default(0, true) }} ({{ kost.total_review | default(0, true) }} Review)</span>
         </div>
 
-        <h1>
+        <h1>{{ kost.nama_kost | default('Nama Kos Tidak Tersedia', true) }}</h1>
+        <div class="alamat"><i class="fas fa-map-marker-alt me-2"></i> {{ kost.alamat | default('Alamat belum diatur', true) }}</div>
 
-            {{ kost[1] }}
+        <h2>Deskripsi Kos</h2>
+        <p>{{ kost.deskripsi | default('Tidak ada deskripsi untuk properti ini.', true) }}</p>
+    </div>
 
-        </h1>
+    <hr style="margin: 40px 0; border: 1px solid #e5e7eb;">
 
-        <div class="alamat">
-
-            {{ kost[2] }}
-
+    <!-- FASILITAS KAMAR -->
+    <div class="info-section">
+        <h2>Fasilitas Kamar & Umum</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px;">
+            <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 12px; background: white; text-align: center; min-width: 140px;">
+                <i class="fas fa-snowflake" style="font-size: 24px; color: #2563eb; margin-bottom: 10px;"></i><br>
+                <span style="font-weight: 500; color: #444;">AC</span>
+            </div>
+            <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 12px; background: white; text-align: center; min-width: 140px;">
+                <i class="fas fa-wifi" style="font-size: 24px; color: #2563eb; margin-bottom: 10px;"></i><br>
+                <span style="font-weight: 500; color: #444;">WiFi Ngebut</span>
+            </div>
+            <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 12px; background: white; text-align: center; min-width: 140px;">
+                <i class="fas fa-bed" style="font-size: 24px; color: #2563eb; margin-bottom: 10px;"></i><br>
+                <span style="font-weight: 500; color: #444;">Kasur Springbed</span>
+            </div>
+            <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 12px; background: white; text-align: center; min-width: 140px;">
+                <i class="fas fa-bath" style="font-size: 24px; color: #2563eb; margin-bottom: 10px;"></i><br>
+                <span style="font-weight: 500; color: #444;">Kamar Mandi Dalam</span>
+            </div>
+            <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 12px; background: white; text-align: center; min-width: 140px;">
+                <i class="fas fa-bolt" style="font-size: 24px; color: #2563eb; margin-bottom: 10px;"></i><br>
+                <span style="font-weight: 500; color: #444;">Listrik Termasuk</span>
+            </div>
         </div>
+    </div>
 
-        <h2>
-
-            Deskripsi Kos
-
-        </h2>
-
-        <p>
-
-            {{ kost[5] }}
-
-        </p>
-
+    <!-- PETA LOKASI -->
+    <div class="info-section" style="margin-bottom: 60px;">
+        <h2>Lokasi & Lingkungan Sekitar</h2>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+            <!-- PETA LEAFLET -->
+            <div style="flex: 2; min-width: 300px;">
+                <div id="map" style="height: 400px; border-radius: 18px; border: 1px solid #e5e7eb;"></div>
+            </div>
+            
+            <!-- FASILITAS SEKITAR -->
+            <div style="flex: 1; min-width: 250px; background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 20px;">
+                <h3 style="font-size: 16px; margin-bottom: 15px; color: #444; border-bottom: 1px solid #eee; padding-bottom: 10px;">Fasilitas Publik Terdekat</h3>
+                <div id="fasilitas-sekitar-list" style="max-height: 320px; overflow-y: auto;">
+                    <div id="loading-fasilitas" style="text-align: center; color: #666; margin-top: 40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i><br>Melacak area sekitar...
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // PERBAIKAN: Membungkus dengan parseFloat agar tidak error meskipun datanya NULL
+        const lat = parseFloat("{{ kost.latitude | default('-6.175110', true) }}");
+        const lon = parseFloat("{{ kost.longitude | default('106.827152', true) }}");
+        const geoapifyKey = "{{ geoapify_key | default('', true) }}";
+
+        // 1. Inisialisasi Peta
+        const map = L.map('map').setView([lat, lon], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Marker Kos
+        const marker = L.marker([lat, lon]).addTo(map);
+        marker.bindPopup("<b>{{ kost.nama_kost | default('Lokasi Properti', true) }}</b>").openPopup();
+
+        // 2. Logika Fasilitas Sekitar
+        const listContainer = document.getElementById("fasilitas-sekitar-list");
+        const loadingDiv = document.getElementById("loading-fasilitas");
+
+        // Fungsi Tombol Reset
+        function createResetButton() {
+            const btn = document.createElement("button");
+            btn.className = "btn btn-sm btn-primary w-100 mb-3";
+            btn.style.cssText = "background: #2563eb; color: white; padding: 8px; border-radius: 8px; border: none; cursor: pointer;";
+            btn.innerHTML = '<i class="fas fa-home me-2"></i> Kembali ke Area Kos';
+            btn.onclick = () => {
+                map.flyTo([lat, lon], 16);
+                marker.openPopup();
+            };
+            return btn;
+        }
+
+        if(geoapifyKey && geoapifyKey !== 'None' && geoapifyKey !== '') {
+            const categories = "commercial.supermarket,education.school,healthcare.hospital,catering.restaurant";
+            const url = `https://api.geoapify.com/v2/places?categories=${categories}&filter=circle:${lon},${lat},2000&limit=6&apiKey=${geoapifyKey}`;
+
+            fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if(loadingDiv) loadingDiv.style.display = "none";
+                
+                // Tambahkan tombol Reset di atas list
+                if(listContainer) listContainer.prepend(createResetButton());
+
+                if(data.features && data.features.length > 0) {
+                    data.features.forEach(place => {
+                        const plat = place.properties.lat;
+                        const plon = place.properties.lon;
+                        const nama = place.properties.name || place.properties.street || "Fasilitas";
+                        
+                        // Marker Fasilitas
+                        const pMarker = L.marker([plat, plon]).addTo(map);
+                        pMarker.bindPopup(`<b>${nama}</b>`);
+
+                        // Item List
+                        const item = document.createElement("div");
+                        item.style.cssText = "cursor:pointer; margin-bottom: 10px; padding: 10px; border: 1px solid #eee; border-radius: 10px; background: #fff;";
+                        item.innerHTML = `<div><i class="fas fa-map-marker-alt text-danger me-2"></i> ${nama}</div>`;
+                        
+                        item.onclick = () => {
+                            map.flyTo([plat, plon], 17);
+                            pMarker.openPopup();
+                        };
+                        
+                        if(listContainer) listContainer.appendChild(item);
+                    });
+                } else {
+                    if(listContainer) listContainer.innerHTML = "<p style='text-align:center;'>Tidak ada fasilitas terdeteksi.</p>";
+                }
+            })
+            .catch(err => {
+                if(loadingDiv) loadingDiv.innerHTML = "Gagal memuat.";
+            });
+        }
+    }); // Ini menutup document.addEventListener
+</script>
 {% endblock %}

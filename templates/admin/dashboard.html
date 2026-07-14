@@ -45,86 +45,135 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-0 bg-white rounded-4">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-envelope-open-text text-warning me-2"></i>Pengajuan Banding (Menunggu Tinjauan)</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light text-muted small fw-bold">
-                                <tr>
-                                    <th class="ps-4 py-3">Tanggal Pengajuan</th>
-                                    <th>Email Pengguna</th>
-                                    <th>Alasan Banding</th>
-                                    <th>Status</th>
-                                    <th class="text-center pe-4">Aksi</th>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 bg-white rounded-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-envelope-open-text text-warning me-2"></i>Pengajuan Banding (Menunggu Tinjauan)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-muted small fw-bold">
+                            <tr>
+                                <th class="ps-4 py-3">Tanggal Pengajuan</th>
+                                <th>Email Pengguna</th>
+                                <th>Alasan Banding</th>
+                                <th>Status</th>
+                                <th class="text-center pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if daftar_banding %}
+                                {% for b in daftar_banding %}
+                                <tr class="border-bottom">
+                                    <td class="ps-4 text-muted small fw-medium">
+                                        {% if b['created_at'] %}
+                                            {{ b['created_at'].strftime('%d %b %Y, %H:%M') if b['created_at'].strftime else b['created_at'] }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="fw-bold text-dark">{{ b['email'] }}</td>
+                                    <td class="text-secondary">{{ b['alasan'] }}</td>
+                                    <td><span class="badge bg-warning bg-opacity-10 text-warning px-3 py-1 rounded-pill">Pending</span></td>
+                                    <td class="text-center pe-4">
+                                        <button type="button" class="btn btn-sm btn-success rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalBanding{{ b['id'] }}">
+                                            <i class="fa-solid fa-check-circle me-1"></i> Terima Banding
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-<tbody>
-    {% if daftar_banding %}
-        {% for b in daftar_banding %}
-        <tr class="border-bottom">
-            <td class="ps-4 text-muted small fw-medium">
-    {% if b['created_at'] %}
-        {{ b['created_at'].strftime('%d %b %Y, %H:%M') if b['created_at'].strftime else b['created_at'] }}
-    {% else %}
-        -
-    {% endif %}
-</td>
-            
-            <td class="fw-bold text-dark">{{ b['email'] }}</td>
-            <td class="text-secondary">{{ b['alasan'] }}</td>
-            <td><span class="badge bg-warning bg-opacity-10 text-warning px-3 py-1 rounded-pill">Pending</span></td>
-            <td class="text-center pe-4">
-                <button type="button" class="btn btn-sm btn-success rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalBanding{{ b['id'] }}">
-                    <i class="fa-solid fa-check-circle me-1"></i> Terima Banding
-                </button>
-            </td>
-        </tr>
-        {% endfor %}
-    {% else %}
-        <tr>
-            <td colspan="5" class="text-center py-5 text-muted">
-                <i class="fa-solid fa-check-circle fs-1 text-success opacity-25 mb-2 d-block"></i>
-                Tidak ada pengajuan banding baru.
-            </td>
-        </tr>
-    {% endif %}
-</tbody>
-                        </table>
-                        {% for b in daftar_banding %}
-<div class="modal fade" id="modalBanding{{ b.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-body p-4 text-center">
-                <div class="mb-3 text-success">
-                    <i class="fa-solid fa-circle-check" style="font-size: 60px;"></i>
-                </div>
-                <h5 class="fw-bold text-dark mb-2">Terima Pengajuan Banding?</h5>
-                <p class="text-muted mb-4">
-                    Anda akan mengaktifkan kembali akun <strong>{{ b.email }}</strong>. 
-                    Tindakan ini tidak dapat dibatalkan.
-                </p>
-                
-                <form action="{{ url_for('admin.proses_banding', banding_id=b.id) }}" method="POST">
-                    <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-light px-4 rounded-3 fw-medium" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success px-4 rounded-3 fw-bold">Ya, Setujui Banding</button>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-check-circle fs-1 text-success opacity-25 mb-2 d-block"></i>
+                                        Tidak ada pengajuan banding baru.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    
+                    {% for b in daftar_banding %}
+                    <div class="modal fade" id="modalBanding{{ b.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4 border-0 shadow">
+                                <div class="modal-body p-4 text-center">
+                                    <div class="mb-3 text-success">
+                                        <i class="fa-solid fa-circle-check" style="font-size: 60px;"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-dark mb-2">Terima Pengajuan Banding?</h5>
+                                    <p class="text-muted mb-4">
+                                        Anda akan mengaktifkan kembali akun <strong>{{ b.email }}</strong>. 
+                                        Tindakan ini tidak dapat dibatalkan.
+                                    </p>
+                                    
+                                    <form action="{{ url_for('admin.proses_banding', banding_id=b.id) }}" method="POST">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button type="button" class="btn btn-light px-4 rounded-3 fw-medium" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-success px-4 rounded-3 fw-bold">Ya, Setujui Banding</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </form>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
 </div>
-{% endfor %}
-                    </div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 bg-white rounded-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-list-check text-primary me-2"></i>Riwayat Tindakan Administrator</h5>
+                <span class="badge bg-light text-secondary border">10 Aktivitas Terakhir</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-muted small fw-bold">
+                            <tr>
+                                <th class="ps-4 py-3">Waktu</th>
+                                <th>Kategori</th>
+                                <th>Aksi</th>
+                                <th>Detail Deskripsi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if riwayat_tindakan %}
+                                {% for log in riwayat_tindakan %}
+                                <tr class="border-bottom">
+                                    <td class="ps-4 text-muted small fw-medium">
+                                        {{ log.created_at.strftime('%d %b %Y, %H:%M') if log.created_at else '-' }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ log.kategori }}</span>
+                                    </td>
+                                    <td class="fw-bold text-dark">{{ log.aksi }}</td>
+                                    <td class="text-secondary small">{{ log.deskripsi }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-clock-rotate-left fs-3 text-secondary opacity-25 mb-2 d-block"></i>
+                                        Belum ada riwayat aktivitas penindakan yang terekam.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>>
 
     <div class="row">
         <div class="col-lg-5">

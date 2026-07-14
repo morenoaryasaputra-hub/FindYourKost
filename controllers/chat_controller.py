@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, session, redirect, request
+import socketio
 from extensions import get_db
 
 chat_bp = Blueprint("chat", __name__)
@@ -163,9 +164,10 @@ def create_chat(kost_id):
 ##BATAS FILE UNTUK CHAT CONTROLLER##
 ############################
 
+import cloudinary.uploader
+from extensions import get_db, socketio
 import os
-from werkzeug.utils import secure_filename
-from flask import request, jsonify
+from flask import request, jsonify, session
 
 # Batasan ukuran (dalam bytes)
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2MB
@@ -188,18 +190,39 @@ def upload_file():
         return jsonify({"error": "Gambar max 2MB"}), 400
     file.seek(0) # Reset pointer setelah read()
 
-    # Simpan file
-    filename = secure_filename(file.filename)
-    save_path = os.path.join("static/uploads", filename)
-    file.save(save_path)
+    # ==========================================
+    # LOGIKA BARU: UPLOAD LANGSUNG KE CLOUDINARY
+    # ==========================================
+    try:
+        # resource_type="auto" agar bisa menerima gambar, video, maupun file lain
+        upload_result = cloudinary.uploader.upload(file, folder="findyourkost_chat", resource_type="auto")
+        file_url = upload_result.get('secure_url')
+    except Exception as e:
+        return jsonify({"error": f"Gagal upload ke Cloudinary: {str(e)}"}), 500
 
-    # Simpan ke DB
+    # Simpan URL Cloudinary ke DB (bukan path lokal lagi)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO chat_message (room_id, sender_id, pesan, file_path) VALUES (%s, %s, %s, %s)", 
-                   (room_id, session["user_id"], "Mengirim file...", save_path))
+                   (room_id, session["user_id"], "Mengirim file...", file_url))
     conn.commit()
     cursor.close()
     conn.close()
 
-    return jsonify({"success": True, "file_path": save_path, "type": ext})
+    # Tentukan tipe file
+    file_type = f"image/{ext}" if ext in ['jpg', 'jpeg', 'png', 'webp'] else f"video/{ext}" if ext in ['mp4', 'webm'] else "application/pdf"
+
+    # Pancarkan URL Cloudinary ke ruangan secara live!
+    socketio.emit(
+        "receive_message",
+        {
+            "sender_id": session["user_id"],
+            "message": "Mengirim file...",
+            "file_path": file_url,
+            "file_type": file_type
+        },
+        to=str(room_id),
+        namespace="/"
+    )
+
+    return jsonify({"success": True, "file_path": file_url, "type": ext})

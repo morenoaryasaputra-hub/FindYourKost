@@ -6,10 +6,13 @@ from flask import request
 from flask import url_for
 from flask import flash
 import os
+import pymysql
+from resend import response
 from werkzeug.utils import secure_filename
 from extensions import get_db
 import requests
 from PIL import Image
+from decimal import Decimal
 
 # ==========================================
 # IMPORT PYTHON STANDARD LIBRARIES
@@ -39,7 +42,7 @@ def cek_pemilik():
         return redirect("/login")
     
     if session.get("role") != "pemilik":
-        return redirect("/penyewa/dashboard")
+        return redirect("/")
 
     # === TAMBAHAN BARU: OTOMATIS TARIK DATA PREMIUM DARI DATABASE ===
     try:
@@ -65,57 +68,67 @@ def cek_pemilik():
 @pemilik_bp.route("/")
 @pemilik_bp.route("/dashboard")
 def dashboard():
-    # 1. Ambil ID Pemilik dari session login
+    if "user_id" not in session or session.get("role") != "pemilik":
+        return redirect("/login")
+        
     pemilik_id = session.get('user_id')
     nama_pemilik = session.get('nama', 'Mitra Pemilik')
 
     try:
-        # 2. Hitung DATA RIIL dari database berdasarkan pemilik_id
-        total_properti = Kost.query.filter_by(pemilik_id=pemilik_id).count()
+        conn = get_db()
+        cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
         
-        # Hitung sisa kamar tersedia secara total dari semua kosan milik dia
-        kamar_tersedia = db.session.query(db.func.sum(Kost.sisa_kamar)).filter(Kost.pemilik_id == pemilik_id).scalar() or 0
+        # [Logika hitung total_properti, kamar_tersedia, booking_aktif, pendapatan_raw SAMA SEPERTI SEBELUMNYA]
+        cursor.execute("SELECT COUNT(id) AS total FROM kost WHERE pemilik_id = %s", (pemilik_id,))
+        total_properti = cursor.fetchone()['total'] or 0
         
-        # Hitung data penyewa/booking aktif (menghitung jumlah kamar terisi)
-        total_kamar = db.session.query(db.func.sum(Kost.total_kamar)).filter(Kost.pemilik_id == pemilik_id).scalar() or 0
-        booking_aktif = total_kamar - kamar_tersedia if total_kamar >= kamar_tersedia else 0
+        cursor.execute("SELECT SUM(sisa_kamar) AS tersedia FROM kost WHERE pemilik_id = %s", (pemilik_id,))
+        kamar_tersedia = cursor.fetchone()['tersedia'] or 0
         
-        # Hitung estimasi pendapatan bulan ini dari kosan yang terisi
-        # (Misal rata-rata sewa terhitung riil dari database harga kos milik dia)
-        rata_harga_kos = db.session.query(db.func.avg(Kost.harga)).filter(Kost.pemilik_id == pemilik_id).scalar() or 0
-        pendapatan_raw = booking_aktif * rata_harga_kos
+        cursor.execute("""
+            SELECT COUNT(b.id) AS aktif 
+            FROM booking b JOIN kost k ON b.kost_id = k.id
+            WHERE k.pemilik_id = %s AND b.status_booking = 'aktif'
+        """, (pemilik_id,))
+        booking_aktif = cursor.fetchone()['aktif'] or 0
         
-        # Format pendapatan biar fleksibel seperti mockup (Contoh: Rp 4.5M atau Rp 12.0JT)
+        cursor.execute("""
+            SELECT SUM(p.jumlah) AS pendapatan 
+            FROM pembayaran p JOIN booking b ON p.booking_id = b.id JOIN kost k ON b.kost_id = k.id
+            WHERE k.pemilik_id = %s AND p.status_pembayaran = 'lunas'
+        """, (pemilik_id,))
+        pendapatan_raw = cursor.fetchone()['pendapatan'] or 0
+        
         if pendapatan_raw >= 1000000000:
             pendapatan_display = f"Rp {(pendapatan_raw / 1000000000):.1f}M"
         elif pendapatan_raw >= 1000000:
             pendapatan_display = f"Rp {(pendapatan_raw / 1000000):.1f}JT"
         else:
-            pendapatan_display = f"Rp {int(pendapatan_raw):,}"
+            pendapatan_display = f"Rp {int(pendapatan_raw):,}".replace(",", ".")
 
-        # 3. Ambil data sampel properti untuk mempersonalisasi daftar aktivitas terbaru
-        kos_terakhir = Kost.query.filter_by(pemilik_id=pemilik_id).order_by(Kost.id.desc()).first()
-        nama_kos_aktif = kos_terakhir.nama_kost if kos_terakhir else "Kos Milik Anda"
+        # === TAMBAHAN BARU: AMBIL SALDO DOMPET ===
+        cursor.execute("SELECT saldo_dompet FROM users WHERE id = %s", (pemilik_id,))
+        saldo_data = cursor.fetchone()
+        saldo_dompet = saldo_data['saldo_dompet'] if saldo_data and saldo_data['saldo_dompet'] else 0
+
+        # Ambil Data Aktivitas / Notifikasi Terbaru
+        cursor.execute("""
+            SELECT judul, pesan, ikon, warna, created_at 
+            FROM notifikasi_pemilik 
+            WHERE pemilik_id = %s 
+            ORDER BY created_at DESC LIMIT 6
+        """, (pemilik_id,))
+        daftar_aktivitas = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
 
     except Exception as e:
-        # PENGAMAN CRASH SKS: Jika query di atas gagal karena struktur tabel belum dimigrasi,
-        # fallback otomatis ke data mockup bawaan agar halaman dashboard tidak error 500 saat ditinjau!
         print(f"Bypass Error Database Dashboard Pemilik: {e}")
         total_properti, kamar_tersedia, booking_aktif = 24, 15, 142
         pendapatan_display = "Rp 82.4M"
-        nama_kos_aktif = "Kos Mentari"
-
-    # 4. Generate data dinamis grafik pendapatan untuk Chart.js (Januari - Juni 2026)
-    # Datanya akan fluktuatif naik turun secara logis mengikuti jumlah properti yang dimiliki
-    base_income =  5000000
-    chart_data = [
-        int(base_income * 0.4),  # Jan (Kecil)
-        int(base_income * 0.6), # Feb
-        int(base_income * 1.0),  # Mar (Turun dikit biar natural)
-        int(base_income * 1.3), # Apr (Mulai nanjak)
-        int(base_income * 1.7), # Mei (Makin tinggi)
-        int(base_income * 1.8)   # Jun (Paling tinggi)
-    ]
+        saldo_dompet = 0 # Fallback saldo
+        daftar_aktivitas = []
 
     return render_template(
         "pemilik/dashboard.html",
@@ -124,22 +137,99 @@ def dashboard():
         kamar_tersedia=kamar_tersedia,
         booking_aktif=booking_aktif,
         pendapatan_display=pendapatan_display,
-        chart_data=chart_data,
-        nama_kos_aktif=nama_kos_aktif
+        saldo_dompet=saldo_dompet, # Kirim saldo ke HTML
+        daftar_aktivitas=daftar_aktivitas
     )
+
+# ==========================================
+# AKSI TARIK SALDO DOMPET (DEMO MAGIC)
+# ==========================================
+@pemilik_bp.route("/tarik-saldo", methods=["POST"])
+def tarik_saldo():
+    if "user_id" not in session or session.get("role") != "pemilik":
+        return redirect("/login")
+
+    # Tangkap nominal dari form
+    try:
+        nominal_tarik = float(request.form.get("nominal", 0))
+    except ValueError:
+        nominal_tarik = 0
+
+    if nominal_tarik < 10000:
+        flash("Minimal penarikan adalah Rp 10.000.", "warning")
+        return redirect(url_for("pemilik.dashboard"))
+
+    pemilik_id = session.get("user_id")
+    conn = get_db()
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+
+    # Cek saldo saat ini
+    cursor.execute("SELECT saldo_dompet FROM users WHERE id = %s", (pemilik_id,))
+    user = cursor.fetchone()
+
+    if user and user['saldo_dompet'] >= nominal_tarik:
+        # 1. POTONG SALDO SECARA GAIB (Otomatis)
+        cursor.execute("UPDATE users SET saldo_dompet = saldo_dompet - %s WHERE id = %s", (nominal_tarik, pemilik_id))
+
+        # 2. CATAT KE NOTIFIKASI (Agar seolah-olah diproses sistem nyata)
+        pesan_notif = f"Penarikan dana sebesar <strong>Rp {int(nominal_tarik):,}</strong> berhasil diproses dan dikirim ke rekening Anda."
+        cursor.execute("""
+            INSERT INTO notifikasi_pemilik (pemilik_id, judul, pesan, ikon, warna, created_at)
+            VALUES (%s, 'Penarikan Berhasil', %s, 'fa-money-bill-wave', 'success', NOW())
+        """, (pemilik_id, pesan_notif))
+
+        conn.commit()
+        flash(f"Penarikan Rp {int(nominal_tarik):,} sedang diproses ke rekening terdaftar Anda!", "success")
+    else:
+        flash("Penarikan gagal! Saldo tidak mencukupi.", "danger")
+
+    cursor.close()
+    conn.close()
+    return redirect(url_for("pemilik.dashboard"))
 # ====================================
 # DATA KOS & HAPUS KOS
 # ====================================
 @pemilik_bp.route("/data-kos")
 def data_kos():
+    # 1. Proteksi Sesi
+    if "user_id" not in session or session.get("role") != "pemilik":
+        return redirect("/login")
+        
     user_id = session.get("user_id")
     
-    # Ambil semua properti kos milik user yang sedang login
-    daftar_kos = Kost.query.filter_by(pemilik_id=user_id).all()
+    # 2. Tangkap Parameter Filter dari URL (GET Request)
+    tipe_filter = request.args.get('tipe')
+    
+    conn = get_db()
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+    
+    # 3. Bangun Query SQL Dasar
+    query = """
+        SELECT id, nama_kost, tipe_penghuni, harga, sisa_kamar, total_kamar, 
+               status_verifikasi, tier_listing 
+        FROM kost 
+        WHERE pemilik_id = %s
+    """
+    params = [user_id]
+    
+    # 4. Tambahkan Kondisi Filter Jika Ada
+    if tipe_filter and tipe_filter in ['putra', 'putri', 'campur']:
+        query += " AND tipe_penghuni = %s"
+        params.append(tipe_filter)
+        
+    query += " ORDER BY id DESC"
+    
+    # 5. Eksekusi Query
+    cursor.execute(query, tuple(params))
+    daftar_kos = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
     
     return render_template(
         "pemilik/data_kos.html",
-        list_kost=daftar_kos
+        list_kost=daftar_kos,
+        tipe_filter=tipe_filter # Kirim kembali ke frontend agar dropdown tetap terpilih
     )
 
 @pemilik_bp.route("/hapus-kos/<int:id>", methods=["POST"])
@@ -263,53 +353,57 @@ def edit_kos(kost_id):
     if "user_id" not in session or session.get("role") != "pemilik":
         return redirect("/login")
 
-    # 1. Ambil data kos lama berdasarkan ID menggunakan ORM bawaan kamu
+    # 1. Ambil data kos lama
     kos = Kost.query.get_or_404(kost_id)
 
     if request.method == "POST":
+        # Ambil input dari form
+        form_harga = request.form.get("harga")
+        form_dp = request.form.get("uang_muka")
+        
+        # LOGIKA PERBAIKAN: Jika form dikosongkan, gunakan nilai lama dari database
         try:
-            harga = int(request.form.get("harga", 0))
-            uang_muka = int(request.form.get("uang_muka", 0))
+            harga = int(form_harga) if form_harga and form_harga.strip() != "" else kos.harga
+            uang_muka = int(form_dp) if form_dp and form_dp.strip() != "" else (kos.uang_muka or 0)
         except ValueError:
-            harga = 0
-            uang_muka = 0
+            harga = kos.harga
+            uang_muka = kos.uang_muka or 0
 
-        # VALIDASI AMAN: Jika perubahan DP melebihi 50% dari Harga Kos
-        if uang_muka > (harga * 0.5):
-            flash("Perubahan Gagal! Uang Muka (DP) maksimal adalah 50% dari harga bulanan kos.", "danger")
+        # VALIDASI AMAN: DP tidak boleh lebih dari 50%
+        if uang_muka > (harga * Decimal('0.5')):
+            flash("Perubahan Gagal! Uang Muka (DP) maksimal adalah 50% dari harga bulanan.", "danger")
             geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
-            # Kembalikan form_data=request.form ke html agar editan terakhir tidak hilang
-            return render_template("pemilik/edit_kos.html", kos=kos, geoapify_key=geoapify_key, form_data=request.form)
+            return render_template("pemilik/edit_kos.html", kos=kos, geoapify_key=geoapify_key)
 
         try:
-            # 2. Update Form Section Bawaan Kamu
+            # 2. Update Field Utama
             kos.nama_kost = request.form.get("nama_kost")
+            
+            # Gabungkan kembali alamat dengan format konsisten
             alamat_raw = request.form.get("alamat")
             alamat_spesifik = request.form.get("alamat_spesifik")
             wilayah = request.form.get("wilayah")
-            
-            # Gabungkan kembali alamat dengan format yang konsisten
             kos.alamat = f"{alamat_raw} ({wilayah}) - Patokan: {alamat_spesifik}"
+            
             kos.tipe_penghuni = request.form.get("tipe_penghuni")
             kos.harga = harga
-            kos.total_kamar = int(request.form.get("total_kamar", 1))
+            kos.uang_muka = uang_muka
+            kos.total_kamar = int(request.form.get("total_kamar", kos.total_kamar))
             
+            # Update atribut opsional
             if hasattr(kos, 'deskripsi'): 
                 kos.deskripsi = request.form.get("deskripsi")
-            if hasattr(kos, 'uang_muka'): 
-                kos.uang_muka = uang_muka
+            if hasattr(kos, 'latitude'): 
+                kos.latitude = request.form.get("latitude")
+            if hasattr(kos, 'longitude'): 
+                kos.longitude = request.form.get("longitude")
 
-            # 3. Ambil pembaruan koordinat dari Map Picker
-            if hasattr(kos, 'latitude'): kos.latitude = request.form.get("latitude")
-            if hasattr(kos, 'longitude'): kos.longitude = request.form.get("longitude")
-
-            # 4. Proses Update File Gambar Baru Bawaan Kamu (Utanpa Dikurangi)
+            # 3. Proses Update Foto (Jika ada file baru)
             foto_files = request.files.getlist("galeri_foto")
-            upload_folder = os.path.join('static', 'uploads')
-            
             for file in foto_files:
                 if file and file.filename != '':
                     filename = secure_filename(file.filename)
+                    upload_folder = os.path.join('static', 'uploads')
                     if not os.path.exists(upload_folder):
                         os.makedirs(upload_folder)
                     file.save(os.path.join(upload_folder, filename))
@@ -323,33 +417,24 @@ def edit_kos(kost_id):
         except Exception as e:
             db.session.rollback()
             print(f"Error Update Database: {e}")
-            flash("Gagal menyimpan perubahan. Periksa kembali koneksi database Anda.", "danger")
+            flash("Gagal menyimpan perubahan. Periksa kembali koneksi database.", "danger")
 
     # ========================================================
-    # LOGIKA PARSING GET REQUEST (MENGISI FORM DATA LAMA KOS)
+    # LOGIKA GET (Menampilkan data ke form)
     # ========================================================
     wilayah_current = ""
     alamat_display = kos.alamat
     alamat_spesifik_current = ""
 
-    # Ekstraksi string patokan spesifik
     if kos.alamat and " - Patokan: " in kos.alamat:
-        try:
-            parts = kos.alamat.split(" - Patokan: ")
-            alamat_display = parts[0]
-            alamat_spesifik_current = parts[1]
-        except Exception:
-            pass
+        parts = kos.alamat.split(" - Patokan: ")
+        alamat_display = parts[0]
+        alamat_spesifik_current = parts[1]
 
-    # Ekstraksi teks wilayah kurung buka-tutup bawaan kamu
     if alamat_display and "(" in alamat_display and ")" in alamat_display:
-        try:
-            wilayah_current = alamat_display.split(" (")[1].replace(")", "")
-            alamat_display = alamat_display.split(" (")[0]
-        except Exception:
-            pass
+        wilayah_current = alamat_display.split(" (")[1].replace(")", "")
+        alamat_display = alamat_display.split(" (")[0]
 
-    # Ambil token dari .env secara aman untuk disalurkan ke Map picker script di halaman edit
     geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
     return render_template(
         "pemilik/edit_kos.html", 
@@ -357,8 +442,7 @@ def edit_kos(kost_id):
         alamat_display=alamat_display, 
         alamat_spesifik_current=alamat_spesifik_current,
         wilayah_current=wilayah_current,
-        geoapify_key=geoapify_key,
-        form_data=None
+        geoapify_key=geoapify_key
     )
 # ====================================
 # VERIFIKASI
@@ -443,15 +527,25 @@ def verifikasi_aksi(booking_id, aksi):
 # ====================================
 @pemilik_bp.route("/premium")
 def premium():
-    user = User.query.get(session.get("user_id"))
-    is_premium = user.is_premium if user else False
+    if "user_id" not in session or session.get("role") != "pemilik":
+        return redirect("/login")
+        
+    conn = get_db()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
     
-    return render_template(
-        "pemilik/layanan_premium.html",
-        is_premium=is_premium
-    )
-
-@pemilik_bp.route("/premium/checkout", methods=["POST"])
+    try:
+        # Ambil harga premium dinamis untuk ditampilkan ke pemilik
+        cursor.execute("SELECT harga FROM paket_premium WHERE id = 1")
+        paket = cursor.fetchone()
+        harga_premium = int(paket['harga']) if paket and paket.get('harga') else 99000
+    except Exception as e:
+        print(f"Error ambil harga premium: {e}")
+        harga_premium = 99000 # Harga default jika database gagal ditarik
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return render_template("pemilik/layanan_premium.html", harga_premium=harga_premium)
 def premium_checkout():
     """
     Rute ini disiapkan untuk memproses transaksi langganan via Midtrans Snap API.
@@ -775,17 +869,114 @@ def laporan_keuangan():
     if "user_id" not in session or session.get("role") != "pemilik":
         return redirect("/login")
     
-    # Cek Premium
     if not session.get("is_premium"):
         flash("Fitur Manajemen Keuangan khusus untuk pengguna Premium.", "warning")
         return redirect(url_for("pemilik.premium"))
     
-    # Data Dummy untuk Tabel Tagihan Penyewa (Sangat bagus untuk demo)
-    data_tagihan = [
-        {"nama": "Anisa Rahma", "kamar": "Kamar 01", "total": 1500000, "status": "Lunas", "tanggal": "05 Jul 2026"},
-        {"nama": "Budi Santoso", "kamar": "Kamar 03", "total": 1500000, "status": "Belum Bayar", "tanggal": "08 Jul 2026"},
-        {"nama": "Citra Kirana", "kamar": "Kamar 05", "total": 1800000, "status": "Tertunda", "tanggal": "07 Jul 2026"}
-    ]
+    conn = get_db()
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+    
+    try:
+        cursor.execute("""
+            SELECT 
+                b.id AS booking_id, 
+                u.nama AS nama, 
+                k.nama_kost AS kamar, 
+                b.total_harga AS total, 
+                b.status_pembayaran AS status 
+            FROM booking b
+            JOIN users u ON b.penyewa_id = u.id
+            JOIN kost k ON b.kost_id = k.id
+            WHERE k.pemilik_id = %s
+        """, (session['user_id'],))
+        
+        tagihan = cursor.fetchall()
+        
+    except Exception as e:
+        print(f"Error Database (Cek kolom status_pembayaran!): {e}")
+        tagihan = [] 
+        
+    finally:
+        cursor.close()
+        conn.close()
 
-    # Kirim data_tagihan ke HTML
-    return render_template("pemilik/laporan_keuangan.html", tagihan=data_tagihan)
+    # Kirim data hasil query ke HTML
+    return render_template("pemilik/laporan_keuangan.html", tagihan=tagihan)
+
+# ==========================================
+# AKSI KIRIM TAGIHAN VIA CHAT OTOMATIS (MODUL 3)
+# ==========================================
+@pemilik_bp.route("/kirim-tagihan/<int:booking_id>", methods=["POST"])
+def kirim_tagihan(booking_id):
+    if "user_id" not in session or session.get("role") != "pemilik":
+        return redirect("/login")
+
+    pemilik_id = session.get("user_id")
+    conn = get_db()
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+
+    try:
+        # 1. Ambil data penyewa dan kos dari tabel booking
+        cursor.execute("""
+            SELECT b.penyewa_id, b.total_harga, b.kost_id, u.nama as nama_penyewa, k.nama_kost
+            FROM booking b
+            JOIN kost k ON b.kost_id = k.id
+            JOIN users u ON b.penyewa_id = u.id
+            WHERE b.id = %s AND k.pemilik_id = %s
+        """, (booking_id, pemilik_id))
+        
+        data_booking = cursor.fetchone()
+
+        if not data_booking:
+            flash("Data pemesanan tidak ditemukan atau tidak valid.", "danger")
+            return redirect(url_for('pemilik.laporan_keuangan'))
+
+        penyewa_id = data_booking['penyewa_id']
+        nama_penyewa = data_booking['nama_penyewa']
+        nama_kost = data_booking['nama_kost']
+        
+        # Ambil nominal dari tagihan_penghuni jika ada, atau pakai harga booking
+        nominal_rp = f"Rp {int(data_booking['total_harga'] or 0):,}".replace(",", ".")
+
+        # 2. Cek apakah Chat Room antara Pemilik dan Penyewa untuk Kos ini sudah ada
+        cursor.execute("""
+            SELECT id FROM chat_room 
+            WHERE pemilik_id = %s AND penyewa_id = %s AND kost_id = %s
+        """, (pemilik_id, penyewa_id, data_booking['kost_id']))
+        room = cursor.fetchone()
+
+        if room:
+            room_id = room['id']
+        else:
+            # Jika belum ada obrolan, buat Chat Room baru
+            cursor.execute("""
+                INSERT INTO chat_room (pemilik_id, penyewa_id, kost_id, created_at)
+                VALUES (%s, %s, %s, NOW())
+            """, (pemilik_id, penyewa_id, data_booking['kost_id']))
+            room_id = cursor.lastrowid
+
+        # 3. Susun Pesan Otomatis & Masukkan ke Chat Message
+        pesan_sistem = (
+            f"🔔 *PENGINGAT TAGIHAN OTOMATIS*\n\n"
+            f"Halo {nama_penyewa}, ini adalah pengingat otomatis dari sistem. "
+            f"Anda memiliki tagihan sewa berjalan untuk kos '{nama_kost}' sebesar {nominal_rp} yang belum dilunasi. "
+            f"Mohon segera melakukan pembayaran melalui sistem. Terima kasih!"
+        )
+
+        cursor.execute("""
+            INSERT INTO chat_message (room_id, sender_id, pesan, is_read, waktu_kirim)
+            VALUES (%s, %s, %s, 0, NOW())
+        """, (room_id, pemilik_id, pesan_sistem))
+
+        conn.commit()
+        flash(f"Pesan tagihan otomatis berhasil dikirim ke ruang chat Anda dengan {nama_penyewa}!", "success")
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Error Kirim Tagihan: {e}")
+        flash("Terjadi kesalahan saat mengirim pesan tagihan.", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('pemilik.laporan_keuangan'))
