@@ -67,6 +67,11 @@
             <a href="/konfirmasi-booking/{{ kost.id | default(0, true) }}" class="booking-btn">Booking Sekarang</a>
             <a href="/chat/create/{{ kost.id | default(0, true) }}" class="chat-btn">Chat Pemilik</a>
             
+            <a href="{{ url_for('penyewa.form_laporan_pemilik', kost_id=kost.id) }}" class="report-btn">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+                Laporkan Pemilik
+            </a>
+
             <a href="/wishlist/toggle/{{ kost.id | default(0, true) }}" class="wishlist-btn-detail">
                 <i class="fa-regular fa-heart"></i> Simpan ke Wishlist
             </a>

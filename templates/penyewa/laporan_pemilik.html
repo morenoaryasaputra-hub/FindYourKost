@@ -1,0 +1,160 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Laporkan Pemilik
+{% endblock %}
+
+{% block css %}
+
+<link
+rel="stylesheet"
+href="{{ url_for(
+    'static',
+    filename='css/laporan_pemilik.css'
+) }}">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="laporan-container">
+
+    <div class="laporan-card">
+
+        <div class="laporan-header">
+
+            <h2>
+
+                Laporkan Pemilik Kos
+
+            </h2>
+
+            <p>
+
+                Apabila Anda mengalami penipuan, perilaku yang tidak sesuai, atau pelanggaran lainnya dari pemilik kos, silakan jelaskan secara rinci. Laporan akan dikirim kepada Administrator FindYourKost untuk ditinjau.
+
+            </p>
+
+        </div>
+
+        <div class="info-kost">
+
+            <div class="info-item">
+
+                <span>
+
+                    Nama Kos
+
+                </span>
+
+                <strong>
+
+                    {{ kost.nama_kost }}
+
+                </strong>
+
+            </div>
+
+            <div class="info-item">
+
+                <span>
+
+                    Pemilik Kos
+
+                </span>
+
+                <strong>
+
+                    {{ kost.nama_pemilik }}
+
+                </strong>
+
+            </div>
+
+        </div>
+
+        <form
+        method="POST">
+
+            <div class="form-group">
+
+                <label>
+
+                    Jelaskan Keluhan Anda
+
+                </label>
+
+                <textarea
+
+                    name="alasan"
+
+                    rows="8"
+
+                    placeholder="Contoh:
+Pemilik meminta pembayaran di luar aplikasi, nomor rekening berbeda dengan yang tertera, atau melakukan tindakan yang merugikan penyewa."
+
+                    required
+
+                ></textarea>
+
+            </div>
+
+                        <div class="laporan-note">
+
+                <h4>
+
+                    Perlu Diketahui
+
+                </h4>
+
+                <ul>
+
+                    <li>
+
+                        Laporan hanya digunakan untuk membantu Administrator melakukan investigasi terhadap pemilik kos.
+
+                    </li>
+
+                    <li>
+
+                        Jangan memberikan informasi palsu atau laporan yang dibuat-buat.
+
+                    </li>
+
+                    <li>
+
+                        Administrator dapat menghubungi Anda apabila diperlukan informasi tambahan.
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="button-group">
+
+                <a
+                href="/detail-kost/{{ kost.id }}"
+                class="btn-secondary">
+
+                    Batal
+
+                </a>
+
+                <button
+                type="submit"
+                class="btn-primary">
+
+                    Kirim Laporan
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

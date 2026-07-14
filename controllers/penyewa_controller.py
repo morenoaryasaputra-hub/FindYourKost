@@ -1694,3 +1694,101 @@ def upload_ktp_booking():
     except Exception as e:
         print(f"Error Upload KTP Cloudinary: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+# ====================================
+# FORM LAPORAN PEMILIK
+# ====================================
+@penyewa_bp.route("/laporkan-pemilik/<int:kost_id>")
+def form_laporan_pemilik(kost_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+    cursor.execute("""
+
+        SELECT
+            k.id,
+            k.nama_kost,
+            u.nama AS nama_pemilik
+
+        FROM kost k
+
+        JOIN users u
+        ON k.pemilik_id=u.id
+
+        WHERE k.id=%s
+
+    """,(kost_id,))
+
+    kost=cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not kost:
+        flash("Data kos tidak ditemukan.","danger")
+        return redirect("/cari-kos")
+
+    return render_template(
+        "penyewa/laporan_pemilik.html",
+        kost=kost
+    )
+
+# ====================================
+# KIRIM LAPORAN
+# ====================================
+
+@penyewa_bp.route("/laporkan-pemilik/<int:kost_id>",methods=["POST"])
+def kirim_laporan_pemilik(kost_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    alasan=request.form.get("alasan")
+
+    conn=get_db()
+    cursor=conn.cursor()
+
+    cursor.execute("""
+
+        INSERT INTO laporan
+        (
+
+            pelapor_id,
+            kost_id,
+            alasan
+
+        )
+
+        VALUES
+        (
+
+            %s,
+            %s,
+            %s
+
+        )
+
+    """,(
+
+        session["user_id"],
+        kost_id,
+        alasan
+
+    ))
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash(
+        "Laporan berhasil dikirim ke Administrator.",
+        "success"
+    )
+
+    return redirect("/booking-saya")

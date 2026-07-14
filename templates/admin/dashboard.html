@@ -173,18 +173,280 @@
             </div>
         </div>
     </div>
-</div>>
+</div>
 
-    <div class="row">
-        <div class="col-lg-5">
-            <div class="card p-4 border-0 shadow-sm bg-white h-100 rounded-4">
-                <h5 class="fw-bold text-dark mb-4">Distribusi Pengguna Platform</h5>
-                <div style="height: 250px;">
-                    <canvas id="roleDistributionChart"></canvas>
-                </div>
+<div class="row">
+
+    <div class="col-lg-5">
+
+        <div class="card p-4 border-0 shadow-sm bg-white h-100 rounded-4">
+
+            <h5 class="fw-bold text-dark mb-4">
+
+                Distribusi Pengguna Platform
+
+            </h5>
+
+            <div style="height:250px;">
+
+                <canvas id="roleDistributionChart"></canvas>
+
             </div>
+
         </div>
+
     </div>
+
+    <div class="col-lg-7">
+
+        <div class="card shadow-sm border-0 bg-white rounded-4 h-100">
+
+            <div class="card-header bg-white border-bottom py-3">
+
+                <h5 class="fw-bold mb-0">
+
+                    📢 Laporan Penyewa
+
+                </h5>
+
+            </div>
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>Pelapor</th>
+
+                                <th>Pemilik</th>
+
+                                <th>Kos</th>
+
+                                <th>Keluhan</th>
+
+                                <th class="text-center">Aksi</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for laporan in laporan_list %}
+
+                            <tr>
+
+                                <td>{{ laporan.nama }}</td>
+
+                                <td>{{ laporan.nama_pemilik }}</td>
+
+                                <td>{{ laporan.nama_kost }}</td>
+
+                                <td>{{ laporan.alasan[:50] }}...</td>
+
+                                <td class="text-center">
+
+                                    <button
+
+                                        type="button"
+
+                                        class="btn btn-sm btn-primary"
+
+                                        data-bs-toggle="modal"
+
+                                        data-bs-target="#modalLaporan{{ laporan.id }}">
+
+                                        <i class="fa-solid fa-eye"></i>
+                                            
+                                        Detail
+                                        
+                                    </button>
+                                    
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td colspan="4" class="text-center py-4">
+
+                                    Belum ada laporan.
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                    {% for laporan in laporan_list %}
+
+<div
+
+class="modal fade"
+
+id="modalLaporan{{ laporan.id }}"
+
+tabindex="-1"
+
+aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content rounded-4 border-0 shadow">
+
+            <div class="modal-header">
+
+                <h5 class="fw-bold">
+
+                    Detail Laporan Penyewa
+
+                </h5>
+
+                <button
+
+                    type="button"
+
+                    class="btn-close"
+
+                    data-bs-dismiss="modal">
+
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+
+                        <label class="fw-bold">
+
+                            Pelapor
+
+                        </label>
+
+                        <div class="form-control">
+
+                            {{ laporan.nama }}
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="fw-bold">
+
+                            Pemilik Kos
+
+                        </label>
+
+                        <div class="form-control">
+
+                            {{ laporan.nama_pemilik }}
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-12">
+
+                        <label class="fw-bold">
+
+                            Nama Kos
+
+                        </label>
+
+                        <div class="form-control">
+
+                            {{ laporan.nama_kost }}
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-12">
+
+                        <label class="fw-bold">
+
+                            Tanggal Laporan
+
+                        </label>
+
+                        <div class="form-control">
+
+                            {{ laporan.created_at.strftime("%d %B %Y %H:%M") }}
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-12">
+
+                        <label class="fw-bold">
+
+                            Isi Keluhan
+
+                        </label>
+
+                        <textarea
+
+                            class="form-control"
+
+                            rows="8"
+
+                            readonly>{{ laporan.alasan }}</textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+
+                    class="btn btn-secondary"
+
+                    data-bs-dismiss="modal">
+
+                    Tutup
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

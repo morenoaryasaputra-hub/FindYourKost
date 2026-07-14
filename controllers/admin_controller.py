@@ -99,7 +99,46 @@ def dashboard():
         total_pengguna, menunggu_approval, total_transaksi = 0, 0, 0
         pemilik_count, penyewa_count, admin_count = 0, 0, 0
         daftar_banding, riwayat_tindakan = [], []
-        
+
+    # =====================================
+    # LAPORAN TERBARU
+    # =====================================
+
+    cursor.execute("""
+
+        SELECT
+
+            l.id,
+
+            pelapor.nama AS nama,
+
+            pemilik.nama AS nama_pemilik,
+
+            k.nama_kost,
+
+            l.alasan,
+
+            l.created_at
+
+        FROM laporan l
+
+        JOIN users pelapor
+        ON pelapor.id=l.pelapor_id
+
+        JOIN kost k
+        ON k.id=l.kost_id
+
+        JOIN users pemilik
+        ON pemilik.id=k.pemilik_id
+
+        ORDER BY l.created_at DESC
+
+        LIMIT 5
+
+        """)
+
+    laporan_list = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
@@ -112,6 +151,7 @@ def dashboard():
         penyewa_count=penyewa_count,
         admin_count=admin_count,
         daftar_banding=daftar_banding,
+        laporan_list=laporan_list,
         riwayat_tindakan=riwayat_tindakan # Variabel baru untuk Dashboard
     )
     
