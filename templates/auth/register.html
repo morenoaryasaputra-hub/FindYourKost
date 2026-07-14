@@ -158,14 +158,29 @@
 
                 <div class="checkbox">
 
-                <input
-                    type="checkbox"
-                    required>
+                    <input
+                        type="checkbox"
+                        id="agreeTerms"
+                        required>
 
-                <span>
-                    Saya menyetujui
-                    Syarat & Ketentuan
-                </span>
+                        <div class="checkbox-text">
+
+                            <label for="agreeTerms">
+
+                                Saya setuju dengan
+
+                            </label>
+
+                            <button
+                                type="button"
+                                id="lihatSyarat"
+                                class="terms-btn">
+                            
+                                Syarat & Ketentuan
+                                
+                            </button>
+
+                        </div>
 
                 </div>
 
@@ -208,6 +223,131 @@
     </div>
 
 </div>
+
+<div
+class="modal-overlay"
+id="modalSyarat">
+
+    <div class="modal-box">
+
+        <div class="modal-header">
+
+            <h2>
+
+                Syarat & Ketentuan FindYourKost
+
+            </h2>
+
+            <button
+                type="button"
+                id="closeModal">
+
+                ×
+
+            </button>
+
+        </div>
+
+        <div class="modal-content">
+
+            <h4>1. Ketentuan Akun</h4>
+
+            <p>
+                Pengguna wajib memberikan data yang benar saat melakukan pendaftaran akun.
+            </p>
+
+            <h4>2. Booking Kos</h4>
+
+            <p>
+                Seluruh transaksi booking dilakukan melalui aplikasi FindYourKost.
+            </p>
+
+            <h4>3. Pembayaran DP</h4>
+
+            <p>
+                Penyewa wajib membayar DP sebesar 30% sebelum pemilik mengonfirmasi booking.
+            </p>
+
+            <h4>4. Pelunasan</h4>
+
+            <p>
+                Setelah booking disetujui pemilik, penyewa wajib melunasi sisa pembayaran melalui aplikasi.
+            </p>
+
+            <h4>5. Pelaporan</h4>
+
+            <p>
+                Pengguna dapat melaporkan pemilik maupun penyewa apabila terjadi pelanggaran.
+            </p>
+
+            <h4>6. Privasi</h4>
+
+            <p>
+                Data pribadi hanya digunakan untuk kebutuhan verifikasi akun.
+            </p>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                id="tutupModal"
+                class="btn-primary">
+
+                Saya Mengerti
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const modal = document.getElementById("modalSyarat");
+
+    const btn = document.getElementById("lihatSyarat");
+
+    const close = document.getElementById("closeModal");
+
+    const ok = document.getElementById("tutupModal");
+
+    btn.addEventListener("click", function(){
+
+        modal.classList.add("show");
+
+    });
+
+    close.addEventListener("click", function(){
+
+        modal.classList.remove("show");
+
+    });
+
+    ok.addEventListener("click", function(){
+
+        modal.classList.remove("show");
+
+    });
+
+    modal.addEventListener("click", function(e){
+
+        if(e.target === modal){
+
+            modal.classList.remove("show");
+
+        }
+
+    });
+
+});
+
+</script>
 
 </body>
 </html>
