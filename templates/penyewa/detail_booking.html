@@ -12,7 +12,75 @@ href="{{ url_for('static', filename='css/detail_booking.css') }}">
 {% endblock %}
 
 {% block content %}
+<!-- ========================================== -->
+    <!-- TEMPLATE INVOICE (DISEMBUNYIKAN DARI LAYAR)-->
+    <!-- ========================================== -->
+    <div style="position: absolute; left: -9999px; top: -9999px;">
+        <div id="invoice-content" style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; width: 800px; background: white;">
+            <!-- Header Invoice -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1453e5; padding-bottom: 20px; margin-bottom: 30px;">
+                <div>
+                    <h2 style="color: #1453e5; margin: 0; font-size: 32px; font-weight: 800;">FindYourKost</h2>
+                    <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">Platform Penyewaan Kos Terpercaya</p>
+                </div>
+                <div style="text-align: right;">
+                    <h1 style="margin: 0; font-size: 38px; color: #111827;">INVOICE</h1>
+                    <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 16px;">#TRX-{{ booking[0] }}</p>
+                    <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">Tanggal Cetak: <span id="tgl-cetak"></span></p>
+                </div>
+            </div>
 
+            <!-- Info Penyewa & Pemilik -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
+                <div>
+                    <h4 style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px; text-transform: uppercase;">Ditagihkan Kepada:</h4>
+                    <p style="margin: 0; font-weight: bold; font-size: 18px; color: #111827;">{{ session.get('nama') }}</p>
+                    <p style="margin: 5px 0 0 0; color: #4b5563; font-size: 14px;">Penyewa Kos</p>
+                </div>
+                <div style="text-align: right;">
+                    <h4 style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px; text-transform: uppercase;">Dibayarkan Kepada:</h4>
+                    <p style="margin: 0; font-weight: bold; font-size: 18px; color: #111827;">{{ booking[12] }}</p>
+                    <p style="margin: 5px 0 0 0; color: #4b5563; font-size: 14px;">Pemilik {{ booking[7] }}</p>
+                </div>
+            </div>
+
+            <!-- Tabel Rincian -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
+                <thead>
+                    <tr style="background: #f3f4f6;">
+                        <th style="padding: 15px; text-align: left; border: 1px solid #e5e7eb; color: #374151;">Deskripsi Sewa</th>
+                        <th style="padding: 15px; text-align: center; border: 1px solid #e5e7eb; color: #374151;">Durasi</th>
+                        <th style="padding: 15px; text-align: right; border: 1px solid #e5e7eb; color: #374151;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 15px; border: 1px solid #e5e7eb;">
+                            <strong style="font-size: 16px; color: #111827;">{{ booking[7] }}</strong><br>
+                            <span style="color: #6b7280; font-size: 13px;">{{ booking[8] }}</span><br>
+                            <span style="color: #6b7280; font-size: 13px;">Tgl Masuk: {{ booking[2].strftime("%d %B %Y") if booking[2] else '-' }}</span>
+                        </td>
+                        <td style="padding: 15px; text-align: center; border: 1px solid #e5e7eb; font-weight: 600;">{{ booking[3] }} Bulan</td>
+                        <td style="padding: 15px; text-align: right; border: 1px solid #e5e7eb; font-weight: 600;">Rp {{ "{:,.0f}".format(booking[4]) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding: 15px; text-align: right; font-weight: bold; border: 1px solid #e5e7eb; color: #4b5563;">Uang Muka (DP 30%)</td>
+                        <td style="padding: 15px; text-align: right; border: 1px solid #e5e7eb; color: #16a34a; font-weight: bold;">Rp {{ "{:,.0f}".format(dp) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding: 15px; text-align: right; font-weight: bold; border: 1px solid #e5e7eb; color: #111827; font-size: 18px;">Sisa Pelunasan</td>
+                        <td style="padding: 15px; text-align: right; border: 1px solid #e5e7eb; color: #1453e5; font-weight: 800; font-size: 18px;">Rp {{ "{:,.0f}".format(pelunasan) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Footer Invoice -->
+            <div style="text-align: center; margin-top: 60px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+                <p style="margin: 0; font-weight: bold; color: #111827;">Terima kasih telah menggunakan layanan FindYourKost.</p>
+                <p style="margin: 5px 0 0 0; font-size: 13px;">Invoice ini diterbitkan oleh sistem sebagai bukti tagihan/pembayaran yang sah.</p>
+            </div>
+        </div>
+    </div>
 <div class="detail-booking-container">
 
     <div class="detail-header">
@@ -30,13 +98,8 @@ href="{{ url_for('static', filename='css/detail_booking.css') }}">
 
         </div>
 
-        <a href="#"
-        class="invoice-btn">
-
-            <i class="fa-solid fa-download"></i>
-
-            Unduh Invoice
-
+<a href="javascript:void(0)" onclick="unduhInvoice()" class="invoice-btn">
+            <i class="fa-solid fa-download"></i> Unduh Invoice
         </a>
 
     </div>
@@ -203,108 +266,68 @@ href="{{ url_for('static', filename='css/detail_booking.css') }}">
 
             </div>
 
-            {% if booking[5] == "menunggu_dp" %}
-
-            <button
-
-            id="pay-button"
-            data-booking-id="{{ booking[0] }}"
-            class="pay-btn">
-
+ {% if booking[5] == "menunggu_dp" %}
+            <button id="pay-button" data-booking-id="{{ booking[0] }}" class="pay-btn">
                 Bayar DP
-
             </button>
-
-            {% elif booking[5] == "dp_dibayar" %}
 
             {% elif booking[5] == "menunggu_pelunasan" %}
-
-            <button
-            id="pelunasan-button"
-            data-booking-id="{{ booking[0] }}"
-            class="pay-btn">
-
+            <button id="pelunasan-button" data-booking-id="{{ booking[0] }}" class="pay-btn">
                 Bayar Pelunasan
-
             </button>
-
+            
+            <!-- TAMBAHAN MODUL 4: TOMBOL ULASAN MUNCUL JIKA STATUS SELESAI -->
+           {% elif booking[5] == "selesai" %}
+            <button type="button" 
+                style="width: 100%; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); transition: transform 0.2s;" 
+                onmouseover="this.style.transform='scale(1.02)'" 
+                onmouseout="this.style.transform='scale(1)'"
+                onclick="bukaUlasan('{{ booking[0] }}', '{{ booking[7] }}')">
+                <i class="fas fa-star me-2"></i> Tulis Ulasan Kos
+            </button>
             {% endif %}
 
         </div>
 
         <!-- kanan -->
 
+<!-- kanan -->
         <div class="kost-card">
-
-            <img
-            src="{{ booking[9] }}"
-            alt="{{ booking[7] }}">
-
+            <img src="{{ booking[9] }}" alt="{{ booking[7] }}">
             <div class="kost-body">
-
-                <h2>
-
-                    {{ booking[6] }}
-
-                </h2>
-
+                <!-- Index 7 = Nama Kos, Index 8 = Alamat -->
+                <h2>{{ booking[7] }}</h2>
                 <p>
-
                     <i class="fa-solid fa-location-dot"></i>
-
-                    {{ booking[7] }}
-
+                    {{ booking[8] }}
                 </p>
-
                 <hr>
-
+                
                 <div class="info">
-
                     <span>Pemilik</span>
-
-                    <b>{{ booking[11] }}</b>
-
+                    <!-- Index 12 = Nama Pemilik -->
+                    <b>{{ booking[12] }}</b>
                 </div>
-
                 <div class="info">
-
                     <span>Durasi</span>
-
                     <b>{{ booking[3] }} Bulan</b>
-
                 </div>
-
                 <div class="info">
-
                     <span>Tanggal Masuk</span>
-
-                    <b>
-
-                        {{ booking[2].strftime("%d %B %Y") }}
-
-                    </b>
-
+                    <b>{{ booking[2].strftime("%d %B %Y") if booking[2] else '-' }}</b>
                 </div>
-
                 <div class="info">
-
-                    <span>Tipe</span>
-
-                    <b>{{ booking[10] }}</b>
-
+                    <span>Tipe Penghuni</span>
+                    <!-- Index 11 = Tipe (Putra/Putri/Campur) -->
+                    <b>{{ booking[11]|capitalize }}</b>
                 </div>
 
-                <a href="/chat/create/{{ booking[6] }}"
-                class="chat-btn">
-
+                <!-- Chat butuh ID Kost (Index 6) -->
+                <a href="/chat/create/{{ booking[6] }}" class="chat-btn">
                     <i class="fa-solid fa-comments"></i>
-
                     Hubungi Pemilik
-
                 </a>
-
             </div>
-
         </div>
 
     </div>
@@ -438,5 +461,109 @@ if(pelunasanButton){
 }
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function bukaUlasan(bookingId, namaKost) {
+    Swal.fire({
+        title: 'Bagaimana pengalaman Anda?',
+        html: `
+            <p style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">Berikan penilaian jujur Anda untuk <b>${namaKost}</b></p>
+            
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">Penilaian Bintang</label>
+                <select id="rating-bintang" class="swal2-select" style="width: 100%; margin: 0; font-size: 15px; padding: 10px; border-radius: 8px;">
+                    <option value="" disabled selected>Pilih jumlah bintang...</option>
+                    <option value="5">⭐⭐⭐⭐⭐ (Sangat Bagus)</option>
+                    <option value="4">⭐⭐⭐⭐ (Bagus)</option>
+                    <option value="3">⭐⭐⭐ (Cukup)</option>
+                    <option value="2">⭐⭐ (Kurang)</option>
+                    <option value="1">⭐ (Buruk)</option>
+                </select>
+            </div>
+            
+            <div style="text-align: left;">
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">Ulasan Anda</label>
+                <textarea id="ulasan-teks" class="swal2-textarea" style="width: 100%; margin: 0; padding: 12px; border-radius: 8px; font-size: 14px; box-sizing: border-box;" rows="4" placeholder="Ceritakan pengalaman Anda di sini (kebersihan kamar, fasilitas, ibu kos, dll)..."></textarea>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Kirim Ulasan',
+        cancelButtonText: 'Nanti Saja',
+        preConfirm: () => {
+            const rating = document.getElementById('rating-bintang').value;
+            const ulasan = document.getElementById('ulasan-teks').value;
+            
+            if (!rating) {
+                Swal.showValidationMessage('Harap pilih jumlah bintang terlebih dahulu!');
+                return false;
+            }
+            if (!ulasan.trim()) {
+                Swal.showValidationMessage('Ulasan tidak boleh kosong!');
+                return false;
+            }
+            
+            return { rating: rating, ulasan: ulasan }
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Mengirim...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+            
+            try {
+                const response = await fetch(`/booking/${bookingId}/kirim-ulasan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(result.value)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire('Berhasil!', 'Ulasan Anda telah dikirim. Terima kasih!', 'success')
+                    .then(() => location.reload());
+                } else {
+                    Swal.fire('Gagal!', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Sistem sedang sibuk.', 'error');
+            }
+        }
+    })
+}
+</script>
+<!-- Script Pembuat PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
+<script>
+    function unduhInvoice() {
+        // Tampilkan loading SweetAlert
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ title: 'Menyiapkan Invoice...', text: 'Mohon tunggu sebentar.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        }
+        
+        // Set tanggal cetak hari ini
+        const tgl = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        document.getElementById('tgl-cetak').innerText = tgl;
+
+        const element = document.getElementById('invoice-content');
+        
+        // Konfigurasi PDF
+        const opt = {
+            margin:       0.2, // Margin tepi kertas
+            filename:     'Invoice_FindYourKost_TRX-{{ booking[0] }}.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true }, // scale: 2 biar resolusinya tajam (HD)
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Eksekusi Download
+        html2pdf().set(opt).from(element).save().then(() => {
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
+                Swal.fire('Berhasil!', 'Invoice berhasil diunduh ke perangkat Anda.', 'success');
+            }
+        });
+    }
+</script>
 {% endblock %}

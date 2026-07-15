@@ -215,7 +215,7 @@ def data_kos():
     # 3. Bangun Query SQL Dasar
     query = """
         SELECT id, nama_kost, tipe_penghuni, harga, sisa_kamar, total_kamar, 
-               status_verifikasi, tier_listing 
+               status_verifikasi, tier_listing, foto_thumbnail  -- <--- FOTO HARUS ADA DI SINI!
         FROM kost 
         WHERE pemilik_id = %s
     """
@@ -389,9 +389,21 @@ def edit_kos(kost_id):
         tipe_penghuni = request.form.get("tipe_penghuni")
         total_kamar = int(request.form.get("total_kamar", 1))
         
-        # SINKRONISASI KAMAR
+        # ==========================================
+        # PERBAIKAN BUG SINKRONISASI KAMAR
+        # ==========================================
         kamar_terpakai = int(kos['total_kamar']) - int(kos['sisa_kamar'])
+        
+        # Jika data sebelumnya rusak/mines (karena bug nambah kamar tak terbatas), reset ke 0
+        if kamar_terpakai < 0:
+            kamar_terpakai = 0
+            
         sisa_kamar_baru = max(0, total_kamar - kamar_terpakai)
+
+        # HARD LIMIT: Sisa kamar TIDAK BOLEH melebihi total kamar
+        if sisa_kamar_baru > total_kamar:
+            sisa_kamar_baru = total_kamar
+        # ==========================================
 
         # FOTO HANDLER
         foto_file = request.files.get("foto_thumbnail")
@@ -406,7 +418,6 @@ def edit_kos(kost_id):
                 print(f"Cloudinary Edit Error: {e}")
 
         try:
-            # HARGA DAN UANG MUKA TETAP TERKUNCI AMAN
             cursor.execute("""
                 UPDATE kost 
                 SET nama_kost = %s, alamat = %s, deskripsi = %s, 
@@ -422,7 +433,6 @@ def edit_kos(kost_id):
             print(f"Error Update Kos: {e}")
             flash("Gagal memperbarui data kos.", "danger")
             
-    # --- LOGIKA MEMECAH ALAMAT SAAT HALAMAN DIBUKA ---
     alamat_display = kos['alamat']
     alamat_spesifik_current = ""
     wilayah_current = ""
@@ -441,7 +451,6 @@ def edit_kos(kost_id):
     
     geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
     
-    # Kirim pecahan data ke HTML
     return render_template(
         "pemilik/edit_kos.html", 
         kos=kos, 
@@ -1033,9 +1042,9 @@ def tolak_booking(booking_id):
     conn = get_db()
     cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
     try:
-        # 1. Ambil info booking, kos, dan penyewa
+        # 1. Ambil info booking, kos, dan penyewa beserta statusnya
         cursor.execute("""
-            SELECT b.penyewa_id, b.kost_id, k.nama_kost 
+            SELECT b.penyewa_id, b.kost_id, b.status_booking, k.nama_kost 
             FROM booking b JOIN kost k ON b.kost_id = k.id 
             WHERE b.id = %s
         """, (booking_id,))
@@ -1045,8 +1054,21 @@ def tolak_booking(booking_id):
             flash("Data pemesanan tidak ditemukan.", "danger")
             return redirect(url_for("pemilik.verifikasi"))
 
-        # 2. Kembalikan Kamar (+1) karena pesanan batal
-        cursor.execute("UPDATE kost SET sisa_kamar = sisa_kamar + 1 WHERE id = %s", (b_data['kost_id'],))
+        # ==========================================
+        # PERBAIKAN LOGIKA PENGEMBALIAN KAMAR
+        # ==========================================
+        # Kembalikan Kamar (+1) HANYA JIKA status booking sudah masuk tahap memotong kamar.
+        # Jika statusnya masih 'menunggu_dp', berarti belum bayar, jangan ditambah +1.
+        status_sudah_potong_kamar = ['dp_dibayar', 'menunggu_pelunasan', 'aktif']
+        
+        if b_data['status_booking'] in status_sudah_potong_kamar:
+            # Gunakan fungsi LEAST untuk memastikan sisa_kamar tidak akan pernah lebih besar dari total_kamar
+            cursor.execute("""
+                UPDATE kost 
+                SET sisa_kamar = LEAST(sisa_kamar + 1, total_kamar) 
+                WHERE id = %s
+            """, (b_data['kost_id'],))
+        # ==========================================
         
         # 3. Ubah status jadi 'menunggu_refund' buat diproses admin
         cursor.execute("UPDATE booking SET status_booking = 'menunggu_refund' WHERE id = %s", (booking_id,))
@@ -1059,14 +1081,13 @@ def tolak_booking(booking_id):
         if room:
             room_id = room['id']
         else:
-            # Bikin room baru kalau belum pernah ada riwayat chat
             cursor.execute("""
                 INSERT INTO chat_room (pemilik_id, penyewa_id, kost_id, created_at) 
                 VALUES (%s, %s, %s, NOW())
             """, (pemilik_id, b_data['penyewa_id'], b_data['kost_id']))
             room_id = cursor.lastrowid
         
-        # 5. Kirim Pesan Sistem (Fix error format string: masukkan room_id, pemilik_id, pesan)
+        # 5. Kirim Pesan Sistem
         pesan_sistem = f"🚫 *PEMBERITAHUAN SISTEM*\n\nMaaf, pengajuan sewa Anda untuk kos '{b_data['nama_kost']}' DITOLAK oleh pemilik. Alasan: {alasan}\n\nDana DP Anda sedang dalam antrean *REFUND* oleh Admin. Harap bersabar."
         
         cursor.execute("""
@@ -1075,7 +1096,7 @@ def tolak_booking(booking_id):
         """, (room_id, pemilik_id, pesan_sistem))
         
         conn.commit()
-        flash("Booking berhasil ditolak. Dana masuk ke antrean Refund Admin dan Kamar telah dikembalikan (+1).", "success")
+        flash("Booking berhasil ditolak dan status pesanan dibatalkan.", "success")
     except Exception as e:
         conn.rollback()
         flash(f"Error: {e}", "danger")

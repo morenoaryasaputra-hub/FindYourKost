@@ -421,84 +421,50 @@ method="GET">
 
             </div>
 
-            <div class="kost-body">
-
+<div class="kost-body">
                 <div class="card-top">
-
                     <span class="gender-tag">
-
                         {{ kost[4]|upper }}
-
                     </span>
-
                     {% if kost[7] == 1 %}
-
                     <span class="verified">
-
                         <i class="fa-solid fa-circle-check"></i>
-
                         Terverifikasi
-
                     </span>
-
                     {% endif %}
-
                 </div>
 
-                <h3>
-
-                    {{ kost[1] }}
-
-                </h3>
+                <h3>{{ kost[1] }}</h3>
+                
+                <!-- BINTANG RATING ALA PLAY STORE -->
+                <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+                    <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 14px;"></i>
+                    <span style="font-weight: 600; font-size: 14px; color: #374151;">
+                        {{ "%.1f"|format(kost[10]) if kost|length > 10 and kost[10] else "0.0" }}
+                    </span>
+                    <span style="font-size: 12px; color: #9ca3af;">
+                        ({{ kost[11] if kost|length > 11 and kost[11] else "0" }})
+                    </span>
+                </div>
 
                 <p class="alamat">
-
                     <i class="fa-solid fa-location-dot"></i>
-
                     {{ kost[2] }}
-
                 </p>
 
                 <div class="price">
-
                     Rp {{ "{:,.0f}".format(kost[3]) }}
-
-                    <span>
-
-                        / bulan
-
-                    </span>
-
+                    <span>/ bulan</span>
                 </div>
 
                 <div class="info-row">
-
                     <i class="fa-solid fa-door-open"></i>
-
-                    Sisa
-
-                    <b>
-
-                        {{ kost[6] }}
-
-                    </b>
-
-                    kamar
-
+                    Sisa <b>{{ kost[6] }}</b> kamar
                 </div>
 
-                <a
-
-                href="/detail-kost/{{ kost[0] }}"
-
-                class="detail-btn"
-
-                onclick="event.stopPropagation()">
-
+                <a href="/detail-kost/{{ kost[0] }}" class="detail-btn" onclick="event.stopPropagation()">
                     Lihat Detail
-
                 </a>
-
             </div>
 
         </div>

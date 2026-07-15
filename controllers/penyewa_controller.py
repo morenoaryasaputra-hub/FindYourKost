@@ -47,20 +47,19 @@ def cek_penyewa():
 # BERANDA
 # ====================================
 
+# ====================================
+# BERANDA
+# ====================================
 @penyewa_bp.route("/")
 def beranda():
-
     if "user_id" not in session:
-
         return redirect("/login")
 
     conn = get_db()
     cursor = conn.cursor()
-
+    
     cursor.execute("""
-
         SELECT
-
             k.id,
             k.nama_kost,
             k.alamat,
@@ -70,98 +69,63 @@ def beranda():
             k.status_verifikasi,
             k.sisa_kamar,
             k.tier_listing,
-
             CASE
-
                 WHEN w.id IS NULL THEN 0
                 ELSE 1
-
-            END AS is_wishlist
+            END AS is_wishlist,
+            
+            -- DATA RATING & ULASAN (Index 10 & 11)
+            COALESCE(AVG(r.rating), 0) AS rating_rata_rata,
+            COUNT(r.id) AS jumlah_ulasan
 
         FROM kost k
-
-        LEFT JOIN wishlist w
-
-        ON
-            w.kost_id = k.id
-
-        AND
-            w.user_id = %s
-
-        WHERE
-            k.status_verifikasi = 1
+        LEFT JOIN wishlist w ON w.kost_id = k.id AND w.user_id = %s
+        LEFT JOIN review r ON k.id = r.kost_id
+        
+        WHERE k.status_verifikasi = 1
+        
+        -- WAJIB GROUP BY KARENA ADA JOIN MULTIPLE TABLE
+        GROUP BY k.id, w.id
 
         ORDER BY
-
-        CASE
-
-            WHEN k.tier_listing='premium' THEN 3
-            WHEN k.tier_listing='gold' THEN 2
-            WHEN k.tier_listing='silver' THEN 1
-            ELSE 0
-
-        END DESC,
-
-        k.created_at DESC
-
+            CASE
+                WHEN k.tier_listing='premium' THEN 3
+                WHEN k.tier_listing='gold' THEN 2
+                WHEN k.tier_listing='silver' THEN 1
+                ELSE 0
+            END DESC,
+            k.created_at DESC
         LIMIT 12
-
-    """,(
-        session["user_id"],
-    ))
+    """, (session["user_id"],))
 
     kost_list = cursor.fetchall()
-
     cursor.close()
     conn.close()
 
     return render_template(
-
         "penyewa/beranda.html",
-
         kost_list=kost_list
-
     )
+
 
 # ====================================
 # CARI KOS
 # ====================================
-
 @penyewa_bp.route("/cari-kos")
 def cari_kos():
-
     if "user_id" not in session:
-
         return redirect("/login")
 
-    gender = request.args.get(
-        "gender",
-        ""
-    )
-
-    max_harga = request.args.get(
-        "max_harga",
-        ""
-    )
-
-    sort = request.args.get(
-        "sort",
-        "premium"
-    )
-
-    keyword = request.args.get(
-        "keyword",
-        ""
-    ).strip()
+    gender = request.args.get("gender", "")
+    max_harga = request.args.get("max_harga", "")
+    sort = request.args.get("sort", "premium")
+    keyword = request.args.get("keyword", "").strip()
 
     conn = get_db()
-
     cursor = conn.cursor()
 
     sql = """
-
         SELECT
-
             k.id,
             k.nama_kost,
             k.alamat,
@@ -171,165 +135,74 @@ def cari_kos():
             k.sisa_kamar,
             k.status_verifikasi,
             k.tier_listing,
-
             CASE
-
                 WHEN w.id IS NULL THEN 0
                 ELSE 1
-
-            END AS is_wishlist
+            END AS is_wishlist,
+            
+            -- DATA RATING & ULASAN (Index 10 & 11)
+            COALESCE(AVG(r.rating), 0) AS rating_rata_rata,
+            COUNT(r.id) AS jumlah_ulasan
 
         FROM kost k
-
-        LEFT JOIN wishlist w
-
-        ON
-            w.kost_id = k.id
-
-        AND
-            w.user_id = %s
-
-        WHERE
-
-            k.status_verifikasi = 1
-
+        LEFT JOIN wishlist w ON w.kost_id = k.id AND w.user_id = %s
+        LEFT JOIN review r ON k.id = r.kost_id
+        
+        WHERE k.status_verifikasi = 1
     """
 
-    params = [
-
-        session["user_id"]
-
-    ]
+    params = [session["user_id"]]
 
     if gender:
-
-        sql += """
-
-            AND
-            k.tipe_penghuni = %s
-
-        """
-
-        params.append(
-            gender
-        )
+        sql += " AND k.tipe_penghuni = %s "
+        params.append(gender)
 
     if max_harga:
-
-        sql += """
-
-            AND
-            k.harga <= %s
-
-        """
-
-        params.append(
-            max_harga
-        )
+        sql += " AND k.harga <= %s "
+        params.append(max_harga)
 
     if keyword:
-
         sql += """
-
-            AND
-
-            (
-
+            AND (
                 k.nama_kost LIKE %s
-
                 OR
-
                 k.alamat LIKE %s
-
             )
-
         """
+        params.extend([f"%{keyword}%", f"%{keyword}%"])
 
-        params.extend(
-
-            [
-
-                f"%{keyword}%",
-
-                f"%{keyword}%"
-
-            ]
-
-        )
+    # WAJIB DITAMBAHKAN SEBELUM ORDER BY
+    sql += " GROUP BY k.id, w.id "
 
     if sort == "murah":
-
-        sql += """
-
-            ORDER BY
-
-            k.harga ASC
-
-        """
-
+        sql += " ORDER BY k.harga ASC "
     elif sort == "mahal":
-
-        sql += """
-
-            ORDER BY
-
-            k.harga DESC
-
-        """
-
+        sql += " ORDER BY k.harga DESC "
     elif sort == "baru":
-
-        sql += """
-
-            ORDER BY
-
-            k.created_at DESC
-
-        """
-
+        sql += " ORDER BY k.created_at DESC "
     else:
-
         sql += """
-
             ORDER BY
-
             CASE
-
                 WHEN k.tier_listing = 'premium' THEN 1
                 WHEN k.tier_listing = 'gold' THEN 2
                 WHEN k.tier_listing = 'silver' THEN 3
                 ELSE 4
-
             END,
-
             k.created_at DESC
-
         """
 
-    cursor.execute(
-
-        sql,
-
-        params
-
-    )
-
+    cursor.execute(sql, params)
     kost_list = cursor.fetchall()
-
+    
     cursor.close()
-
     conn.close()
 
     return render_template(
-
         "penyewa/cari_kos.html",
-
-        kost_list = kost_list,
-
-        keyword = keyword,
-
-        total = len(kost_list)
-
+        kost_list=kost_list,
+        keyword=keyword,
+        total=len(kost_list)
     )
 
 import os
@@ -346,12 +219,23 @@ def detail_kost(kost_id):
     conn = get_db()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
     
-    # 1. Ambil Data Kos Lengkap (Termasuk Latitude & Longitude)
+    # 1. Ambil Data Kos Lengkap + Hitung Rata-Rata Rating & Total Review
+# 1. Ambil Data Kos Lengkap + Hitung Rata-Rata Rating & Total Review
     cursor.execute("""
-        SELECT k.*, u.nama as nama_pemilik, u.foto_profil as foto_pemilik
+        SELECT 
+            k.*, 
+            u.nama as nama_pemilik, 
+            u.foto_profil as foto_pemilik,
+            COALESCE(AVG(r.rating), 0) AS rating,
+            COUNT(r.id) AS total_review
         FROM kost k
         JOIN users u ON k.pemilik_id = u.id
+        LEFT JOIN review r ON k.id = r.kost_id
         WHERE k.id = %s
+        
+        -- PERBAIKAN DI SINI: Tambahkan u.nama dan u.foto_profil
+        GROUP BY k.id, u.nama, u.foto_profil
+        
     """, (kost_id,))
     kost = cursor.fetchone()
     
@@ -360,8 +244,18 @@ def detail_kost(kost_id):
         conn.close()
         flash("Kos tidak ditemukan.", "danger")
         return redirect("/cari-kos")
+
+    # 2. Ambil Daftar Ulasan beserta Nama Penyewanya
+    cursor.execute("""
+        SELECT r.rating, r.ulasan, r.created_at as tanggal, u.nama as nama_penyewa
+        FROM review r
+        JOIN users u ON r.user_id = u.id
+        WHERE r.kost_id = %s
+        ORDER BY r.created_at DESC
+    """, (kost_id,))
+    reviews = cursor.fetchall()
         
-    # 2. Ambil Galeri Foto (Jika tabelnya ada, jika tidak abaikan/sesuaikan)
+    # 3. Ambil Galeri Foto (Jika tabelnya ada, jika tidak abaikan/sesuaikan)
     try:
         cursor.execute("SELECT foto_path FROM galeri_kost WHERE kost_id = %s", (kost_id,))
         foto_list = cursor.fetchall()
@@ -371,12 +265,14 @@ def detail_kost(kost_id):
     cursor.close()
     conn.close()
     
-    # 3. Kirim Kunci API Geoapify untuk Peta
+    # 4. Kirim Kunci API Geoapify untuk Peta
     geoapify_key = os.environ.get("GEOAPIFY_API_KEY")
     
+    # 5. Lempar semua data (termasuk reviews) ke HTML
     return render_template(
         "penyewa/detail_kost.html", 
-        kost=kost, 
+        kost=kost,
+        reviews=reviews, 
         foto_list=foto_list, 
         geoapify_key=geoapify_key
     )
@@ -481,40 +377,33 @@ def konfirmasi_booking(kost_id):
 
         return redirect("/cari-kos")
 
-    harga = int(
+    if kost.get("harga"):
+        kost["harga"] = int(kost["harga"])
+    else:
+        kost["harga"] = 0
+        
+    if kost.get("uang_muka"):
+        kost["uang_muka"] = int(kost["uang_muka"])
+    else:
+        kost["uang_muka"] = 0
 
-        kost["harga"] or 0
-
-    )
-
-    dp = int(
-
-        kost["uang_muka"] or 0
-
-    )
+    # 2. Ambil nilai yang sudah bersih untuk dihitung
+    harga = kost["harga"]
+    dp = kost["uang_muka"]
 
     if dp <= 0:
-
         dp = harga
 
     sisa = harga - dp
 
+    # 3. Lempar ke HTML
     return render_template(
-
         "penyewa/konfirmasi_booking.html",
-
         user=user,
-
         kost=kost,
-
         dp=dp,
-
         sisa=sisa,
-
-        client_key=current_app.config[
-            "MIDTRANS_CLIENT_KEY"
-        ]
-
+        client_key=current_app.config["MIDTRANS_CLIENT_KEY"]
     )
 
 # ====================================
@@ -1414,44 +1303,34 @@ def midtrans_notification():
                 print("KOST -> SISA KAMAR BERKURANG 1")
             # ----------------------------------------------------
 
-        # (Tambahkan di bawah elif order_id.startswith("PEL-"): ... )
+ # (Taruh ini di bawah pengecekan elif order_id.startswith("PEL-"): ... )
+        
         elif order_id.startswith("TAGIHAN-"):
-            # Jika Tagihan Bulanan Berhasil Terbayar
-            gross = float(data.get("gross_amount", 0))
-            # Potong fee layanan tagihan platform (misal admin ambil 2%)
-            fee = gross * 0.02
+            gross = float(gross_amount) # Ambil gross_amount dari webhook Midtrans
+            fee = gross * 0.10          # Misal admin ambil fee 10%
             bersih_ke_pemilik = gross - fee
             
-            # Cari message ID dari Order ID (Format: TAGIHAN-{msg_id}-{random})
             msg_id = order_id.split("-")[1]
             
-            # 1. Cari Pemilik Kos dari Chat Room
-            cursor.execute("SELECT cr.pemilik_id FROM chat_message cm JOIN chat_room cr ON cm.room_id = cr.id WHERE cm.id = %s", (msg_id,))
+            # 1. Cari Pemilik Kos
+            cursor.execute("""
+                SELECT cr.pemilik_id 
+                FROM chat_message cm 
+                JOIN chat_room cr ON cm.room_id = cr.id 
+                WHERE cm.id = %s
+            """, (msg_id,))
             owner = cursor.fetchone()
             
             if owner:
-                # 2. Uang langsung masuk ke Dompet Virtual Pemilik
+                # 2. Uang bersih masuk ke Dompet Virtual Pemilik
                 cursor.execute("UPDATE users SET saldo_dompet = saldo_dompet + %s WHERE id = %s", (bersih_ke_pemilik, owner[0]))
                 
-                # 3. Ubah pesan tagihan di chat menjadi "LUNAS"
-                cursor.execute("UPDATE chat_message SET pesan = 'Tagihan telah LUNAS dibayarkan', is_tagihan = 0 WHERE id = %s", (msg_id,))
+                # 3. KUNCI KARTU TAGIHAN (Tetap pertahankan is_tagihan = 1, ubah pesan jadi LUNAS)
+                cursor.execute("UPDATE chat_message SET pesan = 'LUNAS', is_tagihan = 1 WHERE id = %s", (msg_id,))
                 
-                # 4. Catat ke Log Admin
-                cursor.execute("INSERT INTO log_admin (admin_id, kategori, aksi, deskripsi) VALUES (1, 'Keuangan', 'Tagihan Bulanan', %s)", 
-                               (f"Pemilik menerima tagihan bersih Rp{bersih_ke_pemilik} via chat.",))
-
-        elif order_id.startswith("PEL-"):
-
-            cursor.execute("""
-                UPDATE booking
-                SET status_booking='aktif'
-                WHERE id=%s
-            """, (booking_id,))
-
-            print("BOOKING -> AKTIF")
-
-        print("UPDATE BOOKING =", cursor.rowcount)
-        
+                # 4. Catat Log Admin
+                deskripsi_log = f"Pemilik menerima tagihan bersih Rp{bersih_ke_pemilik} via chat."
+                cursor.execute("INSERT INTO log_admin (admin_id, kategori, aksi, deskripsi) VALUES (1, 'Keuangan', 'Tagihan Bulanan', %s)", (deskripsi_log,))        
         
 
     # =========================================
@@ -1826,3 +1705,91 @@ def kirim_laporan_pemilik(kost_id):
     )
 
     return redirect("/booking-saya")
+
+@penyewa_bp.route("/booking/<int:booking_id>/kirim-ulasan", methods=["POST"])
+def kirim_ulasan(booking_id):
+    if "user_id" not in session or session.get("role") != "penyewa":
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+        
+    data = request.json
+    rating = int(data.get("rating", 5))
+    ulasan_teks = data.get("ulasan", "")
+    user_id = session.get("user_id")
+    
+    conn = get_db()
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+    
+    try:
+        # 1. Cek apakah booking ini valid dan milik user yang sedang login
+        cursor.execute("SELECT kost_id, status_booking FROM booking WHERE id = %s AND penyewa_id = %s", (booking_id, user_id))
+        booking = cursor.fetchone()
+        
+        if not booking:
+            return jsonify({"success": False, "message": "Data pemesanan tidak ditemukan."})
+            
+        if booking['status_booking'] != 'selesai':
+            return jsonify({"success": False, "message": "Anda hanya bisa memberi ulasan setelah masa sewa selesai."})
+            
+        # 2. Cek apakah user sudah pernah memberi ulasan untuk booking ini
+        cursor.execute("SELECT id FROM review WHERE booking_id = %s", (booking_id,))
+        if cursor.fetchone():
+            return jsonify({"success": False, "message": "Anda sudah pernah memberikan ulasan untuk penyewaan ini."})
+            
+        # 3. Simpan Ulasan ke Database
+        cursor.execute("""
+            INSERT INTO review (booking_id, user_id, kost_id, rating, ulasan, created_at)
+            VALUES (%s, %s, %s, %s, %s, NOW())
+        """, (booking_id, user_id, booking['kost_id'], rating, ulasan_teks))
+        
+        conn.commit()
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)})
+    finally:
+        cursor.close()
+        conn.close()
+        
+# ====================================
+# API NOTIFIKASI PENYEWA
+# ====================================
+@penyewa_bp.route("/api/notifikasi", methods=["GET"])
+def get_notifikasi():
+    # Pastikan yang akses cuma penyewa
+    if "user_id" not in session or session.get("role") != "penyewa":
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    conn = get_db()
+    # PENTING: Gunakan DictCursor agar data JSON gampang dibaca frontend
+    cursor = conn.cursor(pymysql.cursors.DictCursor) 
+    
+    try:
+        # Hitung yang belum dibaca
+        cursor.execute("SELECT COUNT(*) as unread FROM notifikasi WHERE user_id = %s AND is_read = 0", (session["user_id"],))
+        unread_count = cursor.fetchone()['unread']
+        
+        # Ambil 5 notifikasi terbaru
+        cursor.execute("SELECT * FROM notifikasi WHERE user_id = %s ORDER BY created_at DESC LIMIT 5", (session["user_id"],))
+        notifs = cursor.fetchall()
+        
+        return jsonify({"unread": unread_count, "data": notifs})
+    finally:
+        cursor.close()
+        conn.close()
+
+@penyewa_bp.route("/api/notifikasi/read", methods=["POST"])
+def read_notifikasi():
+    if "user_id" not in session or session.get("role") != "penyewa":
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        # Ubah status notifikasi menjadi sudah dibaca
+        cursor.execute("UPDATE notifikasi SET is_read = 1 WHERE user_id = %s", (session["user_id"],))
+        conn.commit()
+        return jsonify({"success": True})
+    finally:
+        cursor.close()
+        conn.close()

@@ -86,150 +86,70 @@ href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
         <div class="swiper-wrapper">
 
-            {% for kost in kost_list %}
-
+{% for kost in kost_list %}
             <div class="swiper-slide">
 
-                <div
-                class="kost-card"
-                onclick="window.location='/detail-kost/{{ kost[0] }}'">
+                <div class="kost-card" onclick="window.location='/detail-kost/{{ kost[0] }}'">
 
                     <div class="image-wrapper">
-
                         {% if kost[5] %}
-
-                        <img
-                        src="{{ kost[5] }}"
-                        alt="{{ kost[1] }}">
-
+                        <img src="{{ kost[5] }}" alt="{{ kost[1] }}">
                         {% else %}
-
-                        <img
-                        src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900"
-                        alt="{{ kost[1] }}">
-
+                        <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900" alt="{{ kost[1] }}">
                         {% endif %}
 
-                        <a
-                        href="/wishlist/toggle/{{ kost[0] }}"
-                        class="wishlist-btn"
-                        onclick="event.stopPropagation();">
-
+                        <a href="/wishlist/toggle/{{ kost[0] }}" class="wishlist-btn" onclick="event.stopPropagation();">
                             {% if kost[9] %}
-
                             <i class="fa-solid fa-heart"></i>
-
                             {% else %}
-
                             <i class="fa-regular fa-heart"></i>
-
                             {% endif %}
-
                         </a>
 
                         {% if kost[8] == "premium" %}
-
-                        <span class="badge premium">
-
-                            PREMIUM
-
-                        </span>
-
+                        <span class="badge premium">PREMIUM</span>
                         {% elif kost[8] == "gold" %}
-
-                        <span class="badge gold">
-
-                            GOLD
-
-                        </span>
-
+                        <span class="badge gold">GOLD</span>
                         {% elif kost[8] == "silver" %}
-
-                        <span class="badge silver">
-
-                            SILVER
-
-                        </span>
-
+                        <span class="badge silver">SILVER</span>
                         {% endif %}
 
                         {% if kost[6] == 1 %}
-
-                        <span class="verified">
-
-                            ✓ Terverifikasi
-
-                        </span>
-
+                        <span class="verified">✓ Terverifikasi</span>
                         {% endif %}
-
                     </div>
 
                     <div class="kost-body">
-
-                        <h3>
-
-                            {{ kost[1] }}
-
-                        </h3>
-
-                        <p class="alamat">
-
-                            📍 {{ kost[2] }}
-
-                        </p>
-
-                        <p class="tipe">
-
-                            {{ kost[4]|upper }}
-
-                        </p>
-
-                        <p class="harga">
-
-                            Rp {{ "{:,.0f}".format(kost[3]) }}
-
-                            <span>
-
-                                / bulan
-
+                        <h3>{{ kost[1] }}</h3>
+                        
+                        <!-- BINTANG RATING ALA PLAY STORE -->
+                        <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+                            <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 14px;"></i>
+                            <span style="font-weight: 600; font-size: 14px; color: #374151;">
+                                {{ "%.1f"|format(kost[10]) if kost|length > 10 and kost[10] else "0.0" }}
                             </span>
+                            <span style="font-size: 12px; color: #9ca3af;">
+                                ({{ kost[11] if kost|length > 11 and kost[11] else "0" }})
+                            </span>
+                        </div>
 
+                        <p class="alamat">📍 {{ kost[2] }}</p>
+                        <p class="tipe">{{ kost[4]|upper }}</p>
+                        <p class="harga">
+                            Rp {{ "{:,.0f}".format(kost[3]) }}
+                            <span>/ bulan</span>
                         </p>
+                        <p class="sisa">Sisa Kamar : {{ kost[7] }}</p>
 
-                        <p class="sisa">
-
-                            Sisa Kamar :
-                            {{ kost[7] }}
-
-                        </p>
-
-                        <a
-                        href="/detail-kost/{{ kost[0] }}"
-                        class="detail-btn"
-                        onclick="event.stopPropagation();">
-
+                        <a href="/detail-kost/{{ kost[0] }}" class="detail-btn" onclick="event.stopPropagation();">
                             Lihat Detail
-
                         </a>
-
                     </div>
 
                 </div>
 
             </div>
-
             {% endfor %}
-
-        </div>
-
-    </div>
-
-</section>
-
-<footer>
-
-    © 2026 FindYourKost
 
 </footer>
 

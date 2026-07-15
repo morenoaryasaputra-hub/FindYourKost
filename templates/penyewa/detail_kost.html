@@ -149,7 +149,7 @@
                 <div id="map" style="height: 400px; border-radius: 18px; border: 1px solid #e5e7eb;"></div>
             </div>
             
-            <!-- FASILITAS SEKITAR -->
+<!-- FASILITAS SEKITAR -->
             <div style="flex: 1; min-width: 250px; background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 20px;">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #444; border-bottom: 1px solid #eee; padding-bottom: 10px;">Fasilitas Publik Terdekat</h3>
                 <div id="fasilitas-sekitar-list" style="max-height: 320px; overflow-y: auto;">
@@ -158,10 +158,68 @@
                     </div>
                 </div>
             </div>
+        </div> 
+    </div> 
+
+    <!-- ===================================== -->
+    <!-- KOLOM REVIEW & ULASAN ALA PLAY STORE  -->
+    <!-- ===================================== -->
+    <hr style="margin: 40px 0; border: 1px solid #e5e7eb;">
+    
+    <div class="info-section" style="margin-bottom: 60px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Rating dan Ulasan</h2>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 28px;"></i>
+                <div>
+                    <h3 style="font-size: 24px; margin: 0; color: #111827;">{{ "%.1f"|format(kost.rating|default(0, true)) }}</h3>
+                    <p style="font-size: 13px; color: #6b7280; margin: 0;">Dari {{ kost.total_review | default(0, true) }} ulasan</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <!-- Looping Review dari Backend -->
+            {% if reviews and reviews|length > 0 %}
+                {% for rev in reviews %}
+                <div style="background: white; border: 1px solid #f3f4f6; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; background: #e5e7eb; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: #4b5563;">
+                                {{ rev.nama_penyewa[0] }}
+                            </div>
+                            <div>
+                                <h4 style="font-size: 15px; margin: 0; color: #1f2937;">{{ rev.nama_penyewa }}</h4>
+                                <span style="font-size: 12px; color: #9ca3af;">{{ rev.tanggal.strftime('%d %B %Y') if rev.tanggal else 'Baru saja' }}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 2px;">
+                            <!-- Looping bintang kuning sesuai nilai rating -->
+                            {% for i in range(rev.rating) %}
+                                <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 12px;"></i>
+                            {% endfor %}
+                            <!-- Sisa bintang abu-abu -->
+                            {% for i in range(5 - rev.rating) %}
+                                <i class="fa-solid fa-star" style="color: #e5e7eb; font-size: 12px;"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p style="font-size: 14px; color: #4b5563; line-height: 1.5; margin: 0;">
+                        {{ rev.ulasan }}
+                    </p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 30px; background: #f9fafb; border-radius: 16px;">
+                    <i class="fa-regular fa-comment-dots" style="font-size: 40px; color: #9ca3af; margin-bottom: 15px;"></i>
+                    <h4 style="color: #4b5563; margin-bottom: 5px;">Belum Ada Ulasan</h4>
+                    <p style="color: #6b7280; font-size: 14px;">Jadilah penyewa pertama yang memberikan ulasan untuk properti ini!</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 
-</div>
+</div> 
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
