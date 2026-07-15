@@ -64,7 +64,7 @@ class Kost(db.Model):
     latitude = db.Column(db.Numeric(10, 8), nullable=True)
     longitude = db.Column(db.Numeric(11, 8), nullable=True)
     status_verifikasi = db.Column(db.Boolean, default=False)
-    tier_listing = db.Column(db.Enum('silver', 'gold', 'premium'), default='silver')
+    tier_listing = db.Column(db.Enum('none', 'silver', 'gold', 'premium'), default='none')
     foto_thumbnail = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     uang_muka = db.Column(db.Integer, default=0)
@@ -221,6 +221,9 @@ class ChatMessage(db.Model):
     pesan = db.Column(db.Text, nullable=True)
     is_read = db.Column(db.Boolean, default=False)
     waktu_kirim = db.Column(db.DateTime, default=db.func.current_timestamp())
+    file_path = db.Column(db.String(255), nullable=True)
+    is_tagihan = db.Column(db.Boolean, default=False)
+    tagihan_amount = db.Column(db.Numeric(12, 2), nullable=True)
 
 
 # =================================------------------------

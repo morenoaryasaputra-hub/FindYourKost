@@ -89,7 +89,7 @@
                         <i class="fa-solid fa-clock text-warning" style="font-size: 50px;"></i>
                     </div>
                     <h5 class="fw-bold text-center mb-2">Suspend Akun</h5>
-                    <p class="text-muted text-center mb-4">Bekukan akses login akun <strong>{{ u.nama }}</strong> selama 7 hari otomatis.</p>
+                    <p class="text-muted text-center mb-4">Bekukan akses login akun <strong>{{ u.nama }}</p>
                     
                     <form action="{{ url_for('admin.tindak_user', user_id=u.id) }}" method="POST">
                         <input type="hidden" name="action_type" value="suspend">
@@ -112,7 +112,7 @@
 
                         <div class="d-flex justify-content-center gap-2 mt-2">
                             <button type="button" class="btn btn-light rounded-3 px-4 fw-medium" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-warning text-dark rounded-3 px-4 fw-bold">Suspend 1 Minggu</button>
+                            <button type="submit" class="btn btn-warning text-dark rounded-3 px-4 fw-bold">Suspend</button>
                         </div>
                     </form>
                 </div>

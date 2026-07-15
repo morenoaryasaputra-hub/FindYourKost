@@ -1,22 +1,23 @@
 {% extends 'pemilik/base.html' %} 
 {% block content %}
 
-<div class="container mt-4" style="font-family: 'Inter', sans-serif;">
+<div class="container-fluid px-4 mt-4" style="font-family: 'Inter', sans-serif; min-height: 95vh; background-color: #f8fafc;">
+    
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h2 class="fw-bold mb-1">🏢 Data Properti Kos</h2>
-            <p class="text-muted small mb-0">Kelola informasi properti, ketersediaan kamar, dan status lencana kos Anda.</p>
+            <h3 class="fw-bold text-dark mb-1">🏢 Manajemen Properti Kos</h3>
+            <p class="text-muted small mb-0">Kelola informasi properti, pantau ketersediaan kamar, dan tingkatkan performa iklan Anda.</p>
         </div>
-        <a href="{{ url_for('pemilik.tambah_kos') }}" class="btn btn-primary shadow-sm fw-semibold rounded-3 px-4">
-            <i class="fas fa-plus me-1"></i> Tambah Kos Baru
+        <a href="{{ url_for('pemilik.tambah_kos') }}" class="btn btn-primary shadow-sm fw-semibold rounded-3 px-4 py-2">
+            <i class="fas fa-plus me-2"></i> Tambah Kos Baru
         </a>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm">
-                    {{ message }}
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm border-0 mb-4" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>{{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
@@ -24,100 +25,95 @@
     {% endwith %}
 
     <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
-        <div class="card-body p-3">
-            <form action="{{ url_for('pemilik.data_kos') }}" method="GET" class="d-flex align-items-center gap-2">
-                <label class="fw-semibold text-secondary small ms-1 me-2"><i class="fa-solid fa-filter me-1"></i> Filter:</label>
-                <select name="tipe" class="form-select form-select-sm rounded-3 w-auto" style="min-width: 150px;">
-                    <option value="">Semua Tipe Kos</option>
-                    <option value="putra" {% if tipe_filter == 'putra' %}selected{% endif %}>Putra</option>
-                    <option value="putri" {% if tipe_filter == 'putri' %}selected{% endif %}>Putri</option>
-                    <option value="campur" {% if tipe_filter == 'campur' %}selected{% endif %}>Campur</option>
-                </select>
-                <button type="submit" class="btn btn-sm btn-secondary fw-medium rounded-3 px-3">Terapkan</button>
-                {% if tipe_filter %}
-                    <a href="{{ url_for('pemilik.data_kos') }}" class="btn btn-sm btn-light fw-medium rounded-3 px-3 text-danger">Reset</a>
-                {% endif %}
+        <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center rounded-top-4">
+            <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-list text-primary me-2"></i>Daftar Properti Anda</h6>
+            
+            <form action="{{ url_for('pemilik.data_kos') }}" method="GET" class="d-flex" style="width: 250px;">
+                <div class="input-group input-group-sm shadow-none">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Cari nama kos..." value="{{ request.args.get('search', '') }}">
+                </div>
             </form>
         </div>
-    </div>
 
-    <div class="card shadow-sm border-0 rounded-4 bg-white mb-5">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-secondary small">
+                    <thead class="bg-light text-muted" style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
                         <tr>
-                            <th class="ps-4 py-3">Nama Kos</th>
-                            <th>Tipe</th>
-                            <th>Harga / Bulan</th>
-                            <th>Kamar Tersedia</th>
-                            <th>Status & Lencana</th>
-                            <th class="text-center pe-4">Aksi</th>
+                            <th class="ps-4 py-3 border-bottom-0">Properti Kos</th>
+                            <th class="py-3 border-bottom-0">Tipe</th>
+                            <th class="py-3 border-bottom-0">Harga / Bulan</th>
+                            <th class="py-3 border-bottom-0 text-center">Ketersediaan</th>
+                            <th class="py-3 border-bottom-0 text-center">Lencana</th>
+                            <th class="pe-4 py-3 border-bottom-0 text-end">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="border-top-0">
                         {% if list_kost %}
                             {% for kos in list_kost %}
-                            <tr class="border-bottom">
-                                <td class="ps-4 fw-bold text-dark">{{ kos.nama_kost }}</td>
-                                
-                                <td>
-                                    {% if kos.tipe_penghuni == 'putra' %}
-                                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1"><i class="fa-solid fa-mars me-1"></i>Putra</span>
-                                    {% elif kos.tipe_penghuni == 'putri' %}
-                                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2 py-1"><i class="fa-solid fa-venus me-1"></i>Putri</span>
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        {% if kos.foto_thumbnail %}
+                                            <img src="{{ kos.foto_thumbnail }}" alt="Foto Kos" class="rounded-3 shadow-sm object-fit-cover me-3" style="width: 55px; height: 55px;">
+                                        {% else %}
+                                            <div class="bg-light rounded-3 d-flex justify-content-center align-items-center me-3 text-muted shadow-sm" style="width: 55px; height: 55px;">
+                                                <i class="fas fa-image fs-4"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-1">{{ kos.nama_kost }}</h6>
+                                            <small class="text-muted text-truncate d-inline-block" style="max-width: 200px;">
+                                                <i class="fas fa-map-marker-alt text-danger me-1"></i>{{ kos.alamat.split('(')[0] if '(' in kos.alamat else kos.alamat }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="py-3">
+                                    {% if kos.tipe_penghuni == 'Putra' %}
+                                        <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill"><i class="fas fa-male me-1"></i>Putra</span>
+                                    {% elif kos.tipe_penghuni == 'Putri' %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill"><i class="fas fa-female me-1"></i>Putri</span>
                                     {% else %}
-                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1"><i class="fa-solid fa-venus-mars me-1"></i>Campur</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill"><i class="fas fa-users me-1"></i>Campur</span>
                                     {% endif %}
                                 </td>
-                                
-                                <td class="text-primary fw-semibold">Rp {{ "{:,.0f}".format(kos.harga).replace(',', '.') }}</td>
-                                
-                                <td>
-                                    <span class="fw-bold {{ 'text-danger' if kos.sisa_kamar == 0 else 'text-dark' }}">{{ kos.sisa_kamar }}</span> 
-                                    <span class="text-muted small">/ {{ kos.total_kamar }}</span>
+
+                                <td class="py-3">
+                                    <span class="fw-semibold text-dark">Rp {{ "{:,.0f}".format(kos.harga).replace(',', '.') }}</span>
                                 </td>
-                                
-<td>
-    {% if kos.status_verifikasi == 1 %}
-        <span class="badge bg-success bg-opacity-10 text-success rounded-pill mb-1 d-inline-block border border-success" title="Kos Anda sudah tayang dan bisa dicari oleh penyewa">
-            <i class="fa-solid fa-eye me-1"></i>Publik (Aktif)
-        </span>
-    {% else %}
-        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill mb-1 d-inline-block border border-secondary" title="Sedang ditinjau oleh admin / Ditolak">
-            <i class="fa-solid fa-eye-slash me-1"></i>Belum Tayang
-        </span>
-    {% endif %}
-    <br>
 
-    {% if kos.tier_listing == 'silver' %}
-        <span class="badge rounded-pill shadow-sm mb-1 d-inline-block" style="background-color: #C0C0C0; color: #333;">
-            <i class="fa-solid fa-medal me-1"></i>Kualitas: Silver
-        </span>
-    {% elif kos.tier_listing == 'gold' %}
-        <span class="badge rounded-pill shadow-sm mb-1 d-inline-block" style="background-color: #FFD700; color: #333;">
-            <i class="fa-solid fa-medal me-1"></i>Kualitas: Gold
-        </span>
-    {% elif kos.tier_listing == 'premium' %}
-        <span class="badge rounded-pill shadow-sm mb-1 d-inline-block text-white" style="background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);">
-            <i class="fa-solid fa-gem me-1"></i>Kualitas: Premium
-        </span>
-    {% endif %}
-    
-    {% if kos.status_promosi == 1 %}
-        <br>
-        <span class="badge bg-warning text-dark rounded-pill shadow-sm d-inline-block mt-1">
-            <i class="fa-solid fa-bullhorn me-1"></i>Iklan Dipromosikan
-        </span>
-    {% endif %}
-</td>
+                                <td class="py-3 text-center">
+                                    <div class="d-inline-flex flex-column align-items-center">
+                                        <span class="badge {% if kos.sisa_kamar == 0 %}bg-danger{% else %}bg-info{% endif %} bg-opacity-10 text-{% if kos.sisa_kamar == 0 %}danger{% else %}info{% endif %} px-3 py-2 rounded-3 fw-bold border border-{% if kos.sisa_kamar == 0 %}danger{% else %}info{% endif %}-subtle">
+                                            {{ kos.sisa_kamar }} / {{ kos.total_kamar }}
+                                        </span>
+                                        <small class="text-muted mt-1" style="font-size: 11px;">Kamar Tersedia</small>
+                                    </div>
+                                </td>
 
-                                <td class="text-center pe-4">
-                                    <div class="btn-group shadow-sm rounded-3">
-                                        <a href="{{ url_for('pemilik.edit_kos', kost_id=kos.id) }}" class="btn btn-sm btn-outline-primary border-end-0 fw-medium">Edit</a>
-                                        <form action="{{ url_for('pemilik.hapus_kos', id=kos.id) }}" method="POST" style="display:inline;">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger fw-medium" onclick="return confirm('Peringatan: Yakin ingin menghapus properti kos ini secara permanen?');">
-                                                Hapus
+                                <td class="py-3 text-center">
+                                    {% if kos.tier_listing == 'premium' %}
+                                        <span class="badge bg-warning text-dark px-2 py-1 rounded-pill shadow-sm"><i class="fas fa-crown me-1"></i>Premium</span>
+                                    {% elif kos.tier_listing == 'gold' %}
+                                        <span class="badge" style="background-color: #ffd700; color: #000; padding: 4px 10px; border-radius: 50rem;"><i class="fas fa-star me-1"></i>Gold</span>
+                                    {% elif kos.tier_listing == 'silver' %}
+                                        <span class="badge bg-secondary px-2 py-1 rounded-pill"><i class="fas fa-medal me-1"></i>Silver</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border px-2 py-1 rounded-pill">Basic</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="pe-4 py-3 text-end">
+                                    <div class="btn-group shadow-sm">
+                                        <a href="{{ url_for('pemilik.edit_kos', kost_id=kos.id) }}" class="btn btn-sm btn-light border-end text-primary" data-bs-toggle="tooltip" title="Edit Kos">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <form id="form-hapus-{{ kos.id }}" action="{{ url_for('pemilik.hapus_kos', id=kos.id) }}" method="POST" style="display:inline;">
+                                            <button type="button" class="btn btn-sm btn-light text-danger btn-hapus" data-id="{{ kos.id }}" data-nama="{{ kos.nama_kost }}" data-bs-toggle="tooltip" title="Hapus Kos">
+                                                <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -126,10 +122,15 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
-                                    <i class="fas fa-building fa-3x mb-3 text-light d-block"></i>
-                                    <h6 class="fw-bold text-secondary">Belum ada properti kos</h6>
-                                    <p class="small">Silakan klik tombol "Tambah Kos Baru" untuk mulai menyewakan properti Anda.</p>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="py-4">
+                                        <div class="d-inline-flex justify-content-center align-items-center bg-light rounded-circle mb-3" style="width: 80px; height: 80px;">
+                                            <i class="fas fa-building fa-2x text-muted opacity-50"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Belum ada properti kos</h6>
+                                        <p class="text-muted small mb-3">Silakan klik tombol "Tambah Kos Baru" untuk mulai menyewakan properti Anda.</p>
+                                        <a href="{{ url_for('pemilik.tambah_kos') }}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Mulai Tambah Properti</a>
+                                    </div>
                                 </td>
                             </tr>
                         {% endif %}
@@ -139,5 +140,46 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        // 1. Inisialisasi Tooltip Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // 2. Event Listener untuk Semua Tombol Hapus (Menghindari Inline onClick)
+        var btnHapus = document.querySelectorAll('.btn-hapus');
+        
+        btnHapus.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                // Ambil data dari atribut aman HTML5
+                var idKos = this.getAttribute('data-id');
+                var namaKos = this.getAttribute('data-nama');
+                
+                // Eksekusi Pop-up SweetAlert
+                Swal.fire({
+                    title: 'Hapus Properti?',
+                    html: `Anda yakin ingin menghapus <strong>${namaKos}</strong> secara permanen?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545', 
+                    cancelButtonColor: '#6c757d', 
+                    confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Submit form berdasarkan ID yang diklik
+                        document.getElementById('form-hapus-' + idKos).submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
 
 {% endblock %}

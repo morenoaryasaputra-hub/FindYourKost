@@ -3,7 +3,6 @@
 
 <div class="container-fluid px-4 mt-3" style="background-color: #f8fafc; min-height: 90vh; font-family: 'Inter', sans-serif;">
     
-    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 pt-2">
         <div>
             <h2 class="fw-bold text-dark mb-1" style="font-size: 28px;">Manajemen Tier Properti</h2>
@@ -11,7 +10,6 @@
         </div>
     </div>
 
-    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -23,98 +21,106 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Kotak Paket (Basic & Premium) -->
     <div class="row g-4 justify-content-center mb-5">
         
-        <!-- PAKET BASIC -->
         <div class="col-md-5">
-            <div class="card border-0 shadow-sm p-4 h-100 rounded-4 bg-white d-flex flex-column">
-                <h5 class="text-secondary fw-bold text-center">Basic</h5>
-                <h2 class="fw-bold text-center my-3 text-dark">Gratis</h2>
-                <ul class="list-unstyled mt-4 mb-4 text-muted small flex-grow-1">
-                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Listing properti standar</li>
-                    <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Posisi pencarian bawah</li>
-                    <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Tidak ada lencana "Rekomendasi"</li>
-                    <li class="mb-3"><i class="fas fa-times text-danger me-2"></i> Fitur Manajemen Keuangan & Escrow Terkunci</li>
-                </ul>
-                <button class="btn btn-light w-100 mt-auto rounded-3 fw-medium" disabled>Default Sistem</button>
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white position-relative overflow-hidden h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-secondary-subtle text-secondary fw-bold px-3 py-1.5 rounded-pill mb-2" style="font-size: 12px;">Tier Standar</span>
+                        <h4 class="fw-bold text-dark mb-0">Basic Listing</h4>
+                    </div>
+                    <div class="bg-light rounded-3 text-secondary d-flex justify-content-center align-items-center" style="width: 50px; height: 50px;">
+    <i class="fas fa-home" style="font-size: 24px;"></i>
+</div>
+                </div>
+                
+                <h2 class="fw-extrabold text-dark mb-1">Gratis</h2>
+                <p class="text-muted small mb-4">Fitur standar pencarian kos bagi pemilik properti pemula.</p>
+                
+                <hr class="text-muted opacity-25 my-3">
+                
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small text-secondary fw-medium">Statistik Pengguna</span>
+                    <span class="small fw-bold text-dark">{{ total_basic | default(0, true) }} Properti</span>
+                </div>
+                
+                <div class="progress rounded-pill mb-2" style="height: 6px;">
+                    <div class="progress-bar bg-secondary rounded-pill" id="barBasic" data-progress="{{ persen_basic | default(0, true) }}" style="width: 0%;"></div>
+                </div>
+                <div class="d-flex justify-content-between text-muted" style="font-size: 11px;">
+                    <span>Rasio Distribusi</span>
+                    <span class="fw-bold">{{ persen_basic | default(0, true) }}%</span>
+                </div>
             </div>
         </div>
 
-        <!-- PAKET PREMIUM -->
         <div class="col-md-5">
-            <div class="card border-2 border-primary shadow p-4 h-100 rounded-4 bg-white position-relative d-flex flex-column" style="border-color: #0b57d0 !important;">
-                <div class="position-absolute top-0 start-50 translate-middle badge bg-primary rounded-pill px-3 py-2 shadow-sm" style="background-color: #0b57d0 !important;">Paling Laris</div>
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white position-relative overflow-hidden h-100 border-start border-3 border-primary">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1.5 rounded-pill mb-2" style="font-size: 12px;">Tier Unggulan</span>
+                        <h4 class="fw-bold text-dark mb-0">Premium Booster</h4>
+                    </div>
+                    <div class="bg-primary-subtle rounded-3 text-primary d-flex justify-content-center align-items-center" style="width: 50px; height: 50px;">
+    <i class="fas fa-crown" style="font-size: 24px;"></i>
+</div>
+                </div>
                 
-                <h5 class="text-primary fw-bold text-center mt-2" style="color: #0b57d0 !important;">Premium Listing</h5>
-                <h2 class="fw-bold text-center my-3 text-dark">
-                    Rp {{ "{:,.0f}".format(harga_premium).replace(',', '.') }}<span class="fs-6 text-muted fw-normal">/bln</span>
-                </h2>
+                <h2 class="fw-extrabold text-primary mb-1">Rp {{ "{:,.0f}".format(harga_premium | default(0, true) | int).replace(',', '.') }}<span class="fs-6 text-muted fw-normal">/bulan</span></h2>
+                <p class="text-muted small mb-4">Menaikkan eksposur kos di halaman utama pencarian teratas.</p>
                 
-                <ul class="list-unstyled mt-4 mb-4 text-muted small flex-grow-1">
-                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Tampil di halaman pencarian paling atas</li>
-                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Membuka penuh Modul Keuangan & Dompet Escrow</li>
-                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Fitur Tagih Otomatis via Chat (In-App)</li>
-                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i> Lencana Properti Khusus</li>
-                </ul>
                 
-                <button class="btn btn-primary w-100 mt-auto rounded-3 fw-semibold shadow-sm" style="background-color: #0b57d0; border: none;" data-bs-toggle="modal" data-bs-target="#modalUbahHarga">
-                    <i class="fas fa-edit me-1"></i> Ubah Harga
-                </button>
+                <hr class="text-muted opacity-25 my-3">
+                
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small text-secondary fw-medium">Statistik Pengguna</span>
+                    <span class="small fw-bold text-primary">{{ total_premium | default(0, true) }} Properti</span>
+                </div>
+                
+                <div class="progress rounded-pill mb-2" style="height: 6px;">
+                    <div class="progress-bar bg-primary rounded-pill" id="barPremium" data-progress="{{ persen_premium | default(0, true) }}" style="width: 0%;"></div>
+                </div>
+                <div class="d-flex justify-content-between text-muted" style="font-size: 11px;">
+                    <span>Rasio Distribusi</span>
+                    <span class="fw-bold text-primary">{{ persen_premium | default(0, true) }}%</span>
+                </div>
             </div>
         </div>
+
     </div>
 
-    <!-- Statistik Penggunaan Tier (DATA ASLI DARI DATABASE) -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
-        <div class="card-body p-4">
-            <h5 class="fw-bold text-dark mb-4">Statistik Penggunaan Tier Oleh Pemilik Kos</h5>
-            
-            <div class="mb-4">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="fw-medium text-secondary">Basic (Gratis)</span>
-                    <span class="fw-bold text-dark">{{ count_basic }} Pemilik <span class="text-muted small fw-normal">({{ pct_basic }}%)</span></span>
-                </div>
-                <div class="progress" style="height: 10px;">
-                    <!-- Menggunakan data-progress untuk menghindari deteksi linter CSS -->
-                    <div class="progress-bar bg-secondary-bar" id="barBasic" role="progressbar" data-progress="{{ pct_basic }}" aria-valuenow="{{ pct_basic }}" aria-valuemin="0" aria-valuemax="100" style="background-color: #6c757d;"></div>
-                </div>
-            </div>
-
-            <div class="mb-2">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="fw-medium text-primary">Premium Listing</span>
-                    <span class="fw-bold text-primary">{{ count_premium }} Pemilik <span class="text-muted small fw-normal">({{ pct_premium }}%)</span></span>
-                </div>
-                <div class="progress" style="height: 10px;">
-                    <!-- Menggunakan data-progress untuk menghindari deteksi linter CSS -->
-                    <div class="progress-bar bg-primary" id="barPremium" role="progressbar" data-progress="{{ pct_premium }}" aria-valuenow="{{ pct_premium }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-            
-            <div class="mt-4 pt-3 border-top text-end text-muted small">
-                Total Pemilik Kos Terdaftar: <strong>{{ total_pemilik }}</strong>
-            </div>
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-5" style="max-width: 500px; margin: 0 auto;">
+        <h5 class="fw-bold text-dark mb-3"><i class="fas fa-sliders-h text-primary me-2"></i>Konfigurasi Tarif Sistem</h5>
+        <p class="text-muted small mb-4">Ubah biaya langganan paket premium yang berlaku untuk semua pemilik kos mitra.</p>
+        
+        <div class="p-3 border rounded-3 bg-light mb-4">
+            <div class="small text-secondary mb-1">Tarif Aktif Saat Ini</div>
+            <h3 class="fw-bold text-dark mb-0">Rp {{ "{:,.0f}".format(harga_premium | default(0, true) | int).replace(',', '.') }} <span class="fs-6 fw-normal text-muted">/ bulan</span></h3>
         </div>
+
+        <button class="btn btn-primary w-100 rounded-3 py-2.5 fw-bold shadow-sm" style="background-color: #0b57d0; border: none;" data-bs-toggle="modal" data-bs-target="#modalHargaPremium">
+            <i class="fas fa-edit me-2"></i>Sesuaikan Tarif Baru
+        </button>
     </div>
 
 </div>
 
-<!-- MODAL UBAH HARGA PREMIUM -->
-<div class="modal fade" id="modalUbahHarga" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalHargaPremium" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 bg-light p-3 rounded-top-4">
-                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-sliders text-primary me-2"></i>Sesuaikan Tarif Premium</h5>
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 p-4 pb-2">
+                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-coins text-warning me-2"></i>Ubah Tarif Premium</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ url_for('admin.layanan_premium') }}" method="POST">
-                <div class="modal-body p-4">
+            <form action="/admin/update-harga-premium" method="POST">
+                <div class="modal-body p-4 pt-2">
+                    <p class="text-muted small mb-4">Masukkan nominal tarif berlangganan bulanan yang baru secara murni tanpa titik ataupun tanda baca.</p>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary small">Tarif Baru Bulanan (Rp)</label>
+                        <label class="form-label small fw-semibold text-secondary">Nominal Tarif Baru (Rp) <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 fw-bold text-muted">Rp</span>
-                            <input type="number" name="harga_baru" class="form-control border-start-0" value="{{ harga_premium|int }}" required min="10000">
+                            <input type="number" name="harga_baru" class="form-control border-start-0" value="{{ harga_premium | default(50000, true) | int }}" required min="10000">
                         </div>
                         <div class="form-text text-muted" style="font-size: 11px;">Perubahan tarif ini akan otomatis terupdate di halaman penawaran pemilik kos.</div>
                     </div>
@@ -128,7 +134,6 @@
     </div>
 </div>
 
-<!-- SCRIPT PENGISI PROGRESS BAR AMAN & BERSIH -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const barBasic = document.getElementById("barBasic");
@@ -142,5 +147,4 @@
         }
     });
 </script>
-
 {% endblock %}

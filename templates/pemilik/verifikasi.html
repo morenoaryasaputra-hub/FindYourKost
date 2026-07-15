@@ -1,7 +1,11 @@
 {% extends 'pemilik/base.html' %}
 {% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="container mt-4" style="font-family: 'Inter', sans-serif;">
-    <h3 class="mb-4 fw-bold text-dark">🛡️ Verifikasi Pengajuan Sewa</h3>
+    <h3 class=\"mb-1 fw-bold text-dark\">🛡️ Verifikasi Pengajuan Sewa</h3>
+    <p class="text-muted small mb-4">Kelola dan verifikasi data calon penyewa yang ingin menyewa properti Anda.</p>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -20,53 +24,98 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light text-secondary">
                         <tr>
-                            <th class="px-4 py-3" style="font-size: 14px;">Nama Penyewa</th>
-                            <th style="font-size: 14px;">Properti Kos</th>
-                            <th style="font-size: 14px;">Tanggal Masuk</th>
-                            <th style="font-size: 14px;">Durasi</th>
-                            <th style="font-size: 14px;">Status</th>
-                            <th class="text-center" style="font-size: 14px;">Aksi</th>
+                            <th class="px-4 py-3" style="font-size: 13px;">INFO PENYEWA & KTP</th>
+                            <th style="font-size: 13px;">DETAIL PROPERTI</th>
+                            <th style="font-size: 13px;">INFO TAGIHAN</th>
+                            <th style="font-size: 13px;">STATUS</th>
+                            <th class="text-center" style="font-size: 13px; min-width: 180px;">AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% if bookings %}
+                        {% if bookings and bookings|length > 0 %}
                             {% for b in bookings %}
                             <tr>
-                                <td class="px-4 fw-semibold text-dark">{{ b.penyewa.nama }}</td>
-                                <td><span class="badge bg-light text-dark border">{{ b.kos.nama_kost }}</span></td>
-                                <td class="text-muted">{{ b.tanggal_masuk }}</td>
-                                <td>{{ b.durasi_bulan }} Bulan</td>
+                                <td class="px-4 py-3">
+                                    <div class="fw-bold text-dark">{{ b.nama_penyewa }}</div>
+                                    <div class="text-muted small mb-1"><i class="fas fa-phone-alt me-1"></i> {{ b.no_hp or 'Tidak ada no HP' }}</div>
+                                    
+                                    {% if b.foto_ktp %}
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill" style="font-size: 11px;" 
+                                                onclick="lihatKTP('{{ b.nama_penyewa }}', '{{ b.foto_ktp }}')">
+                                            <i class="fas fa-id-card me-1"></i> Lihat KTP
+                                        </button>
+                                    {% else %}
+                                        <span class="badge bg-secondary opacity-50" style="font-size: 10px;">Belum Upload KTP</span>
+                                    {% endif %}
+                                </td>
+                                
                                 <td>
-                                    {% if b.status == 'pending' or b.status == 'Menunggu' %}
-                                        <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-medium">Menunggu</span>
-                                    {% elif b.status == 'approved' or b.status == 'Disetujui' %}
-                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-medium">Disetujui</span>
+                                    <div class="fw-bold text-primary">{{ b.nama_kost }}</div>
+                                    <div class="small text-dark mt-1"><i class="fas fa-calendar-alt text-muted me-1"></i> Masuk: {{ b.tanggal_masuk }}</div>
+                                    <div class="small text-dark"><i class="fas fa-clock text-muted me-1"></i> Sewa: {{ b.durasi }} Bulan</div>
+                                </td>
+                                
+                                <td>
+                                    {% set total_harga = (b.harga_per_bulan or 0) * (b.durasi or 1) %}
+                                    <div class="small text-muted">Total Tagihan ({{ b.durasi }} Bln):</div>
+                                    <div class="fw-bold text-dark mb-1">Rp {{ "{:,.0f}".format(total_harga).replace(',', '.') }}</div>
+                                    
+                                    <div class="small text-muted mt-1">Status Pembayaran Awal:</div>
+                                    <div class="fw-bold text-success" style="font-size: 12px;">
+                                        {% if b.dp_kost and b.dp_kost > 0 %}
+                                            Menunggu DP: Rp {{ "{:,.0f}".format(b.dp_kost).replace(',', '.') }}
+                                        {% else %}
+                                            Menunggu Lunas: Rp {{ "{:,.0f}".format(b.harga_per_bulan or 0).replace(',', '.') }}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    {% if b.status == 'Menunggu' %}
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-hourglass-half me-1"></i> Menunggu</span>
+                                    {% elif b.status == 'Disetujui' %}
+                                        <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check-circle me-1"></i> Disetujui</span>
+                                    {% elif b.status == 'Ditolak' %}
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fas fa-times-circle me-1"></i> Ditolak</span>
                                     {% else %}
-                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill fw-medium">Ditolak</span>
+                                        <span class="badge bg-secondary px-3 py-2 rounded-pill">{{ b.status }}</span>
                                     {% endif %}
                                 </td>
-                                <td class="text-center">
-                                    {% if b.status == 'pending' or b.status == 'Menunggu' %}
-                                        <form action="{{ url_for('pemilik.verifikasi_aksi', booking_id=b.id, aksi='terima') }}" method="POST" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-success rounded-3 px-3 fw-medium me-1">
-                                                <i class="fas fa-check me-1"></i> Terima
-                                            </button>
-                                        </form>
-                                        <form action="{{ url_for('pemilik.verifikasi_aksi', booking_id=b.id, aksi='tolak') }}" method="POST" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-danger rounded-3 px-3 fw-medium" onclick="return confirm('Apakah Anda yakin ingin menolak pengajuan ini?')">
-                                                <i class="fas fa-times me-1"></i> Tolak
-                                            </button>
-                                        </form>
-                                    {% else %}
-                                        <span class="text-muted small fw-medium"><i class="fas fa-check-double text-muted me-1"></i> Selesai Diproses</span>
-                                    {% endif %}
-                                </td>
+                                
+<td class="text-center">
+    {% if b.status == 'menunggu_dp' or b.status == 'Menunggu' %}
+        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Menunggu DP Midtrans</span>
+    
+{% elif b.status == 'dp_dibayar' %}
+        <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-sm btn-success rounded-3 shadow-sm px-3" onclick="terimaBooking('{{ b.id }}', '{{ b.nama_penyewa }}')">
+                <i class="fas fa-check-circle me-1"></i> Terima
+            </button>
+            
+            <button type="button" class="btn btn-sm btn-danger rounded-3 shadow-sm px-3" onclick="tolakBooking('{{ b.id }}', '{{ b.nama_penyewa }}')">
+                <i class="fas fa-times-circle me-1"></i> Tolak
+            </button>
+        </div>
+
+    {% elif b.status == 'menunggu_refund' %}
+        <span class="badge bg-secondary px-3 py-2 rounded-pill"><i class="fas fa-undo me-1"></i> Refund Diproses Admin</span>
+    
+    {% elif b.status == 'refunded' %}
+        <span class="badge bg-danger px-3 py-2 rounded-pill">Ditolak & Direfund</span>
+    
+    {% elif b.status == 'menunggu_pelunasan' %}
+        <span class="badge bg-info text-white px-3 py-2 rounded-pill">Menunggu Pelunasan</span>
+        
+    {% else %}
+        <span class="text-muted small">{{ b.status }}</span>
+    {% endif %}
+</td>
                             </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
-                                    <i class="fas fa-inbox fa-3x mb-3 text-secondary opacity-20"></i>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3 text-secondary opacity-25"></i>
                                     <h5 class="fw-bold text-dark mb-1">Belum ada pengajuan sewa masuk</h5>
                                     <p class="small text-muted mb-0">Pengajuan booking dari penyewa akan muncul di sini.</p>
                                 </td>
@@ -78,4 +127,88 @@
         </div>
     </div>
 </div>
+
+<script>
+    function lihatKTP(nama, linkKtp) {
+        // Cek apakah linkKtp berupa URL Cloudinary (http/https) atau format lokal statis
+        let imageUrl = linkKtp;
+        if (!linkKtp.startsWith('http')) {
+            imageUrl = "/static/uploads/" + linkKtp; // Sesuaikan dengan path lokal kamu jika tidak pakai cloudinary
+        }
+
+        Swal.fire({
+            title: 'KTP: ' + nama,
+            text: 'Dokumen Identitas Penyewa',
+            imageUrl: imageUrl,
+            imageWidth: 400,
+            imageAlt: 'Foto KTP ' + nama,
+            confirmButtonText: 'Tutup',
+            confirmButtonColor: '#2563eb'
+        });
+    }
+</script>
+
+<script>
+// FUNGSI UNTUK TOMBOL TERIMA (BARU)
+function terimaBooking(bookingId, namaPenyewa) {
+    Swal.fire({
+        title: 'Terima Pesanan ' + namaPenyewa + '?',
+        text: "Penyewa akan langsung diarahkan untuk melakukan pelunasan sisa tagihan.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754', // Warna hijau sukses
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Terima Pesanan',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Buat form virtual untuk POST data
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/pemilik/verifikasi/' + bookingId + '/terima';
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    })
+}
+
+// FUNGSI UNTUK TOMBOL TOLAK (SUDAH ADA SEBELUMNYA)
+function tolakBooking(bookingId, namaPenyewa) {
+    Swal.fire({
+        title: 'Tolak Pesanan ' + namaPenyewa + '?',
+        text: "Penyewa sudah membayar DP. Dana akan direfund oleh Admin dan kamar akan dikembalikan.",
+        input: 'textarea',
+        inputPlaceholder: 'Tuliskan alasan penolakan (misal: Kamar sedang direnovasi)...',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Tolak & Refund',
+        cancelButtonText: 'Batal',
+        preConfirm: (alasan) => {
+            if (!alasan) {
+                Swal.showValidationMessage('Alasan penolakan wajib diisi!')
+            }
+            return alasan
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/pemilik/verifikasi/' + bookingId + '/tolak';
+            
+            const inputAlasan = document.createElement('input');
+            inputAlasan.type = 'hidden';
+            inputAlasan.name = 'alasan_penolakan';
+            inputAlasan.value = result.value;
+            
+            form.appendChild(inputAlasan);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    })
+}
+</script>
+
 {% endblock %}

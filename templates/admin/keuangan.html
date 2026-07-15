@@ -60,41 +60,101 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for t in transaksi %}
-                    <tr>
-                        <td class="ps-3 fw-semibold">{{ t.id }}</td>
-                        <td>{{ t.tipe }}</td>
-                        <td>{{ t.pengirim }}</td>
-                        <td class="text-success fw-bold">Rp {{ "{:,.0f}".format(t.nominal).replace(',', '.') }}</td>
-                        <td>
-                            <span class="badge {% if t.status == 'Telah Diteruskan Ke Pemilik' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                                {{ t.status }}
-                            </span>
-                        </td>
-                        <td>{{ t.tanggal }}</td>
-                        
-                        <td class="text-center pe-3">
-                            {% if t.status != 'Telah Diteruskan Ke Pemilik' %}
-                                <form action="{{ url_for('admin.cairkan_dana', transaksi_id=t.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success fw-bold rounded-3 shadow-sm" onclick="return confirm('Yakin ingin meneruskan dana ini ke pemilik properti? Tindakan ini tidak dapat dibatalkan.');">
-                                        <i class="fas fa-hand-holding-usd me-1"></i> Cairkan
-                                    </button>
-                                </form>
-                            {% else %}
-                                <span class="badge bg-light border border-secondary text-secondary rounded-pill px-3 py-2">
-                                    <i class="fas fa-check-double me-1"></i> Selesai
-                                </span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">Belum ada riwayat transaksi dengan filter tersebut.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+    {% for t in transaksi %}
+    <tr>
+        <td class="ps-3 fw-semibold">{{ t.id }}</td>
+        <td>{{ t.tipe }}</td>
+        <td>{{ t.pengirim }}</td>
+        <td class="text-success fw-bold">Rp {{ "{:,.0f}".format(t.nominal).replace(',', '.') }}</td>
+        <td>
+            {% if t.status == 'Telah Diteruskan Ke Pemilik' %}
+                <span class="badge bg-success">{{ t.status }}</span>
+            {% elif t.status == 'Menunggu Refund' %}
+                <span class="badge bg-danger text-white"><i class="fas fa-exclamation-circle me-1"></i> {{ t.status }}</span>
+            {% elif t.status == 'Selesai (Direfund)' %}
+                <span class="badge bg-dark">{{ t.status }}</span>
+            {% else %}
+                <span class="badge bg-warning text-dark">{{ t.status }}</span>
+            {% endif %}
+        </td>
+        <td>{{ t.tanggal }}</td>
+        
+<td class="text-center pe-3">
+    <!-- Aksi Jika Ditolak Pemilik -> Refund -->
+    {% if t.status == 'Menunggu Refund' %}
+        <form id="form-refund-{{ t.booking_id }}" action="{{ url_for('admin.proses_refund', booking_id=t.booking_id) }}" method="POST" class="d-inline">
+            <button type="button" class="btn btn-sm btn-danger fw-bold rounded-3 shadow-sm" onclick="konfirmasiRefund('{{ t.booking_id }}', '{{ t.pengirim }}')">
+                <i class="fas fa-undo me-1"></i> Refund Dana
+            </button>
+        </form>
+    
+    <!-- Aksi Normal Escrow -> Cairkan ke Pemilik -->
+    {% elif t.status == 'Dana Tertahan (Escrow)' %}
+        <form id="form-cairkan-{{ t.booking_id }}" action="{{ url_for('admin.cairkan_dana', escrow_id=t.booking_id) }}" method="POST" class="d-inline">
+            <button type="button" class="btn btn-sm btn-success fw-bold rounded-3 shadow-sm" onclick="konfirmasiCairkan('{{ t.booking_id }}', '{{ t.pengirim }}', '{{ t.nominal }}')">
+                <i class="fas fa-hand-holding-usd me-1"></i> Cairkan
+            </button>
+        </form>
+
+    <!-- Aksi Jika Selesai -->
+    {% else %}
+        <span class="badge bg-light border border-secondary text-secondary rounded-pill px-3 py-2">
+            <i class="fas fa-check-double me-1"></i> Tuntas
+        </span>
+    {% endif %}
+</td>
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="7" class="text-center py-4 text-muted">Belum ada riwayat transaksi.</td>
+    </tr>
+    {% endfor %}
+</tbody>
             </table>
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function konfirmasiRefund(bookingId, namaPenyewa) {
+    Swal.fire({
+        title: 'Refund Dana DP?',
+        text: "Anda akan mengembalikan dana DP ke akun " + namaPenyewa + ". Notifikasi otomatis akan dikirim ke penyewa.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Refund Sekarang!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('form-refund-' + bookingId).submit();
+        }
+    })
+}
+function konfirmasiCairkan(bookingId, namaPenyewa, nominal) {
+    let nominalRupiah = new Intl.NumberFormat('id-ID', { 
+        style: 'currency', 
+        currency: 'IDR', 
+        minimumFractionDigits: 0 
+    }).format(nominal);
+    
+    Swal.fire({
+        title: 'Teruskan Dana?',
+        html: "Dana sebesar <strong>" + nominalRupiah + "</strong> dari " + namaPenyewa + " akan diteruskan ke saldo dompet pemilik kos.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Cairkan!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('form-cairkan-' + bookingId).submit();
+        }
+    })
+}
+</script>
+
 {% endblock %}

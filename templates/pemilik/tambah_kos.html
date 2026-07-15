@@ -124,12 +124,6 @@
                             <input type="text" id="hargaDisplay" class="form-control rounded-3" placeholder="Contoh: 1.500.000" value="{{ form_data.harga if form_data else '' }}" required>
                             <input type="hidden" name="harga" id="hargaAsli" value="{{ form_data.harga if form_data else '' }}">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Uang Muka / DP (Rp)</label>
-                            <input type="text" id="dpDisplay" class="form-control rounded-3" placeholder="Maksimal 50% dari harga sewa" value="{{ form_data.uang_muka if form_data else '' }}">
-                            <input type="hidden" name="uang_muka" id="dpAsli" value="{{ form_data.uang_muka if form_data else '' }}">
-                            <small id="dpError" class="text-danger d-none fw-bold" style="font-size: 11px;"><i class="fas fa-exclamation-triangle"></i> Pengisian gagal! Aturan bisnis sistem: DP maksimal 50% dari harga bulanan!</small>
-                        </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-semibold text-secondary">Total Jumlah Seluruh Kamar <span class="text-danger">*</span></label>
                             <input type="number" name="total_kamar" class="form-control rounded-3" value="{{ form_data.total_kamar if form_data else '' }}" placeholder="Contoh: 10" required min="1">
@@ -150,11 +144,20 @@
                 </div>
 
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-galeri">
-                    <h5 class="fw-bold text-dark mb-2"><i class="fas fa-images text-danger me-2"></i>Galeri Foto Properti</h5>
+                    <h5 class="fw-bold text-dark mb-2">
+                        <i class="fas fa-images text-danger me-2"></i>Galeri Foto Properti <span class="text-danger">*</span>
+                    </h5>
                     <div class="p-4 border border-2 border-dashed border-secondary-subtle rounded-3 text-center bg-light bg-opacity-50">
                         <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3 opacity-75"></i>
                         <h6 class="fw-bold text-dark mb-1">Pilih File Gambar Properti</h6>
-                        <input type="file" name="galeri_foto" class="form-control form-control-sm mx-auto" multiple accept="image/*" style="max-width: 300px;">
+                        
+                        <!-- Tambahkan atribut required di sini -->
+                        <input type="file" name="galeri_foto" class="form-control form-control-sm mx-auto" multiple accept="image/*" style="max-width: 300px;" required>
+                        
+                        <!-- Tambahkan teks peringatan kecil -->
+                        <div class="form-text small mt-2 text-muted">
+                            Wajib mengunggah minimal 1 foto sebagai wajah utama iklan kos Anda.
+                        </div>
                     </div>
                 </div>
 

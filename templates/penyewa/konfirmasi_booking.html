@@ -313,95 +313,38 @@ href="{{ url_for(
             </div>
 
             <div class="payment-card">
-
-                <h2>
-
-                    Ringkasan Pembayaran
-
-                </h2>
-
-                <div class="row">
-
-                    <span>
-
-                        Harga Kos
-
-                    </span>
-
-                    <strong>
-
-                        Rp {{ "{:,.0f}".format(kost.harga).replace(",",".") }}
-
-                    </strong>
-
-                </div>
-
-                <hr>
-
-                <div class="row total">
-
-                    <span>
-
-                        Total
-
-                    </span>
-
-                    <strong>
-
-                        Rp {{ "{:,.0f}".format(kost.harga).replace(",",".") }}
-
-                    </strong>
-
-                </div>
-
-                <div class="dp-box">
-
-                    <div>
-
-                        <div class="fw-bold">
-
-                            {% if dp>0 %}
-
-                            Uang Muka (DP)
-
-                            {% else %}
-
-                            Bayar Penuh
-
-                            {% endif %}
-
-                        </div>
-
-                        <small>
-
-                            Sisa Pembayaran
-                            Rp {{ "{:,.0f}".format(sisa).replace(",",".") }}
-
-                        </small>
-
-                    </div>
-
-                    <strong
-                    style="color:#2563eb;">
-
-                        Rp {{ "{:,.0f}".format(dp).replace(",",".") }}
-
-                    </strong>
-
-                </div>
-
-                <button
-                type="button"
-                id="btn-lanjut-pembayaran"
-                class="payment-btn"
-                data-kost="{{ kost.id }}"
-                data-has-ktp="{{ 'true' if user.foto_ktp else 'false' }}">
-
-                    Lanjut ke Pembayaran →
-
-                </button>
-
+    <h2>Ringkasan Pembayaran</h2>
+    <div class="row">
+        <span>Harga Kos (1 Bulan)</span>
+        <strong>Rp {{ "{:,.0f}".format(kost.harga).replace(",",".") }}</strong>
+    </div>
+    <hr>
+    
+    <!-- MENGHITUNG DP 30% DARI HARGA SECARA DINAMIS -->
+    {% set dp_calc = (kost.harga * 0.3) %}
+    {% set sisa_calc = kost.harga - dp_calc %}
+    
+    <div class="dp-box">
+        <div>
+            <div class="fw-bold text-dark">
+                Uang Muka (DP 30%)
             </div>
+            <small class="text-muted">
+                Sisa Pelunasan: Rp {{ "{:,.0f}".format(sisa_calc).replace(",",".") }}
+            </small>
+        </div>
+        <strong style="color:#2563eb; font-size: 1.2rem;">
+            Rp {{ "{:,.0f}".format(dp_calc).replace(",",".") }}
+        </strong>
+    </div>
+
+    <button type="button" id="btn-lanjut-pembayaran" class="payment-btn"
+        data-kost="{{ kost.id }}" data-has-ktp="{{ 'true' if user.foto_ktp else 'false' }}">
+        Lanjut ke Pembayaran →
+    </button>
+</div>
+
+       
 
         </div>
 

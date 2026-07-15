@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, session, redirect, request
 import socketio
 from extensions import get_db
+from utils.midtrans import snap
+import uuid
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -61,7 +63,6 @@ def open_room(room_id=None):
         active_room = room_id
 
     if active_room:
-        # GANTI QUERY INI: Tambahkan cm.file_path ke dalam SELECT
         cursor.execute("""
             SELECT 
                 cm.id, 
@@ -69,7 +70,9 @@ def open_room(room_id=None):
                 cm.pesan, 
                 cm.waktu_kirim, 
                 u.nama,
-                cm.file_path  -- TAMBAHKAN INI
+                cm.file_path,       
+                cm.is_tagihan,     
+                cm.tagihan_amount   
             FROM chat_message cm
             JOIN users u ON u.id = cm.sender_id
             WHERE room_id=%s
@@ -226,3 +229,98 @@ def upload_file():
     )
 
     return jsonify({"success": True, "file_path": file_url, "type": ext})
+
+@chat_bp.route("/chat/bayar-tagihan", methods=["POST"])
+def bayar_tagihan():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.json
+    msg_id = data.get("message_id")
+    amount = float(data.get("amount", 0))
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    try:
+        # CEK KEAMANAN: Apakah tagihan sudah lunas?
+        cursor.execute("SELECT pesan FROM chat_message WHERE id = %s", (msg_id,))
+        chat_data = cursor.fetchone()
+        
+        if chat_data and "LUNAS" in chat_data[0]:
+            return jsonify({"error": "Tagihan ini sudah lunas! Anda tidak perlu membayar lagi."})
+
+        # Generate Order ID khusus Tagihan Bulanan (TAGIHAN-)
+        order_id = f"TAGIHAN-{msg_id}-{uuid.uuid4().hex[:8]}"
+        
+        transaction = {
+            "transaction_details": {
+                "order_id": order_id,
+                "gross_amount": int(amount)
+            },
+            "customer_details": {
+                "first_name": session.get("nama", "Penyewa Sistem")
+            }
+        }
+        
+        transaction_result = snap.create_transaction(transaction)
+        return jsonify({"token": transaction_result["token"]})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    finally:
+        cursor.close()
+        conn.close()
+        
+@chat_bp.route("/chat/update-lunas", methods=["POST"])
+def update_lunas_lokal():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.json
+    msg_id = data.get("message_id")
+    amount = float(data.get("amount", 0))
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    try:
+        # CEK PENGAMAN 1: Pastikan belum lunas (Biar saldo pemilik nggak nambah dobel)
+        cursor.execute("SELECT pesan FROM chat_message WHERE id = %s", (msg_id,))
+        cek = cursor.fetchone()
+        
+        if cek and "LUNAS" in cek[0]:
+            return jsonify({"success": True, "message": "Sudah lunas sebelumnya"})
+
+        fee = amount * 0.10
+        bersih_ke_pemilik = amount - fee
+        
+        # Cari Pemilik Kos
+        cursor.execute("""
+            SELECT cr.pemilik_id 
+            FROM chat_message cm 
+            JOIN chat_room cr ON cm.room_id = cr.id 
+            WHERE cm.id = %s
+        """, (msg_id,))
+        owner = cursor.fetchone()
+        
+        if owner:
+            # 1. Update Saldo Pemilik
+            cursor.execute("UPDATE users SET saldo_dompet = saldo_dompet + %s WHERE id = %s", (bersih_ke_pemilik, owner[0]))
+            
+            # 2. Update Chat Message jadi LUNAS (Kunci Tombol)
+            cursor.execute("UPDATE chat_message SET pesan = 'LUNAS', is_tagihan = 1 WHERE id = %s", (msg_id,))
+            
+            # 3. Catat Log Admin
+            deskripsi_log = f"Pemilik menerima tagihan bersih Rp{int(bersih_ke_pemilik)} via chat."
+            cursor.execute("INSERT INTO log_admin (admin_id, kategori, aksi, deskripsi) VALUES (1, 'Keuangan', 'Tagihan Bulanan', %s)", (deskripsi_log,))
+            
+            conn.commit()
+            
+        return jsonify({"success": True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()

@@ -1379,13 +1379,9 @@ def midtrans_notification():
     if transaction_status == "settlement":
 
         cursor.execute("""
-
             UPDATE pembayaran
-
             SET status_pembayaran='success'
-
             WHERE midtrans_order_id=%s
-
         """, (order_id,))
 
         print("UPDATE PEMBAYARAN =", cursor.rowcount)
@@ -1393,32 +1389,70 @@ def midtrans_notification():
         if order_id.startswith("DP-"):
 
             cursor.execute("""
-
                 UPDATE booking
-
                 SET status_booking='dp_dibayar'
-
                 WHERE id=%s
-
             """, (booking_id,))
 
             print("BOOKING -> DP DIBAYAR")
 
+            # --- TAMBAHAN MODUL 3: OTOMATIS POTONG SISA KAMAR ---
+            cursor.execute("""
+                SELECT kost_id 
+                FROM booking 
+                WHERE id=%s
+            """, (booking_id,))
+            
+            kost_data = cursor.fetchone()
+            
+            if kost_data:
+                cursor.execute("""
+                    UPDATE kost 
+                    SET sisa_kamar = sisa_kamar - 1 
+                    WHERE id=%s AND sisa_kamar > 0
+                """, (kost_data[0],))
+                print("KOST -> SISA KAMAR BERKURANG 1")
+            # ----------------------------------------------------
+
+        # (Tambahkan di bawah elif order_id.startswith("PEL-"): ... )
+        elif order_id.startswith("TAGIHAN-"):
+            # Jika Tagihan Bulanan Berhasil Terbayar
+            gross = float(data.get("gross_amount", 0))
+            # Potong fee layanan tagihan platform (misal admin ambil 2%)
+            fee = gross * 0.02
+            bersih_ke_pemilik = gross - fee
+            
+            # Cari message ID dari Order ID (Format: TAGIHAN-{msg_id}-{random})
+            msg_id = order_id.split("-")[1]
+            
+            # 1. Cari Pemilik Kos dari Chat Room
+            cursor.execute("SELECT cr.pemilik_id FROM chat_message cm JOIN chat_room cr ON cm.room_id = cr.id WHERE cm.id = %s", (msg_id,))
+            owner = cursor.fetchone()
+            
+            if owner:
+                # 2. Uang langsung masuk ke Dompet Virtual Pemilik
+                cursor.execute("UPDATE users SET saldo_dompet = saldo_dompet + %s WHERE id = %s", (bersih_ke_pemilik, owner[0]))
+                
+                # 3. Ubah pesan tagihan di chat menjadi "LUNAS"
+                cursor.execute("UPDATE chat_message SET pesan = 'Tagihan telah LUNAS dibayarkan', is_tagihan = 0 WHERE id = %s", (msg_id,))
+                
+                # 4. Catat ke Log Admin
+                cursor.execute("INSERT INTO log_admin (admin_id, kategori, aksi, deskripsi) VALUES (1, 'Keuangan', 'Tagihan Bulanan', %s)", 
+                               (f"Pemilik menerima tagihan bersih Rp{bersih_ke_pemilik} via chat.",))
+
         elif order_id.startswith("PEL-"):
 
             cursor.execute("""
-
                 UPDATE booking
-
                 SET status_booking='aktif'
-
                 WHERE id=%s
-
             """, (booking_id,))
 
             print("BOOKING -> AKTIF")
 
         print("UPDATE BOOKING =", cursor.rowcount)
+        
+        
 
     # =========================================
     # PENDING

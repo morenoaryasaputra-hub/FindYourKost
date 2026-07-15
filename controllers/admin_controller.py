@@ -1,8 +1,5 @@
-# ==========================================
-# IMPORT FLASK COMPONENTS
-# ==========================================
-import os
 
+import os
 from flask import Blueprint
 from flask import render_template
 from flask import request
@@ -28,7 +25,6 @@ from models import Kost
 from models import VerifikasiKost
 from werkzeug.utils import secure_filename
 
-# Inisialisasi Blueprint untuk rute khusus Admin
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 # ==========================================
@@ -42,11 +38,6 @@ def cek_admin():
     if session.get("role") != "admin":
         flash("Akses ditolak! Anda bukan admin.", "danger")
         return redirect("/")
-
-
-# ==========================================
-# RUTE HALAMAN UTAMA (GET / TAMPILAN HTML)
-# ==========================================
 # ==========================================
 # ADMIN DASHBOARD (CRASH-PROOF VERSION)
 # ==========================================
@@ -158,8 +149,6 @@ def dashboard():
 # ==========================================
 # PROSES BANDING (Memperbaiki BuildError)
 # ==========================================
-# Tambahkan ini di paling bawah file admin_controller.py
-
 @admin_bp.route('/proses-banding/<int:banding_id>', methods=['POST'])
 def proses_banding(banding_id):
     if "user_id" not in session or session.get("role") != "admin":
@@ -603,57 +592,122 @@ from datetime import datetime
 
 @admin_bp.route('/keuangan', methods=['GET'])
 def keuangan():
-    # 1. Tangkap parameter filter query string
-    filter_status = request.args.get('status', 'Semua')
-    tgl_mulai_str = request.args.get('tanggal_mulai', '')
-    tgl_akhir_str = request.args.get('tanggal_akhir', '')
-
-    # 2. Query Data Asli Database (Kita ambil dari User yang terverifikasi sebagai contoh logikanya)
-    query = User.query.filter(User.nik.isnot(None))
-    users_transaksi = query.all()
+    conn = get_db()
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+    
+    # Ambil data pembayaran DP yang sudah sukses
+    query = """
+        SELECT b.id as booking_id, u.nama as penyewa, k.nama_kost, p.jumlah, 
+               b.status_booking, p.created_at
+        FROM pembayaran p
+        JOIN booking b ON p.booking_id = b.id
+        JOIN users u ON b.penyewa_id = u.id
+        JOIN kost k ON b.kost_id = k.id
+        WHERE p.jenis_pembayaran = 'dp' AND p.status_pembayaran = 'success'
+        ORDER BY p.id DESC
+    """
+    cursor.execute(query)
+    transaksi_db = cursor.fetchall()
     
     transaksi_asli = []
-    total_escrow = 0
-    pendapatan_bersih = 129900  # Nilai asli dari kodemu
-    dana_tertahan = 1200000     # Nilai asli dari kodemu
+    total_escrow = 0        # Uang ngendap (Tertahan + Nunggu Refund)
+    dana_tertahan = 0       # Uang nunggu dicairkan ke pemilik
+    pendapatan_bersih = 0   # Fee 10% dari uang yang udah CAIR
     
-    for u in users_transaksi:
-        nominal_trx = 99000.00 if u.is_premium else 1200000.00
-        # Simulasikan status berdasarkan is_premium
-        status_trx = "Dalam Penampungan (Escrow)" if not u.is_premium else "Telah Diteruskan Ke Pemilik"
-        tgl_trx = datetime.today().strftime("%Y-%m-%d")
+    for t in transaksi_db:
+        nominal = float(t['jumlah'])
         
-        # Validasi Filter Status
-        if filter_status != 'Semua' and status_trx != filter_status:
-            continue
+        # LOGIKA PERHITUNGAN KARTU & STATUS TRANSAKSI
+        if t['status_booking'] in ['dp_dibayar', 'menunggu_pelunasan']:
+            status_trx = "Dana Tertahan (Escrow)"
+            dana_tertahan += nominal
+            total_escrow += nominal # Uang masih nahan di sistem
             
-        # Validasi Filter Tanggal
-        if tgl_mulai_str and tgl_trx < tgl_mulai_str: continue
-        if tgl_akhir_str and tgl_trx > tgl_akhir_str: continue
+        elif t['status_booking'] == 'menunggu_refund':
+            status_trx = "Menunggu Refund"
+            total_escrow += nominal # Uang masih nahan nunggu direfund admin
+            
+        elif t['status_booking'] == 'refunded':
+            status_trx = "Selesai (Direfund)"
+            # Gak masuk hitungan kartu karena uangnya udah balik ke penyewa
+            
+        elif t['status_booking'] in ['aktif', 'selesai']:
+            status_trx = "Telah Diteruskan Ke Pemilik"
+            # Uang sudah cair. Kita ambil fee 10% dari transaksi ini.
+            fee_admin = nominal * 0.10
+            pendapatan_bersih += fee_admin
+            
+        else:
+            status_trx = "Diproses"
             
         transaksi_asli.append({
-            "id": f"TXT-2026-{u.id:03d}",
-            "tipe": "Layanan Premium" if u.is_premium else "Booking Kos",
-            "pengirim": f"{u.nama} ({u.role.capitalize()})",
-            "nominal": nominal_trx,
+            "id": f"TRX-BK-{t['booking_id']:04d}",
+            "booking_id": t['booking_id'],
+            "tipe": f"DP Kos: {t['nama_kost']}",
+            "pengirim": t['penyewa'],
+            "nominal": nominal,
             "status": status_trx,
-            "tanggal": tgl_trx
+            "tanggal": "Hari Ini" 
         })
         
-        if status_trx == "Dalam Penampungan (Escrow)":
-            total_escrow += nominal_trx
-
-    # 3. Lempar semua data dan filter kembali ke halaman
+    cursor.close()
+    conn.close()
+    
     return render_template(
         'admin/keuangan.html', 
         transaksi=transaksi_asli, 
         total_escrow=total_escrow,
         pendapatan_bersih=pendapatan_bersih,
-        dana_tertahan=dana_tertahan,
-        current_status=filter_status,
-        current_mulai=tgl_mulai_str,
-        current_akhir=tgl_akhir_str
+        dana_tertahan=dana_tertahan
     )
+
+@admin_bp.route('/keuangan/refund/<int:booking_id>', methods=['POST'])
+def proses_refund(booking_id):
+    if "user_id" not in session or session.get("role") != "admin":
+        return redirect("/login")
+        
+    admin_id = session.get("user_id")
+    conn = get_db()
+    cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+    
+    try:
+        # Ambil data untuk notifikasi chat
+        cursor.execute("""
+            SELECT b.penyewa_id, k.pemilik_id, k.nama_kost, u.nama as penyewa
+            FROM booking b 
+            JOIN kost k ON b.kost_id = k.id 
+            JOIN users u ON b.penyewa_id = u.id
+            WHERE b.id = %s
+        """, (booking_id,))
+        data = cursor.fetchone()
+        
+        # 1. Update Booking jadi 'refunded'
+        cursor.execute("UPDATE booking SET status_booking = 'refunded' WHERE id = %s", (booking_id,))
+        
+        # 2. Catat Log Admin
+        deskripsi_log = f"Berhasil mensimulasikan REFUND DP kepada penyewa '{data['penyewa']}' untuk kos '{data['nama_kost']}'"
+        cursor.execute("INSERT INTO log_admin (admin_id, kategori, aksi, deskripsi) VALUES (%s, 'Keuangan', 'Refund DP Kos', %s)", 
+                       (admin_id, deskripsi_log))
+                       
+        # 3. Kirim Chat Notifikasi Sukses Refund ke Penyewa (Seolah-olah admin yang kirim via room pemilik)
+        cursor.execute("SELECT id FROM chat_room WHERE pemilik_id=%s AND penyewa_id=%s AND kost_id=%s", 
+                       (data['pemilik_id'], data['penyewa_id'], booking_id)) # Kost ID mapping fallback
+        room = cursor.fetchone()
+        if room:
+            pesan_sistem = f"✅ *INFO KEUANGAN ADMIN*\n\nDana DP Anda untuk kos '{data['nama_kost']}' telah **BERHASIL DI-REFUND** ke metode pembayaran awal Anda. Mohon cek mutasi rekening dalam 1x24 jam."
+            cursor.execute("INSERT INTO chat_message (room_id, sender_id, pesan, is_read, waktu_kirim) VALUES (%s, %s, %s, 0, NOW())", 
+                           (admin_id, pesan_sistem))
+        
+        conn.commit()
+        flash("Simulasi Refund berhasil diproses! Log Admin & Notifikasi Penyewa telah tercatat.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error Refund: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+        
+    return redirect(url_for('admin.keuangan'))
 # ==========================================
 # PROSES UBAH PASSWORD ADMIN
 # ==========================================
@@ -689,8 +743,6 @@ def ubah_password():
 # AKSI PENCAIRAN DANA ESCROW KE PEMILIK
 # ==========================================
 # ==========================================
-# AKSI ADMIN MENYETUJUI PENCAIRAN KE DOMPET PEMILIK
-# ==========================================
 @admin_bp.route('/keuangan/cairkan/<int:escrow_id>', methods=['POST'])
 def cairkan_dana(escrow_id):
     if "user_id" not in session or session.get("role") != "admin":
@@ -700,49 +752,51 @@ def cairkan_dana(escrow_id):
     conn = get_db()
     cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
     
-    # 1. Ambil data Escrow beserta ID pemiliknya
-    cursor.execute("""
-        SELECT e.jumlah_bersih, k.nama_kost, k.pemilik_id, u.nama as nama_pemilik
-        FROM escrow e
-        JOIN booking b ON e.booking_id = b.id
-        JOIN kost k ON b.kost_id = k.id
-        JOIN users u ON k.pemilik_id = u.id
-        WHERE e.id = %s AND e.status_pencairan = 'diproses'
-    """, (escrow_id,))
-    data = cursor.fetchone()
-    
-    if data:
-        jumlah_cair = data['jumlah_bersih']
-        pemilik_id = data['pemilik_id']
-        nominal_rp = f"Rp {int(jumlah_cair):,}".replace(",", ".")
-        
-        # 2. TAMBAHKAN UANG KE DOMPET VIRTUAL PEMILIK
+    try:
         cursor.execute("""
-            UPDATE users 
-            SET saldo_dompet = saldo_dompet + %s 
-            WHERE id = %s
-        """, (jumlah_cair, pemilik_id))
-        
-        # 3. UBAH STATUS ESCROW JADI SELESAI
-        cursor.execute("""
-            UPDATE escrow 
-            SET status_pencairan = 'selesai', tanggal_pencairan = NOW() 
-            WHERE id = %s
+            SELECT p.jumlah as jumlah_bersih, k.nama_kost, k.pemilik_id, u.nama as nama_pemilik
+            FROM pembayaran p
+            JOIN booking b ON p.booking_id = b.id
+            JOIN kost k ON b.kost_id = k.id
+            JOIN users u ON k.pemilik_id = u.id
+            WHERE b.id = %s AND p.jenis_pembayaran = 'dp' AND p.status_pembayaran = 'success'
         """, (escrow_id,))
+        data = cursor.fetchone()
         
-        # 4. CATAT KE RIWAYAT TINDAKAN ADMIN
-        deskripsi_log = f"Menyetujui pencairan {nominal_rp} ke Saldo Dompet pemilik '{data['nama_pemilik']}' untuk penyewaan '{data['nama_kost']}'"
-        cursor.execute("""
-            INSERT INTO log_admin (admin_id, kategori, aksi, deskripsi) 
-            VALUES (%s, 'Keuangan', 'Pencairan ke Wallet', %s)
-        """, (admin_id, deskripsi_log))
-        
-        conn.commit()
-        flash(f"Dana sebesar {nominal_rp} berhasil masuk ke Dompet Virtual Pemilik!", "success")
-    else:
-        flash("Data transaksi tidak valid atau belum diajukan oleh pemilik.", "danger")
-        
-    cursor.close()
-    conn.close()
+        if data:
+            jumlah_awal = float(data['jumlah_bersih'])
+            
+            # --- LOGIKA FEE 10% MODUL 3 ---
+            fee_admin = jumlah_awal * 0.10
+            jumlah_cair_ke_pemilik = jumlah_awal - fee_admin
+            
+            nominal_rp_awal = f"Rp {int(jumlah_awal):,}".replace(",", ".")
+            nominal_cair_rp = f"Rp {int(jumlah_cair_ke_pemilik):,}".replace(",", ".")
+            
+            # TAMBAHKAN UANG (90%) KE DOMPET VIRTUAL PEMILIK
+            cursor.execute("""
+                UPDATE users 
+                SET saldo_dompet = saldo_dompet + %s 
+                WHERE id = %s
+            """, (jumlah_cair_ke_pemilik, data['pemilik_id']))
+            
+            # UBAH STATUS BOOKING JADI 'aktif'
+            cursor.execute("UPDATE booking SET status_booking = 'aktif' WHERE id = %s", (escrow_id,))
+            
+            # CATAT LOG
+            deskripsi_log = f"Mencairkan {nominal_cair_rp} (potongan fee 10%) ke dompet '{data['nama_pemilik']}' untuk kos '{data['nama_kost']}'"
+            cursor.execute("INSERT INTO log_admin (admin_id, kategori, aksi, deskripsi) VALUES (%s, 'Keuangan', 'Pencairan ke Wallet', %s)", (admin_id, deskripsi_log))
+            
+            conn.commit()
+            flash(f"Berhasil! Dari total {nominal_rp_awal}, sebesar {nominal_cair_rp} diteruskan ke Pemilik dan Fee 10% masuk ke kas Admin.", "success")
+        else:
+            flash("Data transaksi tidak valid.", "danger")
+            
+    except Exception as e:
+        conn.rollback()
+        flash(f"Terjadi kesalahan: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
     
     return redirect(url_for('admin.keuangan'))

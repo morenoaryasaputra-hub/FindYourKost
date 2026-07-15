@@ -93,16 +93,15 @@
                             <div class="border rounded-3 p-3 bg-light h-100" id="wrapperFasilitas" style="max-height: 350px; overflow-y: auto;"></div>
                         </div>
                     </div>
+<div class="mb-3 position-relative">
+    <label class="form-label small fw-semibold text-secondary">Cari / Sesuaikan Alamat Utama <span class="text-primary">(Bisa Diketik Manual)</span></label>
+    <textarea name="alamat" id="alamatInput" class="form-control rounded-3 bg-white" rows="2" required>{{ alamat_display }}</textarea>
+</div>
 
-                    <div class="mb-3 position-relative">
-                        <label class="form-label small fw-semibold text-secondary">Cari / Sesuaikan Alamat Utama <span class="text-primary">(Bisa Diketik Manual)</span></label>
-                        <textarea name="alamat" id="alamatInput" class="form-control rounded-3 bg-white" rows="2" required>{{ form_data.alamat if form_data else alamat_display }}</textarea>
-                    </div>
-
-                    <div class="mb-0">
-                        <label class="form-label small fw-semibold text-secondary">Alamat Detail Spesifik <span class="text-danger">*</span></label>
-                        <textarea name="alamat_spesifik" class="form-control rounded-3 border-info" rows="2" placeholder="Contoh: RT 02/RW 04, Belakang Gedung Perpustakaan UKSW..." required>{{ form_data.alamat_spesifik if form_data else alamat_spesifik_current }}</textarea>
-                    </div>
+<div class="mb-0">
+    <label class="form-label small fw-semibold text-secondary">Alamat Detail Spesifik <span class="text-danger">*</span></label>
+    <textarea name="alamat_spesifik" class="form-control rounded-3 border-info" rows="2" placeholder="Contoh: RT 02/RW 04, Belakang Gedung Perpustakaan UKSW..." required>{{ alamat_spesifik_current }}</textarea>
+</div>
 
                     <input type="hidden" name="latitude" id="latInput" value="{{ form_data.latitude if form_data else (kos.latitude if kos.latitude else '-7.3305') }}">
                     <input type="hidden" name="longitude" id="lngInput" value="{{ form_data.longitude if form_data else (kos.longitude if kos.longitude else '110.5084') }}">
@@ -111,17 +110,25 @@
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-harga">
                     <h5 class="fw-bold text-dark mb-4"><i class="fas fa-money-bill-wave text-success me-2"></i>Informasi Harga & Kamar</h5>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Harga Bulanan (Rp) <span class="text-danger">*</span></label>
-                            <input type="text" id="hargaDisplay" class="form-control rounded-3" value="{{ form_data.harga if form_data else kos.harga }}" required>
-                            <input type="hidden" name="harga" id="hargaAsli" value="{{ form_data.harga if form_data else kos.harga }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Uang Muka / DP (Rp)</label>
-                            <input type="text" id="dpDisplay" class="form-control rounded-3" value="{{ form_data.uang_muka if form_data else (kos.uang_muka if kos.uang_muka else 0) }}">
-                            <input type="hidden" name="uang_muka" id="dpAsli" value="{{ form_data.uang_muka if form_data else (kos.uang_muka if kos.uang_muka else 0) }}">
-                            <small id="dpError" class="text-danger d-none fw-bold" style="font-size: 11px;"><i class="fas fa-exclamation-triangle"></i> Nilai Uang Muka dipotong maksimal 50% dari harga sewa!</small>
-                        </div>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold text-secondary">Harga Sewa Bulanan (Terkunci)</label>
+        <div class="input-group">
+            <span class="input-group-text bg-light text-muted">Rp</span>
+            <input type="number" class="form-control bg-light text-muted" value="{{ kos.harga }}" readonly disabled>
+        </div>
+        <div class="form-text text-warning small"><i class="fas fa-lock me-1"></i> Harga sewa hanya dapat diatur saat pertama kali menambahkan kos.</div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold text-secondary">Uang Muka / DP 30% (Terkunci)</label>
+        <div class="input-group">
+            <span class="input-group-text bg-light text-muted">Rp</span>
+            <input type="number" class="form-control bg-light text-muted" value="{{ kos.uang_muka }}" readonly disabled>
+        </div>
+        <div class="form-text text-warning small"><i class="fas fa-lock me-1"></i> DP terkunci otomatis berdasarkan 30% dari harga sewa.</div>
+    </div>
+</div>
                         <div class="col-md-12">
                             <label class="form-label small fw-semibold text-secondary">Total Seluruh Kamar <span class="text-danger">*</span></label>
                             <input type="number" name="total_kamar" class="form-control rounded-3" value="{{ form_data.total_kamar if form_data else kos.total_kamar }}" required min="1">
@@ -138,17 +145,27 @@
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-galeri">
-                    <h5 class="fw-bold text-dark mb-2"><i class="fas fa-images text-danger me-2"></i>Galeri Foto Properti</h5>
-                    <div class="mb-4">
-                        {% if kos.foto %}
-                            <img src="{{ url_for('static', filename='uploads/' + kos.foto) }}" class="rounded-3 border shadow-sm" style="width: 160px; height: 110px; object-fit: cover;">
-                        {% endif %}
-                    </div>
-                    <div class="p-4 border border-2 border-dashed border-secondary-subtle rounded-3 text-center bg-light bg-opacity-50">
-                        <input type="file" name="galeri_foto" class="form-control form-control-sm mx-auto" multiple accept="image/*" style="max-width: 300px;">
-                    </div>
-                </div>
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="section-galeri">
+    <h5 class="fw-bold text-dark mb-3"><i class="fas fa-images text-danger me-2"></i>Foto Utama Properti</h5>
+    
+    {% if kos.foto_thumbnail %}
+    <div class="mb-3 p-3 bg-light rounded-3 text-center border border-secondary-subtle">
+        <p class="text-muted small mb-2 fw-semibold">Foto Saat Ini:</p>
+        <img src="{{ kos.foto_thumbnail }}" alt="Foto Kos" class="img-fluid rounded shadow-sm" style="max-height: 250px; object-fit: cover;">
+    </div>
+    {% endif %}
+
+    <div class="p-4 border border-2 border-dashed border-secondary-subtle rounded-3 text-center bg-white">
+        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3 opacity-75"></i>
+        <h6 class="fw-bold text-dark mb-1">Ganti File Gambar Properti</h6>
+        
+        <input type="file" name="foto_thumbnail" class="form-control form-control-sm mx-auto" accept="image/*" style="max-width: 300px;">
+        
+        <div class="form-text small mt-2 text-muted">
+            *Biarkan kosong jika Anda tidak ingin mengganti foto saat ini.
+        </div>
+    </div>
+</div>
 
                 <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-end">
                     <button type="submit" class="btn btn-success px-4 py-2.5 fw-bold rounded-3 shadow-sm" style="border: none;">
