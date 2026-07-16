@@ -142,4 +142,4 @@ http://127.0.0.1:5000 (localhost)
 - Vanessa Ruth Walingkas
 - Yuka Asfwa Atalla
 
-Proyek ini dikembangkan secara berkelompok sebagai bagian dari mata kuliah Pengembangan Perangkat Lunak.
+Proyek ini dikembangkan secara berkelompok sebagai bagian dari mata kuliah Pengembangan Aplikasi.
