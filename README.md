@@ -137,9 +137,9 @@ http://127.0.0.1:5000 (localhost)
 ---
 
 ## 👨‍💻 Kontributor
-Moreno Arya Saputra
-Agape Dhaniel Wibowo
-Vanessa Ruth Walingkas
-Yuka Asfwa Atalla
+- Moreno Arya Saputra
+- Agape Dhaniel Wibowo
+- Vanessa Ruth Walingkas
+- Yuka Asfwa Atalla
 
 Proyek ini dikembangkan secara berkelompok sebagai bagian dari mata kuliah Pengembangan Perangkat Lunak.
