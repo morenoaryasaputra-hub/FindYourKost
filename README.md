@@ -1,45 +1,145 @@
-# 🏠 FindYourKost - Platform Pencarian & Manajemen Kos
+# 🏠 FindYourKost
 
-FindYourKost adalah aplikasi web berbasis platform yang dirancang untuk memudahkan pencarian kos bagi penyewa dan mempermudah manajemen properti bagi pemilik kos. Website ini dilengkapi dengan fitur komunikasi langsung dan sistem pembayaran premium terintegrasi.
+FindYourKost adalah platform marketplace kos berbasis web yang dirancang untuk mempermudah proses pencarian kos bagi penyewa serta membantu pemilik kos dalam mengelola properti mereka secara efisien. Platform ini memungkinkan penyewa mencari kos dan berkomunikasi langsung dengan pemilik, sekaligus menyediakan berbagai fitur yang mendukung pengelolaan properti.
 
-Proyek ini dibangun sebagai bagian dari tugas pengembangan perangkat lunak kelompok.
-
----
-
-## 🚀 Fitur Unggulan
-
-1. **Autentikasi Multi-Role**: Sistem login terpisah untuk **Penyewa** dan **Pemilik Kos**.
-2. **Dashboard Pemilik Kos**: Halaman khusus bagi pemilik untuk memantau metrik properti dan transaksi.
-3. **Fitur Chat Real-Time (Socket.io)**: Chat interaktif langsung antara penyewa dan pemilik kos tanpa perlu refresh halaman.
-4. **Berbagi Media di Chat**: Mendukung pengiriman file, gambar (max 2MB), dan video dengan batasan ukuran aman untuk mencegah pembengkakan database.
-5. **Premium Listing Gateway (Midtrans)**: Integrasi pembayaran aman menggunakan Midtrans Snap API bagi pemilik kos yang ingin menaikkan visibilitas propertinya ke baris paling atas.
+Proyek ini dikembangkan sebagai bagian dari mata kuliah Pengembangan Aplikasi.
 
 ---
 
-## 🛠️ Teknologi yang Digunakan (Tech Stack)
+## ✨ Fitur
 
-- **Backend**: Python 3.x, Flask (Framework)
-- **Real-Time Communication**: Flask-SocketIO
-- **Database**: MySQL / TiDB Cloud
-- **Payment Gateway**: Midtrans Snap API
-- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap, FontAwesome
+### 🔐 Autentikasi Multi-Role
+
+Sistem autentikasi terpisah untuk penyewa dan pemilik kos.
+
+### 📊 Dashboard Pemilik Kos
+
+Dashboard khusus bagi pemilik kos untuk mengelola properti, memantau pemesanan, dan melihat transaksi.
+
+### 💬 Pesan Real-Time
+
+Komunikasi langsung antara penyewa dan pemilik kos menggunakan **Flask-SocketIO**, sehingga pesan dapat diterima tanpa perlu me-refresh halaman.
+
+### 📁 Berbagi Media
+
+Mendukung pengiriman gambar, file, dan video melalui fitur chat dengan batas ukuran unggahan guna menjaga performa aplikasi dan efisiensi penyimpanan database.
+
+### ⭐ Premium Listing
+
+Pemilik kos dapat meningkatkan visibilitas properti dengan menampilkan iklan di bagian teratas hasil pencarian.
 
 ---
 
-## 💻 Cara Install & Menjalankan Proyek
+## 🛠️ Teknologi yang Digunakan
 
-Ikuti langkah-langkah di bawah ini untuk menjalankan aplikasi di lingkungan lokal (localhost):
+### Backend
 
-### 1. Clone atau Ekstrak Folder Proyek
-Pastikan semua file proyek sudah berada di dalam satu folder kerja di komputer Anda.
+* Python 3
+* Flask
+* Flask-SocketIO
 
-### 2. Buat & Aktifkan Virtual Environment (Opsional tapi Direkomendasikan)
+### Database
+
+* MySQL
+* TiDB Cloud
+
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript
+* Bootstrap
+* Font Awesome
+
+### API & Layanan
+
+* Midtrans Snap API (Payment Gateway)
+
+---
+
+## 🚀 Instalasi
+
+### 1. Clone Repository
+
 ```bash
-# Membuat virtual environment
+git clone https://github.com/<username>/FindYourKost.git
+cd FindYourKost
+```
+
+### 2. Buat Virtual Environment (Disarankan)
+
+```bash
 python -m venv venv
-
-# Mengaktifkan di Windows
 venv\Scripts\activate
+```
 
-# Mengaktifkan di Mac/Linux
-source venv/bin/activate
+### 3. Instal Dependensi
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Konfigurasi Environment Variables
+
+Buat file `.env` pada direktori utama (root) proyek, kemudian isi dengan kredensial dan API key yang diperlukan sesuai dengan konfigurasi lingkungan Anda.
+
+Contoh:
+
+```env
+SECRET_KEY=
+MYSQL_HOST=
+MYSQL_USER=
+MYSQL_PASSWORD=
+MYSQL_NAME=
+MYSQL_PORT=
+MIDTRANS_SERVER_KEY=
+MIDTRANS_CLIENT_KEY=
+MIDTRANS_IS_PRODUCTION=False (untuk sandbox mode)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+CLOUDINARY_URL=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+GEOAPIFY_API_KEY
+OCR_API_KEY=
+SECRET_KEY=  
+RESEND_API_KEY=
+EMAIL_FROM=onboarding@resend.dev
+MAIL_USERNAME= (kita tidak memiliki domain berbayar untuk resend)
+MAIL_PASSWORD=
+```
+
+### 5. Jalankan Aplikasi
+
+```bash
+python app.py
+```
+
+Aplikasi dapat diakses melalui:
+
+```
+http://127.0.0.1:5000 (localhost)
+```
+
+---
+
+## 📌 Ruang Lingkup Proyek
+
+* Autentikasi multi-role
+* Manajemen properti kos
+* Pencarian dan penelusuran kos
+* Chat real-time
+* Berbagi media
+* Premium listing
+* Integrasi payment gateway
+  
+---
+
+## 👨‍💻 Kontributor
+Moreno Arya Saputra
+Agape Dhaniel Wibowo
+Vanessa Ruth Walingkas
+Yuka Asfwa Atalla
+
+Proyek ini dikembangkan secara berkelompok sebagai bagian dari mata kuliah Pengembangan Perangkat Lunak.
