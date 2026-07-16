@@ -54,6 +54,10 @@ Pemilik kos dapat meningkatkan visibilitas properti dengan menampilkan iklan di 
 ### API & Layanan
 
 * Midtrans Snap API (Payment Gateway)
+* Resend (Email API)
+* GeoApify (untuk maps)
+* Cloudinary (Digital Asset Management)
+* Google Identify Services (G-Auth)
 
 ---
 
@@ -120,6 +124,7 @@ Aplikasi dapat diakses melalui:
 
 ```
 http://127.0.0.1:5000 (localhost)
+(atau deploy sendiri melalui layanan pilihan)
 ```
 
 ---
