@@ -215,7 +215,7 @@ def data_kos():
     # 3. Bangun Query SQL Dasar
     query = """
         SELECT id, nama_kost, tipe_penghuni, harga, sisa_kamar, total_kamar, 
-               status_verifikasi, tier_listing, foto_thumbnail  -- <--- FOTO HARUS ADA DI SINI!
+               status_verifikasi, tier_listing, foto_thumbnail
         FROM kost 
         WHERE pemilik_id = %s
     """
@@ -862,6 +862,8 @@ def kelola_kos(kost_id):
     # ====================================
 # LAPORAN KEUANGAN (FITUR PREMIUM)
 # ====================================
+from datetime import datetime
+
 @pemilik_bp.route("/laporan-keuangan")
 def laporan_keuangan():
     if "user_id" not in session or session.get("role") != "pemilik":
@@ -872,29 +874,45 @@ def laporan_keuangan():
         return redirect(url_for("pemilik.premium"))
     
     pemilik_id = session['user_id']
+    
+    # 1. TANGKAP FILTER BULAN & TAHUN DARI URL
+    now = datetime.now()
+    bulan_pilih = request.args.get('bulan', default=now.month, type=int)
+    tahun_pilih = request.args.get('tahun', default=now.year, type=int)
+
     conn = get_db()
     cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
     
     try:
-        # 1. AMBIL TOTAL PEMASUKAN RIIL (Dari Saldo Dompet)
-        cursor.execute("SELECT saldo_dompet FROM users WHERE id = %s", (pemilik_id,))
-        user_data = cursor.fetchone()
-        total_pemasukan = float(user_data['saldo_dompet']) if user_data and user_data['saldo_dompet'] else 0
-
-        # 2. AMBIL TAGIHAN BELUM DIBAYAR (Dari Chat Tagihan yang aktif)
+        # 2. AMBIL TAGIHAN BELUM DIBAYAR (BULAN/TAHUN TERPILIH SAJA)
+        # Jangan hitung yang sudah "LUNAS"
         cursor.execute("""
-            SELECT SUM(cm.tagihan_amount) AS total_tunggakan
+            SELECT COALESCE(SUM(cm.tagihan_amount), 0) AS total_tunggakan
             FROM chat_message cm
             JOIN chat_room cr ON cm.room_id = cr.id
-            WHERE cr.pemilik_id = %s AND cm.is_tagihan = 1
-        """, (pemilik_id,))
-        tunggakan_data = cursor.fetchone()
-        tagihan_belum_dibayar = float(tunggakan_data['total_tunggakan']) if tunggakan_data and tunggakan_data['total_tunggakan'] else 0
+            WHERE cr.pemilik_id = %s 
+              AND cm.is_tagihan = 1 
+              AND cm.pesan NOT LIKE '%%LUNAS%%'
+              AND MONTH(cm.waktu_kirim) = %s 
+              AND YEAR(cm.waktu_kirim) = %s
+        """, (pemilik_id, bulan_pilih, tahun_pilih))
+        tagihan_belum_dibayar = float(cursor.fetchone()['total_tunggakan'])
 
-        # 3. ESTIMASI TOTAL AKHIR BULAN
+        # 3. AMBIL PEMASUKAN RIIL (Dari DP/Pelunasan Booking bulan terpilih)
+        cursor.execute("""
+            SELECT COALESCE(SUM(b.total_harga), 0) AS total_masuk
+            FROM booking b
+            JOIN kost k ON b.kost_id = k.id
+            WHERE k.pemilik_id = %s 
+              AND b.status_booking IN ('dp_dibayar', 'aktif', 'selesai')
+              AND MONTH(b.tanggal_booking) = %s 
+              AND YEAR(b.tanggal_booking) = %s
+        """, (pemilik_id, bulan_pilih, tahun_pilih))
+        total_pemasukan = float(cursor.fetchone()['total_masuk'])
+
         estimasi_total = total_pemasukan + tagihan_belum_dibayar
 
-        # 4. AMBIL LIST PENYEWA AKTIF (Untuk Tabel)
+        # 4. AMBIL LIST PENYEWA AKTIF & STATUS TAGIHAN MEREKA
         cursor.execute("""
             SELECT 
                 b.id AS booking_id, u.nama AS nama, k.nama_kost AS kamar, 
@@ -902,41 +920,82 @@ def laporan_keuangan():
             FROM booking b
             JOIN users u ON b.penyewa_id = u.id
             JOIN kost k ON b.kost_id = k.id
-            WHERE k.pemilik_id = %s AND b.status_booking IN ('aktif', 'menunggu_pelunasan')
+            WHERE k.pemilik_id = %s 
+              AND b.status_booking IN ('aktif', 'menunggu_pelunasan', 'menunggu_dp', 'dp_dibayar')
         """, (pemilik_id,))
         tagihan = cursor.fetchall()
-
-        # 5. SIMULASI GRAFIK TREND DINAMIS (Agar garis gak datar)
-        # Bikin chart naik bertahap berdasarkan total pemasukan riil
-        trend_data = [
-            total_pemasukan * 0.15,
-            total_pemasukan * 0.35,
-            total_pemasukan * 0.50,
-            total_pemasukan * 0.70,
-            total_pemasukan * 0.85,
-            total_pemasukan
-        ]
         
+        # Penyesuaian label status untuk frontend
+        for t in tagihan:
+            if t['status'] in ['aktif', 'selesai']: t['status'] = 'Lunas'
+            elif t['status'] in ['menunggu_dp']: t['status'] = 'Belum Bayar'
+            else: t['status'] = 'Tertunda'
+
+        # 5. GENERATE DATA GRAFIK 6 BULAN TERAKHIR SECARA DINAMIS
+        chart_labels = []
+        chart_data = []
+        nama_bulan_indo = ["", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"]
+        
+        for i in range(5, -1, -1):
+            m = bulan_pilih - i
+            y = tahun_pilih
+            if m <= 0:
+                m += 12
+                y -= 1
+            chart_labels.append(f"{nama_bulan_indo[m]} {y}")
+            
+            # Query sum bulanan untuk grafik
+            cursor.execute("""
+                SELECT COALESCE(SUM(b.total_harga), 0) AS bulanan
+                FROM booking b JOIN kost k ON b.kost_id = k.id
+                WHERE k.pemilik_id = %s AND b.status_booking IN ('dp_dibayar', 'aktif', 'selesai')
+                  AND MONTH(b.tanggal_booking) = %s AND YEAR(b.tanggal_booking) = %s
+            """, (pemilik_id, m, y))
+            chart_data.append(float(cursor.fetchone()['bulanan']))
+            
     except Exception as e:
         print(f"Error Database Laporan Keuangan: {e}")
+        flash(f"Gagal memuat data: {str(e)}", "danger") 
+        
         tagihan = [] 
         total_pemasukan = tagihan_belum_dibayar = estimasi_total = 0
-        trend_data = [0, 0, 0, 0, 0, 0]
+        
+        # Bikin label chart tetep dinamis meskipun error
+        chart_labels = []
+        nama_bulan_indo = ["", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"]
+        for i in range(5, -1, -1):
+            m = bulan_pilih - i
+            y = tahun_pilih
+            if m <= 0:
+                m += 12
+                y -= 1
+            chart_labels.append(f"{nama_bulan_indo[m]} {y}")
+            
+        chart_data = [0, 0, 0, 0, 0, 0]
         
     finally:
         cursor.close()
         conn.close()
 
-    # Kirim data Real-Time ke HTML
+    # Daftar nama bulan untuk dropdown HTML
+    list_bulan = [
+        (1, 'Januari'), (2, 'Februari'), (3, 'Maret'), (4, 'April'), 
+        (5, 'Mei'), (6, 'Juni'), (7, 'Juli'), (8, 'Agustus'), 
+        (9, 'September'), (10, 'Oktober'), (11, 'November'), (12, 'Desember')
+    ]
+
     return render_template(
         "pemilik/laporan_keuangan.html", 
         tagihan=tagihan,
         total_pemasukan=total_pemasukan,
         tagihan_belum_dibayar=tagihan_belum_dibayar,
         estimasi_total=estimasi_total,
-        trend_data=trend_data
+        chart_labels=chart_labels,
+        chart_data=chart_data,
+        bulan_pilih=bulan_pilih,
+        tahun_pilih=tahun_pilih,
+        list_bulan=list_bulan
     )
-
 # ==========================================
 # AKSI KIRIM TAGIHAN VIA CHAT OTOMATIS (MODUL 3)
 # ==========================================

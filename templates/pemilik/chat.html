@@ -45,13 +45,11 @@
         
         <!-- SIDEBAR KIRI -->
         <div class="chat-sidebar">
-            <!-- KOTAK PENCARIAN -->
             <div class="search-box">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" placeholder="Cari percakapan...">
             </div>
             
-            <!-- DAFTAR CHAT -->
             <div class="chat-list">
                 {% for room in rooms %}
                 <a href="{{ url_for('chat.open_room', room_id=room[0]) }}" class="chat-item {% if room[0] == active_room %}active{% endif %}">
@@ -85,7 +83,6 @@
             {% if active_room %}
             {% set room = rooms|selectattr(0, 'equalto', active_room)|first %}
             
-            <!-- HEADER CHAT ROOM -->
             <div class="chat-header">
                 <div class="header-left">
                     <img src="{{ room[2] if room[2] else 'https://ui-avatars.com/api/?name=' ~ room[1] }}" class="avatar">
@@ -99,29 +96,60 @@
                 <div class="header-right"></div>
             </div>
 
-            <!-- BUBBLE PESAN -->
+            <!-- BUBBLE PESAN (DI-UPGRADE PAKAI LOGIKA PENYEWA) -->
             <div id="messages" class="messages">
                 {% for msg in messages %}
                 <div class="message {{ 'mine' if msg[1] == session['user_id'] }}">
-                    <div class="bubble {{ 'padding-small' if msg[5] else 'padding-normal' }}">
-                        
-                        {% if msg[5] %}
-                            <!-- Cek apakah link dari Cloudinary (http) atau lokal -->
+                    
+                    {% if msg|length > 6 and msg[6] %}
+                        <!-- 1. KARTU TAGIHAN BULANAN -->
+                        <div class="bubble" style="padding: 0; background: transparent; box-shadow: none;">
+                            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; min-width: 270px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <div style="width: 50px; height: 50px; background: #eff6ff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                        <i class="fas fa-file-invoice-dollar" style="font-size: 24px; color: #2563eb;"></i>
+                                    </div>
+                                </div>
+                                
+                                <h6 style="font-size: 15px; font-weight: 700; margin-bottom: 5px; margin-top: 0; color: #111827;">Tagihan Sewa Bulanan</h6>
+                                <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px; line-height: 1.4;">{{ msg[2]|safe }}</p>
+                                
+                                <h4 style="font-size: 24px; font-weight: 800; color: #16a34a; margin-bottom: 20px; margin-top: 0;">Rp {{ "{:,.0f}".format(msg[7]).replace(',', '.') if msg[7] else "0" }}</h4>
+                                
+                                <!-- TAMPILAN STATUS PEMILIK (Bukan Tombol Bayar) -->
+                                {% if 'LUNAS' in msg[2] %}
+                                    <div style="width: 100%; background: #dcfce7; color: #166534; padding: 12px 0; border-radius: 50px; font-weight: bold; font-size: 14px; border: 1px solid #bbf7d0;">
+                                        <i class="fas fa-check-circle me-1"></i> Tagihan Lunas
+                                    </div>
+                                {% else %}
+                                    <div style="width: 100%; background: #f1f5f9; color: #64748b; padding: 10px 0; border-radius: 50px; font-size: 13px; font-weight: bold;">
+                                        <i class="fas fa-clock me-1"></i> Menunggu Pembayaran
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    {% elif msg|length > 5 and msg[5] %}
+                        <!-- 2. FILE & GAMBAR -->
+                        <div class="bubble padding-small">
                             {% set img_src = msg[5] if msg[5].startswith('http') else '/' ~ msg[5] %}
-                            
                             {% if msg[5].lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')) %}
-                                <img src="{{ img_src }}" style="max-width:200px; border-radius:10px; cursor:zoom-in;" onclick="bukaPreview(this.src)">
+                                <img src="{{ img_src }}" style="max-width:200px; border-radius:10px; cursor:zoom-in; display:block;" onclick="bukaPreview(this.src)">
                             {% elif msg[5].lower().endswith(('.mp4', '.webm')) %}
-                                <video width="200" controls><source src="{{ img_src }}"></video>
+                                <video width="200" controls style="border-radius:10px; display:block;"><source src="{{ img_src }}"></video>
                             {% else %}
-                                <a href="{{ img_src }}" target="_blank" style="color: blue;">📄 Lihat File</a>
+                                <a href="{{ img_src }}" target="_blank" style="color: blue; text-decoration: underline;">📄 Lihat File</a>
                             {% endif %}
-                            
-                        {% else %}
-                            {{ msg[2]|safe }} 
-                        {% endif %}
+                        </div>
                         
-                    </div>
+                    {% else %}
+                        <!-- 3. TEKS BIASA -->
+                        <div class="bubble padding-normal">
+                            {{ msg[2]|safe }} 
+                        </div>
+                    {% endif %}
+                    
                     <span class="time">{{ msg[3].strftime("%H:%M") }}</span>
                 </div>
                 {% endfor %}
@@ -131,10 +159,8 @@
             <form id="chat-form" class="chat-input">
                 <input type="hidden" id="room_id" name="room_id" value="{{ active_room }}">
                 
-                <!-- Input file tersembunyi -->
                 <input type="file" id="file-input" style="display:none" accept="image/*,video/*,.pdf,.doc">
                 
-                <!-- Tombol pemanggil input file -->
                 <button type="button" class="attach-btn" onclick="document.getElementById('file-input').click()">
                     <i class="fa-solid fa-paperclip"></i>
                 </button>
@@ -146,20 +172,59 @@
             </form>
 
             {% else %}
-            <!-- TAMPILAN JIKA BELUM ADA CHAT YANG DIKLIK -->
+            <!-- JIKA BELUM ADA CHAT -->
             <div class="empty-chat">
                 <i class="fa-solid fa-comments"></i>
                 <h2>Belum ada percakapan</h2>
-                <p>Pilih percakapan di sebelah kiri untuk mulai chatting.</p>
+                <p>Pilih percakapan di sebelah kiri untuk melihat rincian.</p>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- SCRIPT SOCKET.IO & UPLOAD (GABUNGAN) -->
+<!-- LIGHTBOX ZOOM PREVIEW -->
+<div id="imagePreviewModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.85); align-items:center; justify-content:center; flex-direction:column; overflow: hidden;">
+    <span onclick="tutupPreview()" style="position:absolute; top:20px; right:30px; color:white; font-size:40px; font-weight:bold; cursor:pointer; text-shadow: 0px 0px 10px black;">&times;</span>
+    <div style="overflow:auto; max-width:95vw; max-height:80vh; text-align:center; display:flex; justify-content:center; align-items:center;">
+        <img id="previewImageSrc" style="max-width:100%; max-height:100%; border-radius:8px; transition: transform 0.25s ease-in-out; transform-origin: center center;">
+    </div>
+    <div style="margin-top:25px; display:flex; gap:20px; z-index: 10000;">
+        <button type="button" class="btn btn-light rounded-circle shadow d-flex align-items-center justify-content-center" onclick="zoomOut()" style="width:50px; height:50px; font-size: 20px; border:none;"><i class="fas fa-search-minus"></i></button>
+        <button type="button" class="btn btn-light rounded-circle shadow d-flex align-items-center justify-content-center" onclick="resetZoom()" style="width:50px; height:50px; font-size: 20px; border:none;"><i class="fas fa-sync-alt"></i></button>
+        <button type="button" class="btn btn-light rounded-circle shadow d-flex align-items-center justify-content-center" onclick="zoomIn()" style="width:50px; height:50px; font-size: 20px; border:none;"><i class="fas fa-search-plus"></i></button>
+    </div>
+</div>
+
+<!-- SCRIPT SOCKET.IO & UPLOAD -->
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
+    let currentZoom = 1;
+
+    function bukaPreview(src) {
+        document.getElementById('imagePreviewModal').style.display = 'flex';
+        document.getElementById('previewImageSrc').src = src;
+        resetZoom();
+    }
+    function tutupPreview() {
+        document.getElementById('imagePreviewModal').style.display = 'none';
+        document.getElementById('previewImageSrc').src = '';
+    }
+    function zoomIn() {
+        currentZoom += 0.25;
+        document.getElementById('previewImageSrc').style.transform = `scale(${currentZoom})`;
+    }
+    function zoomOut() {
+        if(currentZoom > 0.5) {
+            currentZoom -= 0.25;
+            document.getElementById('previewImageSrc').style.transform = `scale(${currentZoom})`;
+        }
+    }
+    function resetZoom() {
+        currentZoom = 1;
+        document.getElementById('previewImageSrc').style.transform = `scale(${currentZoom})`;
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const socket = io("/", { transports: ["websocket"] });
 
@@ -173,17 +238,14 @@
         const messages = document.getElementById("messages");
         const fileInput = document.getElementById("file-input");
 
-        // 1. GABUNG KE ROOM
         if (roomId) {
             socket.emit("join", { room: roomId.value });
         }
 
-        // 2. SCROLL KE BAWAH SECARA OTOMATIS
         if (messages) {
             messages.scrollTop = messages.scrollHeight;
         }
 
-        // 3. KIRIM PESAN TEKS
         if (form) {
             form.addEventListener("submit", function(e) {
                 e.preventDefault();
@@ -200,7 +262,6 @@
             });
         }
 
-        // 4. TERIMA PESAN & GAMBAR DARI SOCKET
         socket.on("receive_message", function(data) {
             if (!messages) return;
 
@@ -208,18 +269,17 @@
             const wrapper = document.createElement("div");
             wrapper.className = isMine ? "message mine" : "message";
 
-            let content = `<div class="bubble">${data.message}</div>`;
+            let content = `<div class="bubble padding-normal">${data.message}</div>`;
             
-            // LOGIKA GAMBAR (Cloudinary Support)
             if (data.file_path) {
                 const srcPath = data.file_path.startsWith('http') ? data.file_path : `/${data.file_path}`;
 
                 if (data.file_type && data.file_type.startsWith('image/')) {
-                    content = `<div class="bubble" style="padding:5px;"><img src="${srcPath}" style="max-width:200px; border-radius:10px; cursor:zoom-in;" onclick="bukaPreview(this.src)"></div>`;
+                    content = `<div class="bubble padding-small"><img src="${srcPath}" style="max-width:200px; border-radius:10px; cursor:zoom-in;" onclick="bukaPreview(this.src)"></div>`;
                 } else if (data.file_type && data.file_type.startsWith('video/')) {
-                    content = `<div class="bubble" style="padding:5px;"><video width="200" controls><source src="${srcPath}"></video></div>`;
+                    content = `<div class="bubble padding-small"><video width="200" controls><source src="${srcPath}"></video></div>`;
                 } else {
-                    content = `<div class="bubble"><a href="${srcPath}" target="_blank">📄 Download File</a></div>`;
+                    content = `<div class="bubble padding-normal"><a href="${srcPath}" target="_blank">📄 Download File</a></div>`;
                 }
             }
 
@@ -232,7 +292,6 @@
             messages.scrollTop = messages.scrollHeight;
         });
 
-        // 5. UPLOAD GAMBAR SECARA AJAX (TANPA REFRESH)
         if (fileInput) {
             fileInput.addEventListener("change", function() {
                 if (this.files.length === 0) return;
@@ -242,14 +301,12 @@
                 formData.append("file", file);
                 formData.append("room_id", roomId.value);
 
-                // Tampilkan animasi loading sementara di chat kita
                 const loadingWrapper = document.createElement("div");
                 loadingWrapper.className = "message mine";
                 loadingWrapper.innerHTML = `<div class="bubble padding-small text-muted"><i class="fas fa-spinner fa-spin me-2"></i> Mengirim...</div>`;
                 messages.appendChild(loadingWrapper);
                 messages.scrollTop = messages.scrollHeight;
 
-                // Tembak file ke backend diam-diam
                 fetch("/chat/upload", {
                     method: "POST",
                     body: formData
@@ -259,72 +316,21 @@
                     if (data.error) {
                         alert("Gagal mengirim: " + data.error);
                     }
-                    // Socket.IO akan otomatis menangkap gambar dari backend, 
-                    // jadi kita hapus animasi loadingnya agar tidak dobel.
-                    messages.removeChild(loadingWrapper);
+                    if(messages.contains(loadingWrapper)) {
+                        messages.removeChild(loadingWrapper);
+                    }
                 })
                 .catch(err => {
                     console.error("Upload error:", err);
                     alert("Terjadi kesalahan sistem saat upload.");
-                    messages.removeChild(loadingWrapper);
+                    if(messages.contains(loadingWrapper)) {
+                        messages.removeChild(loadingWrapper);
+                    }
                 });
 
-                // Reset input file
                 this.value = ""; 
             });
         }
     });
-</script>
-
-<div id="imagePreviewModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.85); align-items:center; justify-content:center; flex-direction:column; overflow: hidden;">
-    
-    <span onclick="tutupPreview()" style="position:absolute; top:20px; right:30px; color:white; font-size:40px; font-weight:bold; cursor:pointer; text-shadow: 0px 0px 10px black;">&times;</span>
-    
-    <div style="overflow:auto; max-width:95vw; max-height:80vh; text-align:center; display:flex; justify-content:center; align-items:center;">
-        <img id="previewImageSrc" style="max-width:100%; max-height:100%; border-radius:8px; transition: transform 0.25s ease-in-out; transform-origin: center center;" >
-    </div>
-
-    <div style="margin-top:25px; display:flex; gap:20px; z-index: 10000;">
-        <button type="button" class="btn btn-light rounded-circle shadow d-flex align-items-center justify-content-center" onclick="zoomOut()" style="width:50px; height:50px; font-size: 20px;"><i class="fas fa-search-minus"></i></button>
-        <button type="button" class="btn btn-light rounded-circle shadow d-flex align-items-center justify-content-center" onclick="resetZoom()" style="width:50px; height:50px; font-size: 20px;"><i class="fas fa-sync-alt"></i></button>
-        <button type="button" class="btn btn-light rounded-circle shadow d-flex align-items-center justify-content-center" onclick="zoomIn()" style="width:50px; height:50px; font-size: 20px;"><i class="fas fa-search-plus"></i></button>
-    </div>
-</div>
-
-<script>
-    let currentZoom = 1;
-
-    // Fungsi membuka Pop-up
-    function bukaPreview(src) {
-        document.getElementById('imagePreviewModal').style.display = 'flex';
-        document.getElementById('previewImageSrc').src = src;
-        resetZoom(); // Pastikan zoom kembali normal setiap kali dibuka
-    }
-
-    // Fungsi menutup Pop-up
-    function tutupPreview() {
-        document.getElementById('imagePreviewModal').style.display = 'none';
-        document.getElementById('previewImageSrc').src = '';
-    }
-
-    // Fungsi Zoom In
-    function zoomIn() {
-        currentZoom += 0.25;
-        document.getElementById('previewImageSrc').style.transform = `scale(${currentZoom})`;
-    }
-
-    // Fungsi Zoom Out (Maksimal mengecil sampai 50%)
-    function zoomOut() {
-        if(currentZoom > 0.5) {
-            currentZoom -= 0.25;
-            document.getElementById('previewImageSrc').style.transform = `scale(${currentZoom})`;
-        }
-    }
-
-    // Fungsi Reset Ukuran
-    function resetZoom() {
-        currentZoom = 1;
-        document.getElementById('previewImageSrc').style.transform = `scale(${currentZoom})`;
-    }
 </script>
 {% endblock %}

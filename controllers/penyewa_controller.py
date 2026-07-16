@@ -1727,8 +1727,8 @@ def kirim_ulasan(booking_id):
         if not booking:
             return jsonify({"success": False, "message": "Data pemesanan tidak ditemukan."})
             
-        if booking['status_booking'] != 'selesai':
-            return jsonify({"success": False, "message": "Anda hanya bisa memberi ulasan setelah masa sewa selesai."})
+        if booking['status_booking'] not in ['selesai', 'aktif']:
+            return jsonify({"success": False, "message": "Anda hanya bisa memberi ulasan saat masa sewa aktif atau selesai."})
             
         # 2. Cek apakah user sudah pernah memberi ulasan untuk booking ini
         cursor.execute("SELECT id FROM review WHERE booking_id = %s", (booking_id,))

@@ -382,15 +382,50 @@ def layanan_premium():
             flash(f"Gagal memperbarui harga: {e}", "danger")
         return redirect(url_for('admin.layanan_premium'))
     
-    # Ambil harga premium terupdate dari database
+    # 1. Ambil harga premium terupdate dari database
     cursor.execute("SELECT harga FROM paket_premium WHERE id = 1")
     paket = cursor.fetchone()
     harga_premium = paket['harga'] if paket else 99000
     
+    # ==========================================
+    # 2. LOGIKA STATISTIK PENGGUNA TIER
+    # ==========================================
+    try:
+        # Hitung jumlah properti Basic (Selain Premium)
+        cursor.execute("SELECT COUNT(id) AS total FROM kost WHERE tier_listing != 'premium' OR tier_listing IS NULL")
+        total_basic = cursor.fetchone()['total'] or 0
+        
+        # Hitung jumlah properti Premium
+        cursor.execute("SELECT COUNT(id) AS total FROM kost WHERE tier_listing = 'premium'")
+        total_premium = cursor.fetchone()['total'] or 0
+        
+        total_semua = total_basic + total_premium
+        
+        # Hitung persentase bar (hindari error pembagian dengan nol)
+        if total_semua > 0:
+            persen_basic = round((total_basic / total_semua) * 100)
+            persen_premium = round((total_premium / total_semua) * 100)
+        else:
+            persen_basic = 0
+            persen_premium = 0
+            
+    except Exception as e:
+        print(f"Error hitung statistik premium: {e}")
+        total_basic = total_premium = persen_basic = persen_premium = 0
+    # ==========================================
+        
     cursor.close()
     conn.close()
     
-    return render_template('admin/layanan_premium.html', harga_premium=harga_premium)
+    # 3. Lempar semua data hitungan ke HTML
+    return render_template(
+        'admin/layanan_premium.html', 
+        harga_premium=harga_premium,
+        total_basic=total_basic,
+        total_premium=total_premium,
+        persen_basic=persen_basic,
+        persen_premium=persen_premium
+    )
 
 # ==========================================
 # ADMIN PROFIL & SETTING (FIX NAMA & STATISTIK)
